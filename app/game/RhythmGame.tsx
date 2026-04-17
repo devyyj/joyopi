@@ -35,6 +35,14 @@ interface Note { id: number; time: number; judged: boolean }
 interface JudgeEffect { id: number; text: string; color: string; alpha: number; offsetY: number; createdAt: number }
 interface HitPulse { createdAt: number; color: string }
 
+interface GameResult {
+  score: number;
+  maxCombo: number;
+  perfectCnt: number;
+  goodCnt: number;
+  missCnt: number;
+}
+
 interface GS {
   phase: 'idle' | 'playing' | 'result';
   startTime: number;
@@ -142,10 +150,10 @@ export default function RhythmGame() {
   const wrapRef   = useRef<HTMLDivElement>(null);
   const gs        = useRef<GS>(initGS());
   const imgRef    = useRef<HTMLImageElement | null>(null);
-  const gameLoopRef = useRef<() => void>();
+  const gameLoopRef = useRef<() => void>(undefined);
 
   const [phase, setPhase] = useState<'idle' | 'playing' | 'result'>('idle');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<GameResult | null>(null);
   const [, setTick] = useState(0); 
 
   useEffect(() => {
@@ -213,6 +221,7 @@ export default function RhythmGame() {
 
   const endGame = useCallback(() => {
     const s = gs.current;
+    if (s.phase !== 'playing') return;
     setResult({ score: s.score, maxCombo: s.maxCombo, perfectCnt: s.perfectCnt, goodCnt: s.goodCnt, missCnt: s.missCnt });
     s.phase = 'result';
     setPhase('result');
@@ -220,7 +229,8 @@ export default function RhythmGame() {
 
   const startGame = useCallback(() => {
     const s = gs.current;
-    Object.assign(s, initGS(), { phase: 'playing' });
+    const currentW = s.canvasW; 
+    Object.assign(s, initGS(), { phase: 'playing', canvasW: currentW });
     s.notes = generateAllNotes();
     s.startTime = performance.now();
     setPhase('playing');
@@ -315,9 +325,11 @@ export default function RhythmGame() {
     const s = gs.current;
     const now = performance.now();
 
-    if (s.phase === 'playing') {
+    if (s.phase !== 'idle') {
       s.elapsed = now - s.startTime;
-      
+    }
+
+    if (s.phase === 'playing') {
       s.notes = s.notes.map(n => {
         if (!n.judged && s.elapsed - n.time > AUTO_MISS_MS) {
           applyMiss();
@@ -330,13 +342,16 @@ export default function RhythmGame() {
         endGame();
       }
       
-      s.effects = s.effects.map(e => {
-        const age = s.elapsed - e.createdAt;
-        return { ...e, alpha: Math.max(0, 1 - age / 600), offsetY: age * 0.08 };
-      }).filter(e => e.alpha > 0);
-      
       setTick(now); 
     }
+
+    // 효과 및 펄스 업데이트 (결과 화면에서도 애니메이션 지속)
+    s.effects = s.effects.map(e => {
+      const age = s.elapsed - e.createdAt;
+      return { ...e, alpha: Math.max(0, 1 - age / 600), offsetY: age * 0.08 };
+    }).filter(e => e.alpha > 0);
+
+    s.hitPulses = s.hitPulses.filter(p => s.elapsed - p.createdAt < 400);
 
     draw();
     s.rafId = requestAnimationFrame(() => gameLoopRef.current?.());
@@ -363,14 +378,19 @@ export default function RhythmGame() {
   }, []);
 
   useEffect(() => {
-    const onDown = (e: any) => { if (e.type === 'keydown' || (e.target as HTMLElement).tagName !== 'BUTTON') pressNote(); };
+    const onDown = (e: MouseEvent | TouchEvent | KeyboardEvent) => { 
+      if (e.type !== 'keydown' && (e.target as HTMLElement).tagName === 'BUTTON') return;
+      pressNote(); 
+    };
     const onUp = () => { gs.current.pressed = false; };
+    
     window.addEventListener('mousedown', onDown);
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchstart', onDown, { passive: true });
     window.addEventListener('touchend', onUp);
     window.addEventListener('keydown', onDown);
     window.addEventListener('keyup', onUp);
+    
     return () => {
       window.removeEventListener('mousedown', onDown);
       window.removeEventListener('mouseup', onUp);

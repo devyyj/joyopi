@@ -1,0 +1,32 @@
+# 빌드 / 의존성 (토큰 절약용 인덱싱 제외)
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# 잠금 파일
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 환경 / 비밀
+.env
+.env.*
+
+# 미디어 (바이너리)
+public/**/*.mp3
+public/**/*.mp4
+public/**/*.wav
+public/**/*.png
+public/**/*.jpg
+public/**/*.jpeg
+public/**/*.gif
+public/**/*.ico
+public/**/*.webp
+
+# 기타
+.git/
+*.db
+*.sqlite
+*.log

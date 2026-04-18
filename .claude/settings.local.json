@@ -1,0 +1,25 @@
+{
+  "skillListingMaxDescChars": 300,
+  "skillListingBudgetFraction": 0.005,
+  "includeGitInstructions": false,
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "WebSearch"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "alwaysThinkingEnabled": false,
+  "autoCompactWindow": 100000,
+  "promptSuggestionEnabled": false,
+  "autoMemoryEnabled": false,
+  "model": "claude-sonnet-4-6",
+  "env": {
+    "MAX_THINKING_TOKENS": "8000",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-haiku-4-5-20251001",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+  }
+}

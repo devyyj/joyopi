@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'JOYOPI',
-  description: '웹 리듬 게임',
+  title: 'YOPI LAND',
+  description: '개발자 요피의 실험실이자 다양한 서비스 놀이터',
 };
 
 export default function RootLayout({
@@ -27,7 +27,9 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#F4F6FF] text-[#1E1B4B]">
+        {children}
+      </body>
     </html>
   );
 }

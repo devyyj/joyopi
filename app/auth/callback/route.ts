@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
-  const origin = getURL()
+  const origin = await getURL()
 
   if (code) {
     const supabase = await createClient()

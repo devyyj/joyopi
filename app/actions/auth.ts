@@ -6,7 +6,7 @@ import { getURL } from '@/utils/url'
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  const origin = getURL()
+  const origin = await getURL()
 
   const { data } = await supabase.auth.signInWithOAuth({
     provider: 'google',

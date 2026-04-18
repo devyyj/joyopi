@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
-import { signInWithGoogle, signOut } from '@/app/actions/auth';
+import { signOut } from '@/app/actions/auth';
+import GoogleLoginButton from './google-login-button';
 
 const MainHeader = async () => {
   const supabase = await createClient();
@@ -29,14 +30,7 @@ const MainHeader = async () => {
               </form>
             </div>
           ) : (
-            <form action={signInWithGoogle}>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-full bg-[#1E1B4B] text-white text-sm font-bold hover:bg-opacity-90 transition-all active:scale-95"
-              >
-                구글 로그인
-              </button>
-            </form>
+            <GoogleLoginButton />
           )}
         </nav>
       </div>

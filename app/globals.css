@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f1f5f9; /* Slate 100 - 확실히 차분해진 배경색 */
+  --foreground: #0f172a; /* Slate 900 */
+  --muted: #64748b; /* Slate 500 */
+  --border: #e2e8f0; /* Slate 200 */
+  --primary: #6366f1; /* Indigo 500 */
+  --card: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-card: var(--card);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #020617; /* 더 깊은 네이비 배경 */
+    --foreground: #f1f5f9;
+    --muted: #94a3b8;
+    --border: #1e293b;
+    --primary: #818cf8;
+    --card: #0f172a; /* Slate 900 카드 */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease;
 }

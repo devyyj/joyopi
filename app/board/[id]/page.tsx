@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { deletePost } from '@/app/actions/board';
 import Link from 'next/link';
+import { buttonStyles } from '@/app/components/ui/core';
 
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,7 +16,6 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
     notFound();
   }
 
-  // DB에서 게시글 조회
   let postList: typeof posts.$inferSelect[] = [];
   try {
     postList = await db.select().from(posts).where(eq(posts.id, postId));
@@ -32,47 +32,71 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 현재 로그인한 사용자가 글 작성자인지 확인
   const isAuthor = user?.id === post.authorId;
   const deleteAction = deletePost.bind(null, post.id);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F4F6FF]">
+    <div className="flex flex-col min-h-screen bg-background">
       <MainHeader />
       
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-12">
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-          <div className="border-b border-slate-100 pb-6 mb-6">
-            <h1 className="text-3xl font-black tracking-tight mb-4 text-[#1E1B4B]">{post.title}</h1>
-            <div className="flex items-center justify-between text-sm font-medium text-slate-400">
-              <span className="text-slate-600 font-bold">{post.authorName}</span>
-              <span>{post.createdAt.toLocaleString()}</span>
+      <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-16">
+        <article className="space-y-12">
+          <header className="space-y-8">
+            <div className="flex items-center gap-3">
+              <Link href="/board" className="text-xs font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-600 transition-colors">Free Board</Link>
+              <span className="text-slate-200">/</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Post #{post.id}</span>
             </div>
-          </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+              {post.title}
+            </h1>
+            
+            <div className="flex items-center justify-between py-6 border-y border-slate-200/50">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-400 uppercase">
+                  {post.authorName?.substring(0, 1)}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-900">{post.authorName}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{post.createdAt.toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+          </header>
           
-          <div className="prose max-w-none text-[#1E1B4B] font-medium leading-relaxed whitespace-pre-wrap min-h-[200px]">
+          <div className="text-lg font-medium leading-relaxed text-slate-600 whitespace-pre-wrap min-h-[300px]">
             {post.content}
           </div>
 
-          <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
-            <Link href="/board" className="px-6 py-2.5 rounded-xl font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-              목록으로
+          <footer className="mt-20 pt-10 border-t border-slate-200/50 flex flex-col md:flex-row items-center justify-between gap-8">
+            <Link 
+              href="/board" 
+              className={`${buttonStyles.base} ${buttonStyles.variant.secondary} ${buttonStyles.size.md}`}
+            >
+              목록으로 돌아가기
             </Link>
             
             {isAuthor && (
-              <div className="flex items-center gap-2">
-                <Link href={`/board/${post.id}/edit`} className="px-6 py-2.5 rounded-xl font-bold text-[#4F46E5] hover:bg-indigo-50 transition-colors">
-                  수정하기
+              <div className="flex items-center gap-4">
+                <Link 
+                  href={`/board/${post.id}/edit`} 
+                  className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-indigo-500 transition-colors"
+                >
+                  수정
                 </Link>
                 <form action={deleteAction}>
-                  <button type="submit" className="px-6 py-2.5 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-colors">
-                    삭제하기
+                  <button 
+                    type="submit" 
+                    className="text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-red-500 transition-colors"
+                  >
+                    삭제
                   </button>
                 </form>
               </div>
             )}
-          </div>
-        </div>
+          </footer>
+        </article>
       </main>
     </div>
   );

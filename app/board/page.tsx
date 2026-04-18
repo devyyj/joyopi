@@ -4,12 +4,11 @@ import { db } from '@/db';
 import { posts } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 import { createClient } from '@/utils/supabase/server';
+import { SectionHeader, buttonStyles } from '@/app/components/ui/core';
 
-export const revalidate = 0; // 항상 최신 데이터 로드
+export const revalidate = 0;
 
 export default async function BoardPage() {
-  // DB에서 게시글 목록을 최신순으로 가져옵니다.
-  // DB 연결이 안 된 초기 상태일 경우 오류 방지를 위해 try-catch 처리
   let allPosts: typeof posts.$inferSelect[] = [];
   try {
     allPosts = await db.select().from(posts).orderBy(desc(posts.createdAt));
@@ -21,52 +20,68 @@ export default async function BoardPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F4F6FF]">
+    <div className="flex flex-col min-h-screen bg-background selection:bg-indigo-50">
       <MainHeader />
       
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-black tracking-tight text-[#1E1B4B]">자유게시판</h2>
-            <p className="text-slate-400 font-medium">실험실의 첫 번째 소통 공간입니다.</p>
-          </div>
+      <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-16">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+          <SectionHeader 
+            label="Community"
+            title="자유게시판"
+            description="가벼운 인사부터 진지한 고민까지, 자유롭게 이야기를 나누는 공간입니다."
+          />
           
-          {user ? (
-            <Link href="/board/write" className="px-6 py-2.5 rounded-2xl bg-[#4F46E5] text-white font-bold hover:shadow-lg hover:shadow-indigo-100 transition-all active:scale-95">
-              글쓰기
-            </Link>
-          ) : (
-            <div className="text-sm font-bold text-slate-400 bg-slate-100 px-4 py-2 rounded-xl">
-              글쓰기는 로그인 후 가능합니다
-            </div>
-          )}
-        </div>
+          <div className="flex-shrink-0">
+            {user ? (
+              <Link 
+                href="/board/write" 
+                className={`${buttonStyles.base} ${buttonStyles.variant.primary} ${buttonStyles.size.md}`}
+              >
+                새 글 쓰기
+              </Link>
+            ) : (
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-100/50 px-6 py-4 rounded-xl">
+                로그인 후 작성 가능
+              </div>
+            )}
+          </div>
+        </header>
 
         {/* 게시글 목록 */}
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+        <div className="space-y-4">
           {allPosts.length > 0 ? (
-            <ul className="divide-y divide-slate-50">
+            <ul className="grid grid-cols-1 gap-4">
               {allPosts.map((post) => (
                 <li key={post.id}>
-                  <Link href={`/board/${post.id}`} className="block p-6 hover:bg-slate-50/50 transition-colors group">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold group-hover:text-[#4F46E5] transition-colors text-[#1E1B4B]">
+                  <Link 
+                    href={`/board/${post.id}`} 
+                    className="flex flex-col md:flex-row md:items-center justify-between p-8 rounded-2xl bg-card border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 group"
+                  >
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-bold tracking-tight group-hover:text-indigo-600 transition-colors text-slate-900">
                         {post.title}
                       </h3>
-                      <span className="text-sm text-slate-300 font-medium">
-                        {post.createdAt.toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center gap-4 text-xs font-bold text-slate-300 uppercase tracking-widest">
+                        <span className="text-slate-400">{post.authorName}</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-200"></span>
+                        <span>{post.createdAt.toLocaleDateString('ko-KR')}</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-400 mt-1 font-medium">{post.authorName}</p>
+                    
+                    <div className="mt-6 md:mt-0 flex items-center gap-2 text-indigo-400 opacity-0 group-hover:opacity-100 transition-all">
+                      <span className="text-xs font-bold uppercase tracking-widest">읽어보기</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </div>
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="py-20 text-center flex flex-col items-center">
-              <span className="text-4xl mb-4">📭</span>
-              <p className="text-slate-400 font-bold">아직 게시글이 없습니다.</p>
-              <p className="text-sm text-slate-300 mt-2">첫 번째 글의 주인공이 되어보세요!</p>
+            <div className="py-32 text-center rounded-2xl border-2 border-dashed border-slate-100">
+              <span className="text-4xl mb-4 block">💬</span>
+              <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">첫 번째 대화를 시작해보세요.</p>
             </div>
           )}
         </div>

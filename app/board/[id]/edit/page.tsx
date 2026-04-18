@@ -6,6 +6,7 @@ import { posts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { SectionHeader, buttonStyles } from '@/app/components/ui/core';
 
 export default async function EditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,7 +23,6 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
     redirect('/board');
   }
 
-  // DB에서 게시글 조회
   let postList: typeof posts.$inferSelect[] = [];
   try {
     postList = await db.select().from(posts).where(eq(posts.id, postId));
@@ -36,7 +36,6 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
     notFound();
   }
 
-  // 작성자 본인인지 확인
   if (post.authorId !== user.id) {
     redirect(`/board/${postId}`);
   }
@@ -44,47 +43,54 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   const updateAction = updatePost.bind(null, post.id);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F4F6FF]">
+    <div className="flex flex-col min-h-screen bg-background">
       <MainHeader />
       
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h2 className="text-3xl font-black tracking-tight text-[#1E1B4B]">게시글 수정</h2>
-        </div>
+      <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-16">
+        <header className="mb-12">
+          <SectionHeader 
+            label="Edit"
+            title="기록 수정하기"
+            description="내용을 정성스럽게 고쳐볼까요?"
+          />
+        </header>
 
-        <form action={updateAction} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="title" className="font-bold text-slate-700">제목</label>
+        <form action={updateAction} className="space-y-8">
+          <div className="space-y-3">
+            <label htmlFor="title" className="text-xs font-bold uppercase tracking-widest text-slate-400 block ml-1">제목</label>
             <input 
               type="text" 
               name="title" 
               id="title"
               required 
               defaultValue={post.title}
-              className="px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] transition-all font-medium text-[#1E1B4B]" 
+              className="w-full bg-card border border-slate-200 rounded-2xl px-6 py-4 text-xl font-bold tracking-tight focus:outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/5 transition-all placeholder:text-slate-200" 
               placeholder="제목을 입력하세요"
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="content" className="font-bold text-slate-700">내용</label>
+          <div className="space-y-3">
+            <label htmlFor="content" className="text-xs font-bold uppercase tracking-widest text-slate-400 block ml-1">내용</label>
             <textarea 
               name="content" 
               id="content"
               required 
               rows={10}
               defaultValue={post.content}
-              className="px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] transition-all font-medium resize-none text-[#1E1B4B]" 
+              className="w-full bg-card border border-slate-200 rounded-2xl p-6 text-base font-medium leading-relaxed focus:outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/5 transition-all resize-none placeholder:text-slate-200" 
               placeholder="자유롭게 글을 작성해보세요"
             />
           </div>
 
-          <div className="flex justify-end gap-3 mt-4">
-            <Link href={`/board/${post.id}`} className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors">
-              취소
+          <div className="flex justify-between items-center pt-8">
+            <Link href={`/board/${post.id}`} className="text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-slate-900 transition-colors">
+              취소하고 돌아가기
             </Link>
-            <button type="submit" className="px-8 py-3 rounded-xl bg-[#4F46E5] text-white font-bold hover:shadow-lg hover:shadow-indigo-100 transition-all active:scale-95">
-              수정완료
+            <button 
+              type="submit" 
+              className={`${buttonStyles.base} ${buttonStyles.variant.primary} ${buttonStyles.size.lg}`}
+            >
+              수정 완료
             </button>
           </div>
         </form>

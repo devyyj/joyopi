@@ -8,9 +8,20 @@ export async function signInWithGoogle() {
   const supabase = await createClient()
   
   const headersList = await headers()
+  const forwardedHost = headersList.get('x-forwarded-host')
   const host = headersList.get('host')
-  const protocol = host?.includes('localhost') ? 'http' : 'https'
-  const origin = `${protocol}://${host}`
+  
+  // 프록시 호스트가 있으면 우선 사용, 없으면 일반 호스트 사용
+  const activeHost = forwardedHost || host
+  const protocol = headersList.get('x-forwarded-proto') || (activeHost?.includes('localhost') ? 'http' : 'https')
+  const origin = `${protocol}://${activeHost}`
+
+  console.log('--- Auth Debug ---')
+  console.log('Forwarded Host:', forwardedHost)
+  console.log('Host:', host)
+  console.log('Protocol:', protocol)
+  console.log('Final Origin:', origin)
+  console.log('------------------')
 
   const { data } = await supabase.auth.signInWithOAuth({
     provider: 'google',

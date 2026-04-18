@@ -7,22 +7,22 @@ const MainHeader = async () => {
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-100">
-      <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-black tracking-tighter hover:opacity-70 transition-opacity">
+    <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-xl border-b border-slate-300/50">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link href="/" className="text-lg font-bold tracking-tight hover:text-indigo-500 transition-colors">
           YOPI LAND
         </Link>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-6">
           {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-slate-600">
-                {user.user_metadata?.full_name || user.user_metadata?.name || '사용자'}님
+            <div className="flex items-center gap-6">
+              <span className="text-sm font-bold text-slate-400">
+                {user.user_metadata?.full_name || user.user_metadata?.name || '사용자'}
               </span>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all active:scale-95"
+                  className="text-sm font-bold text-slate-600 hover:text-indigo-500 transition-colors"
                 >
                   로그아웃
                 </button>
@@ -32,9 +32,9 @@ const MainHeader = async () => {
             <form action={signInWithGoogle}>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-full bg-[#1E1B4B] text-white text-sm font-bold hover:bg-opacity-90 transition-all active:scale-95"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-indigo-100"
               >
-                구글 로그인
+                Sign In
               </button>
             </form>
           )}

@@ -61,10 +61,11 @@
    - **RLS 정책 검토**: `INSERT` 작업 전, 해당 테이블에 `authenticated` 사용자를 위한 권한 정책이 수립되어 있는지 확인. (Supabase는 기본적으로 모든 INSERT를 차단함)
    - **데이터 타입 검증**: UUID, JSONB 등 특수 타입 사용 시 전달되는 값이 규격에 맞는지 타입 캐스팅 여부 확인.
    - **FK 제약 조건**: 참조하는 ID(예: user.id)가 실제 존재하는 데이터인지, 혹은 `auth.users`를 올바르게 참조하는지 점검.
-7. **동적 URL 및 환경 변수 관리 (Dynamic URL & Environment Strategy)**:
-   - **현재 호스트 우선 참조**: `localhost:3000`이나 환경 변수에 고정된 도메인을 우선하지 마십시오. Server Actions, Route Handlers 등 서버 요청 컨텍스트에서는 반드시 `next/headers`의 `headers()`를 사용하여 **현재 사용자가 접속 중인 호스트**(`x-forwarded-host` 또는 `host`)를 동적으로 감지하십시오.
-   - **환경 변수의 용도 제한**: `NEXT_PUBLIC_SITE_URL` 등의 환경 변수는 오직 요청 컨텍스트가 없는 **빌드 타임(SSG, 메타데이터 생성 등)**의 폴백 용도로만 사용하십시오. 인증(Auth) 리다이렉트와 같이 실제 요청이 발생하는 로직은 100% 동적 호스트 감지에 의존해야 합니다.
-   - **외부 서비스 설정 동기화**: Supabase, Google Console 등 외부 서비스의 리다이렉트 허용 목록(Whitelist)에 현재 배포 환경의 URL(`https://<your-domain>/auth/callback`)이 등록되어 있는지 반드시 확인하십시오. 등록되지 않은 경우 외부 서비스가 기본값(예: localhost:3000)으로 강제 리다이렉트할 수 있습니다.
+7. **동적 URL 관리 (Dynamic URL Strategy)**:
+   - **현재 호스트 직접 참조**: 고정된 도메인이나 복잡한 유틸리티 대신, 현재 실행 환경의 표준 방식을 사용하여 호스트를 참조하십시오.
+   - **Route Handlers**: `request.url`로부터 `new URL(request.url).origin`을 추출하여 사용하십시오.
+   - **Server Actions**: `next/headers`의 `headers()`를 사용하여 현재 접속 중인 `host`를 동적으로 감지하십시오. 로컬 환경(`localhost`)인 경우 `http`, 그 외 배포 환경인 경우 `https` 프로토콜을 사용하십시오.
+   - **외부 서비스 설정 동기화**: Supabase, Google Console 등 외부 서비스의 리다이렉트 허용 목록(Whitelist)에 현재 배포 환경의 URL(`https://<your-domain>/auth/callback`)이 등록되어 있는지 확인하십시오.
 8. **최종 보고 (Report)**: 
    - 모든 검증을 성공적으로 통과한 경우에만, 수정된 내용과 테스트 결과, 그리고 최종적으로 달성한 작업 내역을 사용자에게 정리하여 간결하게 보고합니다.
    - **보고서 하단에 "지침 준수 체크리스트 확인 결과" 및 "자가 점검 완료 리포트"를 포함합니다.**

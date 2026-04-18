@@ -2,11 +2,15 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { getURL } from '@/utils/url'
+import { headers } from 'next/headers'
 
 export async function signInWithGoogle() {
   const supabase = await createClient()
-  const origin = await getURL()
+  
+  const headersList = await headers()
+  const host = headersList.get('host')
+  const protocol = host?.includes('localhost') ? 'http' : 'https'
+  const origin = `${protocol}://${host}`
 
   const { data } = await supabase.auth.signInWithOAuth({
     provider: 'google',

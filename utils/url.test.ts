@@ -44,6 +44,18 @@ describe('getURL', () => {
     expect(await getURL()).toBe('https://my-app.com')
   })
 
+  it('x-forwarded-host 헤더가 있는 경우 이를 우선시해야 함', async () => {
+    mockedHeaders.mockResolvedValue({
+      get: vi.fn((key: string) => {
+        if (key === 'x-forwarded-host') return 'proxy-domain.com'
+        if (key === 'host') return 'localhost:3000'
+        return null
+      }),
+    } as unknown as Awaited<ReturnType<typeof headers>>)
+
+    expect(await getURL()).toBe('https://proxy-domain.com')
+  })
+
   it('로컬호스트인 경우 http 프로토콜을 사용해야 함', async () => {
     mockedHeaders.mockResolvedValue({
       get: vi.fn((key: string) => {

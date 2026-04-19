@@ -1,12 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f1f5f9; /* Slate 100 - 확실히 차분해진 배경색 */
-  --foreground: #0f172a; /* Slate 900 */
-  --muted: #64748b; /* Slate 500 */
-  --border: #e2e8f0; /* Slate 200 */
-  --primary: #6366f1; /* Indigo 500 */
+  --background: #ffffff;
+  --foreground: #1f2328;
+  --muted: #656d76;
+  --border: #d0d7de;
+  --primary: #0969da;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f8fa;
+  --secondary-foreground: #1f2328;
   --card: #ffffff;
+  --card-foreground: #1f2328;
+  --ring: rgba(9, 105, 218, 0.2);
 }
 
 @theme inline {
@@ -15,27 +20,46 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-card: var(--card);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card-foreground: var(--card-foreground);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+  --radius-md: 6px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #020617; /* 더 깊은 네이비 배경 */
-    --foreground: #f1f5f9;
-    --muted: #94a3b8;
-    --border: #1e293b;
-    --primary: #818cf8;
-    --card: #0f172a; /* Slate 900 카드 */
+    --background: #0d1117;
+    --foreground: #e6edf3;
+    --muted: #848d97;
+    --border: #30363d;
+    --primary: #2f81f7;
+    --primary-foreground: #ffffff;
+    --secondary: #21262d;
+    --secondary-foreground: #e6edf3;
+    --card: #0d1117;
+    --ring: rgba(47, 129, 247, 0.3);
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.5s ease;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+::selection {
+  background-color: rgba(9, 105, 218, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::selection {
+    background-color: rgba(47, 129, 247, 0.4);
+  }
 }

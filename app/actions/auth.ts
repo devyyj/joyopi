@@ -17,6 +17,10 @@ export async function signInWithGoogle() {
     provider: 'google',
     options: {
       redirectTo: `${origin}/auth/callback`,
+      // 개인정보(email, profile) 요청을 제외하고 최소한의 신원 확인(openid)만 수행합니다.
+      queryParams: {
+        scope: 'openid',
+      },
     },
   })
 

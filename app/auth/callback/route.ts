@@ -15,8 +15,26 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (!error && user) {
+      // 프로필 존재 여부 확인 및 생성
+      const { db } = await import('@/db')
+      const { profiles } = await import('@/db/schema')
+      const { eq } = await import('drizzle-orm')
+      const { generateRandomNickname } = await import('@/utils/nickname')
+
+      const existingProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.id, user.id)
+      })
+
+      if (!existingProfile) {
+        await db.insert(profiles).values({
+          id: user.id,
+          nickname: generateRandomNickname(),
+        })
+      }
+
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

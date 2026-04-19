@@ -2,8 +2,9 @@
 
 import { createPost, updatePost } from '@/app/actions/board';
 import { Button, Card } from '@/app/components/ui/core';
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface PostFormProps {
   initialData?: {
@@ -11,10 +12,16 @@ interface PostFormProps {
     title: string;
     content: string;
   };
-  userInitial: string;
 }
 
-export default function PostForm({ initialData, userInitial }: PostFormProps) {
+const MAX_TITLE = 50;
+const MAX_CONTENT = 5000;
+
+export default function PostForm({ initialData }: PostFormProps) {
+  const router = useRouter();
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [content, setContent] = useState(initialData?.content || '');
+
   const [state, action, isPending] = useActionState(async (_prevState: unknown, formData: FormData) => {
     try {
       if (initialData) {
@@ -24,58 +31,70 @@ export default function PostForm({ initialData, userInitial }: PostFormProps) {
       }
       return { success: true, error: null };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : '알 수 없는 에러가 발생했습니다.' 
-      };
+      return { success: false, error: error instanceof Error ? error.message : '오류가 발생했습니다.' };
     }
   }, { success: false, error: null });
 
+  // 성공 시 목록으로 이동
+  useEffect(() => {
+    if (state.success) {
+      router.push('/board');
+      router.refresh();
+    }
+  }, [state.success, router]);
+
   return (
     <form action={action}>
-      <Card className="p-0 overflow-hidden border-primary/20 shadow-lg shadow-primary/5">
-        <div className="bg-secondary/50 px-4 py-2 border-b border-border flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-            {userInitial}
+      <Card className="p-6 space-y-6">
+        <div className="space-y-2">
+          <div className="flex justify-between items-end">
+            <label htmlFor="title" className="text-sm font-medium">제목</label>
+            <span className={`text-[10px] ${title.length > MAX_TITLE ? 'text-red-500 font-bold' : 'text-muted'}`}>
+              {title.length} / {MAX_TITLE}
+            </span>
           </div>
-          <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-            {initialData ? 'Edit Post' : 'Post Editor'}
-          </span>
+          <input 
+            type="text" 
+            name="title" 
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={MAX_TITLE}
+            required 
+            className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary" 
+            placeholder="제목을 입력하세요"
+          />
         </div>
-        <div className="p-6 space-y-4">
-          <div className="space-y-1">
-            <input 
-              type="text" 
-              name="title" 
-              id="title"
-              defaultValue={initialData?.title}
-              required 
-              className="w-full bg-transparent border-none p-0 text-xl font-bold focus:ring-0 placeholder:text-muted/30" 
-              placeholder="제목을 입력하세요"
-            />
-          </div>
 
-          <div className="space-y-1">
-            <textarea 
-              name="content" 
-              id="content"
-              defaultValue={initialData?.content}
-              required 
-              rows={8}
-              className="w-full bg-transparent border-none p-0 text-base focus:ring-0 resize-none placeholder:text-muted/30 font-sans" 
-              placeholder="무슨 일이 일어나고 있나요?"
-            />
+        <div className="space-y-2">
+          <div className="flex justify-between items-end">
+            <label htmlFor="content" className="text-sm font-medium">내용</label>
+            <span className={`text-[10px] ${content.length > MAX_CONTENT ? 'text-red-500 font-bold' : 'text-muted'}`}>
+              {content.length} / {MAX_CONTENT}
+            </span>
           </div>
-          
-          {state.error && (
-            <p className="text-xs text-red-500 font-medium">{state.error}</p>
-          )}
+          <textarea 
+            name="content" 
+            id="content"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            maxLength={MAX_CONTENT}
+            required 
+            rows={15}
+            className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none" 
+            placeholder="내용을 입력하세요"
+          />
         </div>
-        <div className="bg-secondary/30 px-6 py-4 border-t border-border flex justify-between items-center">
-          <Link href="/board" className="text-sm font-medium text-muted hover:text-foreground">
-            취소
-          </Link>
-          <Button type="submit" size="md" isLoading={isPending}>
+        
+        {state.error && <p className="text-xs text-red-500">{state.error}</p>}
+
+        <div className="flex justify-between items-center pt-4 border-t border-border">
+          <Link href="/board" className="text-sm text-muted hover:text-foreground">취소</Link>
+          <Button 
+            type="submit" 
+            isLoading={isPending}
+            disabled={title.length > MAX_TITLE || content.length > MAX_CONTENT}
+          >
             {initialData ? '수정 완료' : '게시하기'}
           </Button>
         </div>

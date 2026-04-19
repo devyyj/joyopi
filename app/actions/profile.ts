@@ -32,6 +32,12 @@ export async function updateProfile(formData: FormData) {
   if (!nickname) {
     throw new Error('닉네임을 입력해주세요.')
   }
+  if (nickname.length > 20) {
+    throw new Error('닉네임은 최대 20자까지 가능합니다.')
+  }
+  if (bio && bio.length > 100) {
+    throw new Error('자기소개는 최대 100자까지 가능합니다.')
+  }
 
   try {
     await db.update(profiles)
@@ -49,7 +55,17 @@ export async function updateProfile(formData: FormData) {
   }
 
   revalidatePath('/profile')
-  revalidatePath('/board')
+}
+
+export async function getPublicProfile(userId: string) {
+  return await db.query.profiles.findFirst({
+    where: eq(profiles.id, userId),
+    columns: {
+      nickname: true,
+      bio: true,
+      createdAt: true,
+    }
+  })
 }
 
 export async function deleteAccount() {

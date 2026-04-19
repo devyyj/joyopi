@@ -17,7 +17,7 @@ const MainHeader = async () => {
             <span className="w-6 h-6 bg-foreground rounded-full" />
             YOPI LAND
           </Link>
-          <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-6">
             <Link href="/board" className="text-sm font-medium text-muted hover:text-foreground">
               게시판
             </Link>

@@ -3,6 +3,7 @@
 import { deletePost } from '@/app/actions/board';
 import { Button } from '@/app/components/ui/core';
 import { useTransition } from 'react';
+import { useDialog } from '@/app/components/ui/dialog-provider';
 
 interface DeletePostButtonProps {
   postId: number;
@@ -10,17 +11,23 @@ interface DeletePostButtonProps {
 
 export default function DeletePostButton({ postId }: DeletePostButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const { alert, confirm } = useDialog();
 
-  const handleDelete = () => {
-    if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
-      startTransition(async () => {
-        try {
-          await deletePost(postId);
-        } catch (error) {
-          alert(error instanceof Error ? error.message : '알 수 없는 에러가 발생했습니다.');
-        }
-      });
-    }
+  const handleDelete = async () => {
+    const ok = await confirm('정말로 이 게시글을 삭제하시겠습니까?', {
+      variant: 'danger',
+      confirmText: '삭제하기'
+    });
+    
+    if (!ok) return;
+
+    startTransition(async () => {
+      try {
+        await deletePost(postId);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.');
+      }
+    });
   };
 
   return (
@@ -29,7 +36,7 @@ export default function DeletePostButton({ postId }: DeletePostButtonProps) {
       size="sm" 
       onClick={handleDelete}
       isLoading={isPending}
-      className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+      className="text-red-500/70 hover:text-red-600 h-7 px-2 text-[10px]"
     >
       삭제
     </Button>

@@ -2,12 +2,15 @@
 
 import { signOut } from '@/app/actions/auth';
 import { useTransition } from 'react';
+import { useDialog } from './ui/dialog-provider';
 
 const LogoutButton = () => {
   const [isPending, startTransition] = useTransition();
+  const { confirm } = useDialog();
 
   const handleLogout = async () => {
-    if (window.confirm('로그아웃 하시겠습니까?')) {
+    const ok = await confirm('로그아웃 하시겠습니까?');
+    if (ok) {
       startTransition(async () => {
         await signOut();
       });

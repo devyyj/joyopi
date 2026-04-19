@@ -68,10 +68,9 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
 
     if (ok) {
       startTransition(async () => {
-        try {
-          await deletePost(item.id);
-        } catch (error) {
-          alert(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.');
+        const result = await deletePost(item.id);
+        if (!result.success) {
+          alert(result.message || '삭제 중 오류가 발생했습니다.');
         }
       });
     }
@@ -92,20 +91,18 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
     }
 
     startTransition(async () => {
-      // 1. UI 즉시 반영
+      // UI 즉시 반영
       setOptimisticPost({ title: trimmedTitle, content: trimmedContent });
       setIsEditing(false);
 
-      try {
-        // 2. 서버 데이터 업데이트
-        const formData = new FormData();
-        formData.append('title', trimmedTitle);
-        formData.append('content', trimmedContent);
-        await updatePost(item.id, formData);
-      } catch (error) {
-        // 3. 실패 시 원래 상태로 복구 및 알림
+      const formData = new FormData();
+      formData.append('title', trimmedTitle);
+      formData.append('content', trimmedContent);
+      const result = await updatePost(item.id, formData);
+      
+      if (!result.success) {
         setIsEditing(true); // 편집 모드 다시 활성화
-        alert(error instanceof Error ? error.message : '수정 중 오류가 발생했습니다.');
+        alert(result.message || '수정 중 오류가 발생했습니다.');
       }
     });
   };

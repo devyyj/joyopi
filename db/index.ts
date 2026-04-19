@@ -18,9 +18,8 @@ const globalForDb = globalThis as unknown as {
 // Disable prefetch as it is not supported for "Transaction" pool mode in Supabase by default
 const client = globalForDb.postgresClient ?? postgres(url, { prepare: false });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForDb.postgresClient = client;
-}
+// 프로덕션 환경에서도 싱글톤 유지 (서버리스 환경이 아닐 경우 유효)
+globalForDb.postgresClient = client;
 
 export const db = drizzle(client, { schema });
 

@@ -24,10 +24,9 @@ export default function LikeButton({ postId, initialLiked, likeCount }: LikeButt
   const handleToggle = () => {
     startTransition(async () => {
       addOptimisticLike(!optimisticLike.liked);
-      try {
-        await toggleLike(postId);
-      } catch (error) {
-        alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
+      const result = await toggleLike(postId);
+      if (!result.success) {
+        alert(result.message || '오류가 발생했습니다.');
       }
     });
   };

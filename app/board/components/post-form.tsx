@@ -1,6 +1,6 @@
 'use client';
 
-import { createPost, updatePost } from '@/app/actions/board';
+import { createPost, updatePost, ActionResult } from '@/app/actions/board';
 import { Button, Card } from '@/app/components/ui/core';
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -22,18 +22,13 @@ export default function PostForm({ initialData }: PostFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
   const [content, setContent] = useState(initialData?.content || '');
 
-  const [state, action, isPending] = useActionState(async (_prevState: unknown, formData: FormData) => {
-    try {
-      if (initialData) {
-        await updatePost(initialData.id, formData);
-      } else {
-        await createPost(formData);
-      }
-      return { success: true, error: null };
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : '오류가 발생했습니다.' };
+  const [state, action, isPending] = useActionState(async (_prevState: ActionResult | null, formData: FormData) => {
+    if (initialData) {
+      return await updatePost(initialData.id, formData);
+    } else {
+      return await createPost(formData);
     }
-  }, { success: false, error: null });
+  }, { success: false });
 
   // 성공 시 목록으로 이동
   useEffect(() => {
@@ -86,7 +81,7 @@ export default function PostForm({ initialData }: PostFormProps) {
           />
         </div>
         
-        {state.error && <p className="text-xs text-red-500">{state.error}</p>}
+        {state.message && <p className="text-xs text-red-500">{state.message}</p>}
 
         <div className="flex justify-between items-center pt-4 border-t border-border">
           <Link href="/board" className="text-sm text-muted hover:text-foreground">취소</Link>

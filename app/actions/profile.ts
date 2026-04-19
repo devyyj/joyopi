@@ -6,40 +6,38 @@ import { profiles } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { ActionResult } from './board'
 
 export async function getProfile() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return null
+    if (!user) return null
 
-  return await db.query.profiles.findFirst({
-    where: eq(profiles.id, user.id)
-  })
+    return await db.query.profiles.findFirst({
+      where: eq(profiles.id, user.id)
+    })
+  } catch (error) {
+    console.error(error)
+    return null
+  }
 }
 
-export async function updateProfile(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('로그인이 필요합니다.')
-  }
-
-  const nickname = (formData.get('nickname') as string)?.trim()
-  const bio = (formData.get('bio') as string)?.trim()
-
-  if (!nickname) {
-    throw new Error('닉네임을 입력해주세요.')
-  }
-  if (nickname.length > 10) {
-    throw new Error('닉네임은 최대 10자까지 가능합니다.')
-  }
-  if (bio && bio.length > 100) {
-    throw new Error('자기소개는 최대 100자까지 가능합니다.')
-  }
-
+export async function updateProfile(formData: FormData): Promise<ActionResult> {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
+
+    const nickname = (formData.get('nickname') as string)?.trim()
+    const bio = (formData.get('bio') as string)?.trim()
+
+    if (!nickname) return { success: false, message: '닉네임을 입력해주세요.' };
+    if (nickname.length > 10) return { success: false, message: '닉네임은 최대 10자까지 가능합니다.' };
+    if (bio && bio.length > 100) return { success: false, message: '자기소개는 최대 100자까지 가능합니다.' };
+
     await db.update(profiles)
       .set({ 
         nickname, 
@@ -47,64 +45,64 @@ export async function updateProfile(formData: FormData) {
         updatedAt: new Date()
       })
       .where(eq(profiles.id, user.id))
+      
+    revalidatePath('/profile')
+    return { success: true };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === '23505') {
-      throw new Error('이미 사용 중인 닉네임입니다.')
+      return { success: false, message: '이미 사용 중인 닉네임입니다.' };
     }
-    throw error
+    console.error(error);
+    return { success: false, message: '프로필 저장 중 오류가 발생했습니다.' };
   }
-
-  revalidatePath('/profile')
 }
 
 export async function getPublicProfile(userId: string) {
-  return await db.query.profiles.findFirst({
-    where: eq(profiles.id, userId),
-    columns: {
-      nickname: true,
-      bio: true,
-      createdAt: true,
-    }
-  })
+  try {
+    return await db.query.profiles.findFirst({
+      where: eq(profiles.id, userId),
+      columns: {
+        nickname: true,
+        bio: true,
+        createdAt: true,
+      }
+    })
+  } catch (error) {
+    console.error(error)
+    return null
+  }
 }
 
-export async function deleteAccount() {
-  const supabase = await createClient()
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-  
-  if (sessionError || !session?.user) {
-    throw new Error('로그인 세션이 만료되었거나 찾을 수 없습니다.')
-  }
-
+export async function deleteAccount(): Promise<ActionResult> {
   try {
-    // 보안 강화: 앱에서 관리자 키를 사용하지 않고 격리된 Edge Function을 호출합니다.
-    // 구글 소셜 연동 해제를 위해 세션에서 provider_token을 추출하여 전달합니다.
-    const googleToken = session.provider_token
+    const supabase = await createClient()
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
+    if (sessionError || !session?.user) {
+      return { success: false, message: '로그인 세션이 만료되었습니다.' };
+    }
+
+    const googleToken = session.provider_token
     const { error: functionError } = await supabase.functions.invoke('withdraw-user', {
       body: { googleToken }
     })
     
     if (functionError) {
-      console.error('[Withdrawal] Edge Function 호출 실패:', functionError)
-      throw new Error('회원 탈퇴 처리 중 오류가 발생했습니다.')
+      console.error('[Withdrawal] Edge Function error:', functionError)
+      return { success: false, message: '회원 탈퇴 처리 중 오류가 발생했습니다.' };
     }
 
-    console.log('[Withdrawal] User successfully withdrawn via Edge Function')
-
-    // 세션 파기는 성공 시에만 수행
     await supabase.auth.signOut()
-
+    
+    // 전체 레이아웃 대신 필요한 부분만 재검증
+    revalidatePath('/')
   } catch (error) {
-    // redirect()가 던지는 내부 에러는 그대로 다시 던져야 합니다.
     if (error instanceof Error && (error.message === 'NEXT_REDIRECT' || error.constructor.name === 'RedirectError')) {
       throw error
     }
-    console.error('[Withdrawal] Critical error during withdrawal:', error)
-    throw error instanceof Error ? error : new Error('탈퇴 처리 중 예상치 못한 오류가 발생했습니다.')
+    console.error('[Withdrawal] Error:', error)
+    return { success: false, message: '탈퇴 처리 중 예상치 못한 오류가 발생했습니다.' };
   }
 
-  // redirect는 반드시 try-catch 블록 외부에서 호출해야 합니다.
-  revalidatePath('/', 'layout')
   redirect('/')
 }

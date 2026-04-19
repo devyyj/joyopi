@@ -90,11 +90,10 @@ export default function CommentSection({
           isLiked: false
         }
       });
-      try {
-        await createComment(postId, trimmed);
-      } catch (error) {
+      const result = await createComment(postId, trimmed);
+      if (!result.success) {
         setContent(trimmed);
-        alert(error instanceof Error ? error.message : '댓글 작성 중 오류가 발생했습니다.');
+        alert(result.message || '댓글 작성 중 오류가 발생했습니다.');
       }
     });
   };
@@ -104,10 +103,9 @@ export default function CommentSection({
       if (ok) {
         startTransition(async () => {
           dispatchOptimistic({ type: 'DELETE', commentId });
-          try {
-            await deleteComment(commentId);
-          } catch (error) {
-            alert(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.');
+          const result = await deleteComment(commentId);
+          if (!result.success) {
+            alert(result.message || '삭제 중 오류가 발생했습니다.');
           }
         });
       }
@@ -125,10 +123,9 @@ export default function CommentSection({
     startTransition(async () => {
       dispatchOptimistic({ type: 'UPDATE', commentId, content: trimmed });
       setEditId(null);
-      try {
-        await updateComment(commentId, trimmed);
-      } catch (error) {
-        alert(error instanceof Error ? error.message : '수정 중 오류가 발생했습니다.');
+      const result = await updateComment(commentId, trimmed);
+      if (!result.success) {
+        alert(result.message || '수정 중 오류가 발생했습니다.');
       }
     });
   };
@@ -136,10 +133,9 @@ export default function CommentSection({
   const handleToggleLike = (commentId: number) => {
     startTransition(async () => {
       dispatchOptimistic({ type: 'TOGGLE_LIKE', commentId });
-      try {
-        await toggleCommentLike(commentId);
-      } catch (error) {
-        alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
+      const result = await toggleCommentLike(commentId);
+      if (!result.success) {
+        alert(result.message || '오류가 발생했습니다.');
       }
     });
   };

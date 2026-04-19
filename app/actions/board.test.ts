@@ -60,7 +60,8 @@ describe('Board Actions', () => {
 
     const result = await createPost(formData);
     expect(db.insert).toHaveBeenCalled();
-    expect(result).toHaveProperty('id');
+    expect(result.success).toBe(true);
+    expect(result.data).toHaveProperty('id');
   });
 
   it('updatePost should verify ownership', async () => {
@@ -71,7 +72,9 @@ describe('Board Actions', () => {
     formData.append('title', 'Edit');
     formData.append('content', 'Edit');
 
-    await expect(updatePost(1, formData)).rejects.toThrow('수정 권한이 없습니다.');
+    const result = await updatePost(1, formData);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('수정 권한이 없습니다.');
   });
 
   it('createPost should fail if title is too long', async () => {
@@ -82,7 +85,9 @@ describe('Board Actions', () => {
     formData.append('title', 'a'.repeat(51));
     formData.append('content', 'valid');
 
-    await expect(createPost(formData)).rejects.toThrow('제목은 최대 50자까지 가능합니다.');
+    const result = await createPost(formData);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('최대 50자');
   });
 
   it('createComment should fail if content is too long', async () => {
@@ -90,7 +95,9 @@ describe('Board Actions', () => {
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }) },
     });
     const longContent = 'a'.repeat(201);
-    await expect(createComment(1, longContent)).rejects.toThrow('댓글은 최대 200자까지 작성 가능합니다.');
+    const result = await createComment(1, longContent);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('최대 200자');
   });
 
   it('createComment should fail if content contains newline', async () => {
@@ -98,6 +105,8 @@ describe('Board Actions', () => {
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }) },
     });
     const multilineContent = 'line 1\nline 2';
-    await expect(createComment(1, multilineContent)).rejects.toThrow('댓글은 한 줄로만 작성 가능합니다.');
+    const result = await createComment(1, multilineContent);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('한 줄로만');
   });
 });

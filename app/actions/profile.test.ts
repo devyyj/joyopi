@@ -63,24 +63,29 @@ describe('Profile Actions', () => {
     formData.append('nickname', 'new-nick');
     formData.append('bio', 'new-bio');
 
-    await updateProfile(formData);
+    const result = await updateProfile(formData);
     expect(db.update).toHaveBeenCalled();
+    expect(result.success).toBe(true);
   });
 
-  it('should throw error if nickname is too long', async () => {
+  it('should fail if nickname is too long', async () => {
     const formData = new FormData();
     formData.append('nickname', 'a'.repeat(11));
     formData.append('bio', 'valid');
 
-    await expect(updateProfile(formData)).rejects.toThrow('닉네임은 최대 10자까지 가능합니다.');
+    const result = await updateProfile(formData);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('최대 10자');
   });
 
-  it('should throw error if bio is too long', async () => {
+  it('should fail if bio is too long', async () => {
     const formData = new FormData();
     formData.append('nickname', 'nick');
     formData.append('bio', 'a'.repeat(101));
 
-    await expect(updateProfile(formData)).rejects.toThrow('자기소개는 최대 100자까지 가능합니다.');
+    const result = await updateProfile(formData);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('최대 100자');
   });
 
   it('should delete account via edge function', async () => {

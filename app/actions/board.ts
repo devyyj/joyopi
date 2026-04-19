@@ -6,11 +6,17 @@ import { posts, comments, likes, profiles, commentLikes } from '@/db/schema';
 import { revalidatePath } from 'next/cache';
 import { eq, and, desc } from 'drizzle-orm';
 
+// 공통 결과 타입
+export type ActionResult<T = unknown> = {
+  success: boolean;
+  message?: string;
+  data?: T;
+};
+
 // 공통 인증 및 프로필 확인 헬퍼
 async function getAuthUser() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('로그인이 필요합니다.');
   return user;
 }
 
@@ -18,191 +24,336 @@ async function getUserProfile(userId: string) {
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, userId)
   });
-  if (!profile) throw new Error('프로필을 찾을 수 없습니다.');
   return profile;
 }
 
 // --- 게시글 (Posts) ---
 
-export async function createPost(formData: FormData) {
-  const user = await getAuthUser();
-  const profile = await getUserProfile(user.id);
+export async function createPost(formData: FormData): Promise<ActionResult<{ id: number }>> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  const title = (formData.get('title') as string)?.trim();
-  const content = (formData.get('content') as string)?.trim();
+    const profile = await getUserProfile(user.id);
+    if (!profile) return { success: false, message: '프로필을 찾을 수 없습니다.' };
 
-  if (!title || !content) throw new Error('제목과 내용을 입력해주세요.');
-  if (title.length > 50) throw new Error('제목은 최대 50자까지 가능합니다.');
-  if (content.length > 5000) throw new Error('내용은 최대 5,000자까지 가능합니다.');
+    const title = (formData.get('title') as string)?.trim();
+    const content = (formData.get('content') as string)?.trim();
 
-  const [newPost] = await db.insert(posts).values({
-    title,
-    content,
-    authorId: user.id,
-    authorName: profile.nickname,
-  }).returning();
+    if (!title || !content) return { success: false, message: '제목과 내용을 입력해주세요.' };
+    if (title.length > 50) return { success: false, message: '제목은 최대 50자까지 가능합니다.' };
+    if (content.length > 5000) return { success: false, message: '내용은 최대 5,000자까지 가능합니다.' };
 
-  revalidatePath('/board');
-  revalidatePath('/');
-  return { id: newPost.id };
+    const [newPost] = await db.insert(posts).values({
+      title,
+      content,
+      authorId: user.id,
+      authorName: profile.nickname,
+    }).returning();
+
+    // /board 페이지만 갱신하여 응답 속도 향상
+    revalidatePath('/board');
+    return { success: true, data: { id: newPost.id } };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '게시글 작성 중 오류가 발생했습니다.' };
+  }
 }
 
-export async function updatePost(id: number, formData: FormData) {
-  const user = await getAuthUser();
-  const title = (formData.get('title') as string)?.trim();
-  const content = (formData.get('content') as string)?.trim();
+export async function updatePost(id: number, formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  if (!title || !content) throw new Error('제목과 내용을 입력해주세요.');
-  if (title.length > 50) throw new Error('제목은 최대 50자까지 가능합니다.');
-  if (content.length > 5000) throw new Error('내용은 최대 5,000자까지 가능합니다.');
+    const title = (formData.get('title') as string)?.trim();
+    const content = (formData.get('content') as string)?.trim();
 
-  // 소유권 검증
-  const existing = await db.query.posts.findFirst({ where: eq(posts.id, id) });
-  if (!existing || existing.authorId !== user.id) throw new Error('수정 권한이 없습니다.');
+    if (!title || !content) return { success: false, message: '제목과 내용을 입력해주세요.' };
+    if (title.length > 50) return { success: false, message: '제목은 최대 50자까지 가능합니다.' };
+    if (content.length > 5000) return { success: false, message: '내용은 최대 5,000자까지 가능합니다.' };
 
-  await db.update(posts)
-    .set({ title, content, updatedAt: new Date() })
-    .where(and(eq(posts.id, id), eq(posts.authorId, user.id)));
+    const existing = await db.query.posts.findFirst({ where: eq(posts.id, id) });
+    if (!existing || existing.authorId !== user.id) return { success: false, message: '수정 권한이 없습니다.' };
 
-  revalidatePath(`/board/${id}`);
-  revalidatePath('/board');
+    await db.update(posts)
+      .set({ title, content, updatedAt: new Date() })
+      .where(and(eq(posts.id, id), eq(posts.authorId, user.id)));
+
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '수정 중 오류가 발생했습니다.' };
+  }
 }
 
-export async function deletePost(id: number) {
-  const user = await getAuthUser();
+export async function deletePost(id: number): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  // 소유권 검증
-  const existing = await db.query.posts.findFirst({ where: eq(posts.id, id) });
-  if (!existing || existing.authorId !== user.id) throw new Error('삭제 권한이 없습니다.');
+    const existing = await db.query.posts.findFirst({ where: eq(posts.id, id) });
+    if (!existing || existing.authorId !== user.id) return { success: false, message: '삭제 권한이 없습니다.' };
 
-  await db.delete(posts).where(and(eq(posts.id, id), eq(posts.authorId, user.id)));
-  
-  revalidatePath('/board');
-  revalidatePath('/');
+    await db.delete(posts).where(and(eq(posts.id, id), eq(posts.authorId, user.id)));
+    
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '삭제 중 오류가 발생했습니다.' };
+  }
 }
 
 // --- 댓글 (Comments) ---
 
-export async function createComment(postId: number, content: string) {
-  const user = await getAuthUser();
-  const profile = await getUserProfile(user.id);
+export async function createComment(postId: number, content: string): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  const trimmedContent = content.trim();
-  if (!trimmedContent) throw new Error('댓글 내용을 입력해주세요.');
-  if (trimmedContent.length > 200) throw new Error('댓글은 최대 200자까지 작성 가능합니다.');
-  if (trimmedContent.includes('\n') || trimmedContent.includes('\r')) {
-    throw new Error('댓글은 한 줄로만 작성 가능합니다.');
+    const profile = await getUserProfile(user.id);
+    if (!profile) return { success: false, message: '프로필을 찾을 수 없습니다.' };
+
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return { success: false, message: '댓글 내용을 입력해주세요.' };
+    if (trimmedContent.length > 200) return { success: false, message: '댓글은 최대 200자까지 가능합니다.' };
+    if (trimmedContent.includes('\n') || trimmedContent.includes('\r')) {
+      return { success: false, message: '댓글은 한 줄로만 작성 가능합니다.' };
+    }
+
+    await db.insert(comments).values({
+      postId,
+      authorId: user.id,
+      authorName: profile.nickname,
+      content: trimmedContent,
+    });
+
+    // 특정 경로만 타겟팅하여 재검증 속도 향상
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '댓글 작성 중 오류가 발생했습니다.' };
   }
-
-  const [newComment] = await db.insert(comments).values({
-    postId,
-    authorId: user.id,
-    authorName: profile.nickname,
-    content: trimmedContent,
-  }).returning();
-
-  revalidatePath(`/board/${postId}`);
-  return newComment;
 }
 
-export async function deleteComment(commentId: number, _postId: number) {
-  const user = await getAuthUser();
+export async function deleteComment(commentId: number): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  // 소유권 검증
-  const existing = await db.query.comments.findFirst({ where: eq(comments.id, commentId) });
-  if (!existing || existing.authorId !== user.id) throw new Error('댓글 삭제 권한이 없습니다.');
+    const existing = await db.query.comments.findFirst({ where: eq(comments.id, commentId) });
+    if (!existing || existing.authorId !== user.id) return { success: false, message: '권한이 없습니다.' };
 
-  await db.delete(comments).where(and(eq(comments.id, commentId), eq(comments.authorId, user.id)));
+    await db.delete(comments).where(and(eq(comments.id, commentId), eq(comments.authorId, user.id)));
 
-  revalidatePath(`/board`);
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '삭제 중 오류가 발생했습니다.' };
+  }
 }
 
-export async function updateComment(commentId: number, content: string) {
-  const user = await getAuthUser();
+export async function updateComment(commentId: number, content: string): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  const trimmedContent = content.trim();
-  if (!trimmedContent) throw new Error('댓글 내용을 입력해주세요.');
-  if (trimmedContent.length > 200) throw new Error('댓글은 최대 200자까지 작성 가능합니다.');
-  if (trimmedContent.includes('\n') || trimmedContent.includes('\r')) {
-    throw new Error('댓글은 한 줄로만 작성 가능합니다.');
+    const trimmedContent = content.trim();
+    if (!trimmedContent) return { success: false, message: '내용을 입력해주세요.' };
+    if (trimmedContent.length > 200) return { success: false, message: '댓글은 최대 200자까지 가능합니다.' };
+
+    const existing = await db.query.comments.findFirst({ where: eq(comments.id, commentId) });
+    if (!existing || existing.authorId !== user.id) return { success: false, message: '권한이 없습니다.' };
+
+    await db.update(comments)
+      .set({ content: trimmedContent })
+      .where(and(eq(comments.id, commentId), eq(comments.authorId, user.id)));
+
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '수정 중 오류가 발생했습니다.' };
   }
-
-  // 소유권 검증
-  const existing = await db.query.comments.findFirst({ where: eq(comments.id, commentId) });
-  if (!existing || existing.authorId !== user.id) throw new Error('댓글 수정 권한이 없습니다.');
-
-  await db.update(comments)
-    .set({ content: content.trim() })
-    .where(and(eq(comments.id, commentId), eq(comments.authorId, user.id)));
-
-  revalidatePath(`/board`);
 }
 
 // --- 좋아요 (Likes) ---
 
-export async function toggleLike(postId: number) {
-  const user = await getAuthUser();
+export async function toggleLike(postId: number): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  const existing = await db.query.likes.findFirst({
-    where: and(eq(likes.postId, postId), eq(likes.userId, user.id))
-  });
+    const existing = await db.query.likes.findFirst({
+      where: and(eq(likes.postId, postId), eq(likes.userId, user.id))
+    });
 
-  if (existing) {
-    await db.delete(likes).where(and(eq(likes.postId, postId), eq(likes.userId, user.id)));
-  } else {
-    await db.insert(likes).values({ postId, userId: user.id });
+    if (existing) {
+      await db.delete(likes).where(and(eq(likes.postId, postId), eq(likes.userId, user.id)));
+    } else {
+      await db.insert(likes).values({ postId, userId: user.id });
+    }
+
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '오류가 발생했습니다.' };
   }
-
-  revalidatePath(`/board`);
-  revalidatePath('/');
 }
 
-export async function toggleCommentLike(commentId: number) {
-  const user = await getAuthUser();
+export async function toggleCommentLike(commentId: number): Promise<ActionResult> {
+  try {
+    const user = await getAuthUser();
+    if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-  const existing = await db.query.commentLikes.findFirst({
-    where: and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, user.id))
-  });
+    const existing = await db.query.commentLikes.findFirst({
+      where: and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, user.id))
+    });
 
-  if (existing) {
-    await db.delete(commentLikes).where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, user.id)));
-  } else {
-    await db.insert(commentLikes).values({ commentId, userId: user.id });
+    if (existing) {
+      await db.delete(commentLikes).where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, user.id)));
+    } else {
+      await db.insert(commentLikes).values({ commentId, userId: user.id });
+    }
+
+    revalidatePath('/board');
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: '오류가 발생했습니다.' };
   }
-
-  revalidatePath(`/board`);
 }
 
-export async function getPostDetail(postId: number) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+// --- 게시글 조회 (Fetch) ---
 
-  const post = await db.query.posts.findFirst({
-    where: eq(posts.id, postId),
-  });
+export interface CommentWithDetails {
+  id: number;
+  postId: number;
+  authorId: string | null;
+  authorName: string;
+  author?: { avatarUrl: string | null } | null;
+  content: string;
+  createdAt: Date;
+  likeCount: number;
+  isLiked: boolean;
+}
 
-  if (!post) return null;
+export interface PostWithDetails {
+  id: number;
+  title: string;
+  content: string;
+  authorId: string | null;
+  authorName: string;
+  author?: { avatarUrl: string | null } | null;
+  createdAt: Date;
+  comments: CommentWithDetails[];
+  likeCount: number;
+  isLiked: boolean;
+  isAuthor: boolean;
+}
 
-  const postLikes = await db.select().from(likes).where(eq(likes.postId, postId));
-  const postComments = await db.query.comments.findMany({
-    where: eq(comments.postId, postId),
-    orderBy: [desc(comments.createdAt)],
-  });
+export async function getPaginatedPosts(offset: number = 0, limit: number = 10): Promise<PostWithDetails[]> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-  const commentsWithLikes = await Promise.all(postComments.map(async (comment) => {
-    const cLikes = await db.select().from(commentLikes).where(eq(commentLikes.commentId, comment.id));
-    return {
+    const data = await db.query.posts.findMany({
+      orderBy: [desc(posts.createdAt)],
+      limit,
+      offset,
+      with: {
+        author: {
+          columns: {
+            avatarUrl: true
+          }
+        },
+        likes: true,
+        comments: {
+          orderBy: [desc(comments.createdAt)],
+          with: {
+            author: {
+              columns: {
+                avatarUrl: true
+              }
+            },
+            likes: true
+          }
+        }
+      }
+    });
+
+    return data.map((post) => {
+      const commentsWithLikes = post.comments.map((comment) => ({
+        ...comment,
+        likeCount: comment.likes.length,
+        isLiked: user ? comment.likes.some(cl => cl.userId === user.id) : false
+      }));
+      
+      return {
+        ...post,
+        comments: commentsWithLikes,
+        likeCount: post.likes.length,
+        isLiked: user ? post.likes.some(l => l.userId === user.id) : false,
+        isAuthor: user?.id === post.authorId
+      };
+    });
+  } catch (error) {
+    console.error('[getPaginatedPosts] Error:', error);
+    return [];
+  }
+}
+
+export async function getPostDetail(postId: number): Promise<PostWithDetails | null> {
+  try {
+    const [supabase, post] = await Promise.all([
+      createClient(),
+      db.query.posts.findFirst({
+        where: eq(posts.id, postId),
+        with: {
+          author: {
+            columns: {
+              avatarUrl: true
+            }
+          },
+          likes: true,
+          comments: {
+            orderBy: [desc(comments.createdAt)],
+            with: {
+              author: {
+                columns: {
+                  avatarUrl: true
+                }
+              },
+              likes: true
+            }
+          }
+        }
+      })
+    ]);
+
+    if (!post) return null;
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const commentsWithLikes = post.comments.map((comment) => ({
       ...comment,
-      likeCount: cLikes.length,
-      isLiked: user ? cLikes.some(cl => cl.userId === user.id) : false,
-    };
-  }));
+      likeCount: comment.likes.length,
+      isLiked: user ? comment.likes.some(cl => cl.userId === user.id) : false,
+    }));
 
-  return {
-    ...post,
-    comments: commentsWithLikes,
-    likeCount: postLikes.length,
-    isLiked: user ? postLikes.some(l => l.userId === user.id) : false,
-    isAuthor: user?.id === post.authorId,
-  };
+    return {
+      ...post,
+      comments: commentsWithLikes,
+      likeCount: post.likes.length,
+      isLiked: user ? post.likes.some(l => l.userId === user.id) : false,
+      isAuthor: user?.id === post.authorId,
+    };
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
 }

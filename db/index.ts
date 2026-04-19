@@ -5,7 +5,7 @@ import * as schema from './schema';
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  console.warn("⚠️ DATABASE_URL 환경 변수가 설정되지 않았습니다. 로컬 DB 연결을 시도합니다.");
+  console.warn("[WARNING] DATABASE_URL 환경 변수가 설정되지 않았습니다. 로컬 DB 연결을 시도합니다.");
 }
 
 const url = connectionString || 'postgresql://postgres:password@localhost:5432/postgres';
@@ -18,9 +18,8 @@ const globalForDb = globalThis as unknown as {
 // Disable prefetch as it is not supported for "Transaction" pool mode in Supabase by default
 const client = globalForDb.postgresClient ?? postgres(url, { prepare: false });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForDb.postgresClient = client;
-}
+// 프로덕션 환경에서도 싱글톤 유지 (서버리스 환경이 아닐 경우 유효)
+globalForDb.postgresClient = client;
 
 export const db = drizzle(client, { schema });
 

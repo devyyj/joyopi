@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YOPI LAND (요피 랜드)
 
-## Getting Started
+Next.js 15와 Supabase를 활용한 초고속 반응형 커뮤니티 및 개인 개발 포털입니다.
 
-First, run the development server:
+## 🚀 주요 기능
+
+- **통합 대시보드**: 최신/인기 게시글 및 활발한 논의 실시간 집계 및 퀵 프리뷰.
+- **피드형 게시판**: 
+  - **무한 스크롤**: Native Intersection Observer를 이용한 끊김 없는 콘텐츠 로딩.
+  - **인라인 편집**: 페이지 이동 없는 즉각적인 CRUD 및 Optimistic UI 반영.
+  - **구조화된 레이아웃**: Identity Bar와 최적화된 정보 위계를 통한 높은 가독성.
+- **프로필 시스템**:
+  - **이미지 최적화**: 클라이언트 측 자동 리사이징(300x300 WebP) 후 업로드.
+  - **익명성 기반**: 소셜 로그인 연동 및 닉네임 중심의 활동.
+- **공통 UI 시스템**: 전역 다이얼로그(Alert/Confirm), 세련된 플로팅 액션 버튼(FAB), 재사용 가능한 아바타/닉네임 컴포넌트.
+
+## 🛠 기술 스택
+
+- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS
+- **Backend/Storage**: Supabase (Auth, Storage)
+- **Database**: PostgreSQL (Supabase) + Drizzle ORM
+- **Testing/Lint**: Vitest, ESLint
+
+## 📦 시작하기
 
 ```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 빌드 및 프로덕션 실행
+npm run build
+npm start
+
+# 코드 검증 (Lint, TSC, Test)
+npm run verify
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 관련 문서
+- [프로젝트 정의서 (docs/00_요피랜드.md)](./docs/00_요피랜드.md)
+- [엔지니어링 가이드 (GEMINI.md)](./GEMINI.md)

@@ -34,34 +34,35 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState<DialogType>('alert');
   const [options, setOptions] = useState<DialogOptions>({ message: '' });
-  const [resolvePromise, setResolvePromise] = useState<(value: boolean) => void>();
+  const [resolveFn, setResolveFn] = useState<((value: boolean) => void) | null>(null);
 
   const showAlert = useCallback((message: string, opts?: Omit<DialogOptions, 'message'>) => {
+    setOptions({ confirmText: '확인', ...opts, message });
     setType('alert');
-    setOptions({ message, ...opts });
     setIsOpen(true);
+    setResolveFn(null);
   }, []);
 
   const showConfirm = useCallback((message: string, opts?: Omit<DialogOptions, 'message'>) => {
+    setOptions({ confirmText: '확인', cancelText: '취소', ...opts, message });
     setType('confirm');
-    setOptions({ message, ...opts });
     setIsOpen(true);
     return new Promise<boolean>((resolve) => {
-      setResolvePromise(() => resolve);
+      setResolveFn(() => resolve);
     });
   }, []);
 
   const handleConfirm = useCallback(() => {
-    options.onConfirm?.();
-    resolvePromise?.(true);
     setIsOpen(false);
-  }, [options, resolvePromise]);
+    options.onConfirm?.();
+    if (resolveFn) resolveFn(true);
+  }, [options, resolveFn]);
 
   const handleCancel = useCallback(() => {
-    options.onCancel?.();
-    resolvePromise?.(false);
     setIsOpen(false);
-  }, [options, resolvePromise]);
+    options.onCancel?.();
+    if (resolveFn) resolveFn(false);
+  }, [options, resolveFn]);
 
   return (
     <DialogContext.Provider value={{ alert: showAlert, confirm: showConfirm }}>
@@ -73,7 +74,7 @@ export const DialogProvider = ({ children }: { children: React.ReactNode }) => {
         title={options.title || (type === 'alert' ? '알림' : '확인')}
         message={options.message}
         confirmText={options.confirmText}
-        cancelText={type === 'alert' ? undefined : options.cancelText}
+        cancelText={type === 'confirm' ? (options.cancelText || '취소') : undefined}
         variant={options.variant}
       />
     </DialogContext.Provider>

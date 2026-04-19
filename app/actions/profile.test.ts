@@ -60,18 +60,32 @@ describe('Profile Actions', () => {
 
   it('should update profile nickname and bio', async () => {
     const formData = new FormData();
-    formData.append('nickname', 'new-nickname');
+    formData.append('nickname', 'new-nick');
     formData.append('bio', 'new-bio');
 
-    await updateProfile(formData);
+    const result = await updateProfile(formData);
     expect(db.update).toHaveBeenCalled();
+    expect(result.success).toBe(true);
   });
 
-  it('should throw error if nickname is missing', async () => {
+  it('should fail if nickname is too long', async () => {
     const formData = new FormData();
-    formData.append('bio', 'new-bio');
+    formData.append('nickname', 'a'.repeat(11));
+    formData.append('bio', 'valid');
 
-    await expect(updateProfile(formData)).rejects.toThrow('닉네임을 입력해주세요.');
+    const result = await updateProfile(formData);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('최대 10자');
+  });
+
+  it('should fail if bio is too long', async () => {
+    const formData = new FormData();
+    formData.append('nickname', 'nick');
+    formData.append('bio', 'a'.repeat(101));
+
+    const result = await updateProfile(formData);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('최대 100자');
   });
 
   it('should delete account via edge function', async () => {

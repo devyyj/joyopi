@@ -10,7 +10,7 @@ export async function updateSession(request: NextRequest) {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('⚠️ Supabase 환경 변수 누락: 미들웨어 세션 업데이트를 건너뜁니다.')
+    console.warn('[WARNING] Supabase 환경 변수 누락: 미들웨어 세션 업데이트를 건너뜁니다.')
     return supabaseResponse
   }
 

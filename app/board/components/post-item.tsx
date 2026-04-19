@@ -1,39 +1,15 @@
 'use client';
 
 import { useState, useTransition, useOptimistic } from 'react';
-import { Card, Button, UserNickname } from '@/app/components/ui/core';
+import { Card, UserNickname, UserAvatar } from '@/app/components/ui/core';
 import LikeButton from './like-button';
 import CommentSection from './comment-section';
 import UserProfileModal from '@/app/components/user-profile-modal';
-import { deletePost, updatePost } from '@/app/actions/board';
+import { deletePost, updatePost, PostWithDetails } from '@/app/actions/board';
 import { useDialog } from '@/app/components/ui/dialog-provider';
 
-interface CommentWithLikes {
-  id: number;
-  postId: number;
-  authorId: string | null;
-  authorName: string;
-  content: string;
-  createdAt: Date;
-  likeCount: number;
-  isLiked: boolean;
-}
-
-interface PostItemData {
-  id: number;
-  title: string;
-  content: string;
-  authorId: string | null;
-  authorName: string;
-  createdAt: Date;
-  comments: CommentWithLikes[];
-  likeCount: number;
-  isLiked: boolean;
-  isAuthor: boolean;
-}
-
 interface PostItemProps {
-  item: PostItemData;
+  item: PostWithDetails;
   currentUserId?: string;
   currentUserName?: string;
 }
@@ -68,10 +44,9 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
 
     if (ok) {
       startTransition(async () => {
-        try {
-          await deletePost(item.id);
-        } catch (error) {
-          alert(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.');
+        const result = await deletePost(item.id);
+        if (!result.success) {
+          alert(result.message || '삭제 중 오류가 발생했습니다.');
         }
       });
     }
@@ -92,20 +67,18 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
     }
 
     startTransition(async () => {
-      // 1. UI 즉시 반영
+      // UI 즉시 반영
       setOptimisticPost({ title: trimmedTitle, content: trimmedContent });
       setIsEditing(false);
 
-      try {
-        // 2. 서버 데이터 업데이트
-        const formData = new FormData();
-        formData.append('title', trimmedTitle);
-        formData.append('content', trimmedContent);
-        await updatePost(item.id, formData);
-      } catch (error) {
-        // 3. 실패 시 원래 상태로 복구 및 알림
+      const formData = new FormData();
+      formData.append('title', trimmedTitle);
+      formData.append('content', trimmedContent);
+      const result = await updatePost(item.id, formData);
+      
+      if (!result.success) {
         setIsEditing(true); // 편집 모드 다시 활성화
-        alert(error instanceof Error ? error.message : '수정 중 오류가 발생했습니다.');
+        alert(result.message || '수정 중 오류가 발생했습니다.');
       }
     });
   };
@@ -116,102 +89,115 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
     setIsEditing(false);
   };
 
+  const formattedDate = new Date(item.createdAt).toLocaleDateString() + ' ' + 
+                       new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const handleUserClick = () => {
+    if (item.authorId) {
+      setSelectedUserId(item.authorId);
+    } else {
+      alert('탈퇴하거나 정보가 없는 사용자입니다.');
+    }
+  };
+
   return (
-    <article className="space-y-2">
+    <article className="space-y-1">
       <Card className="p-0 overflow-hidden shadow-sm border-border/60">
-        {/* Post Header */}
-        <header className="bg-secondary/30 px-4 py-2 border-b border-border/50 flex justify-between items-start">
-          <div className="space-y-1.5 flex-1 mr-4">
-            <div className="flex items-center gap-2 text-[11px] text-muted">
-              <UserNickname 
-                name={item.authorName}
-                size="lg"
-                onClick={() => {
-                  if (item.authorId) {
-                    setSelectedUserId(item.authorId);
-                  } else {
-                    alert('탈퇴하거나 정보가 없는 사용자입니다.');
-                  }
-                }}
-              />
-              <span>·</span>
-              <span suppressHydrationWarning>
-                {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            
-            {isEditing ? (
-              <div className="space-y-1">
-                <div className="flex justify-end">
-                  <span className={`text-[9px] ${editTitle.length > MAX_TITLE ? 'text-red-500 font-bold' : 'text-muted'}`}>
-                    제목: {editTitle.length} / {MAX_TITLE}
-                  </span>
-                </div>
-                <input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  maxLength={MAX_TITLE}
-                  className="w-full text-lg font-bold bg-background border border-primary/30 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                  autoFocus
-                />
-              </div>
-            ) : (
-              <h2 className="text-lg font-bold text-foreground leading-tight line-clamp-2">
-                {optimisticPost.title}
-              </h2>
-            )}
+        {/* 1. Identity Bar (Avatar + ID + Actions) */}
+        <div className="px-4 py-2 bg-secondary/40 border-b border-border/40 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <UserAvatar 
+              url={item.author?.avatarUrl} 
+              name={item.authorName} 
+              size="md" 
+              onClick={handleUserClick}
+            />
+            <UserNickname 
+              name={item.authorName}
+              size="md"
+              onClick={handleUserClick}
+              className="hover:text-primary transition-colors"
+            />
           </div>
 
-          <div className="flex gap-1">
+          {/* Actions */}
+          <div className="flex gap-1.5 shrink-0 items-center">
             {item.isAuthor && !isEditing && (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 px-2 text-[10px]"
-                  onClick={() => setIsEditing(true)}
+                <button 
+                  onClick={() => setIsEditing(true)} 
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-0.5"
                 >
                   수정
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleDelete}
-                  isLoading={isPending}
-                  className="text-red-500/70 hover:text-red-600 h-7 px-2 text-[10px]"
+                </button>
+                <button 
+                  onClick={handleDelete} 
+                  disabled={isPending}
+                  className="text-[10px] text-red-500/70 hover:text-red-600 transition-colors px-0.5 disabled:opacity-50"
                 >
                   삭제
-                </Button>
+                </button>
               </>
             )}
             {isEditing && (
               <>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
-                  className="h-7 px-2 text-[10px]"
-                  onClick={handleUpdate}
-                  isLoading={isPending}
-                  disabled={editTitle.length > MAX_TITLE || editContent.length > MAX_CONTENT}
+                <button 
+                  onClick={handleUpdate} 
+                  disabled={isPending}
+                  className="text-[10px] text-primary font-bold hover:opacity-80 transition-opacity px-0.5 disabled:opacity-50"
                 >
                   저장
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 px-2 text-[10px]"
-                  onClick={handleCancel}
+                </button>
+                <button 
+                  onClick={handleCancel} 
                   disabled={isPending}
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-0.5 disabled:opacity-50"
                 >
                   취소
-                </Button>
+                </button>
               </>
             )}
           </div>
+        </div>
+
+        {/* 2. Content Meta (Title) */}
+        <header className="px-4 py-4 bg-card">
+          {isEditing ? (
+            <div className="space-y-1">
+              <div className="flex justify-end">
+                <span className={`text-[9px] ${editTitle.length > MAX_TITLE ? 'text-red-500 font-bold' : 'text-muted'}`}>
+                  제목: {editTitle.length} / {MAX_TITLE}
+                </span>
+              </div>
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={MAX_TITLE}
+                className="w-full text-base sm:text-lg font-bold bg-background border border-primary/30 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                autoFocus
+              />
+            </div>
+          ) : (
+            <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight tracking-tight line-clamp-2">
+              {optimisticPost.title}
+            </h2>
+          )}
         </header>
 
         {/* Post Content */}
-        <div className="px-4 py-4 text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+        <div className="px-4 pb-5 pt-0 text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap border-b border-border/20">
+          {!isEditing && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 font-medium mb-3" suppressHydrationWarning>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              {formattedDate}
+            </div>
+          )}
+
           {isEditing ? (
             <div className="space-y-1">
               <div className="flex justify-end">
@@ -276,7 +262,7 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
         </div>
       )}
       
-      <div className="pt-4 border-b border-border/20 last:border-0" />
+      <div className="pt-2 border-b border-border/20 last:border-0" />
 
       {/* Modals */}
       <UserProfileModal 

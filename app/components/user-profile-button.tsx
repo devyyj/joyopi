@@ -11,8 +11,12 @@ const UserProfileButton = async () => {
       href="/profile" 
       className="text-xs font-medium text-muted hover:text-foreground transition-colors flex items-center gap-2"
     >
-      <div className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center text-[10px] text-primary">
-        {profile.nickname[0]}
+      <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-xs text-primary overflow-hidden border border-border/50">
+        {profile.avatarUrl ? (
+          <img src={profile.avatarUrl} alt={profile.nickname} className="w-full h-full object-cover" />
+        ) : (
+          profile.nickname[0]
+        )}
       </div>
       {profile.nickname}
     </Link>

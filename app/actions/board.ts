@@ -228,40 +228,128 @@ export async function toggleCommentLike(commentId: number): Promise<ActionResult
   }
 }
 
-export async function getPostDetail(postId: number) {
+// --- 게시글 조회 (Fetch) ---
+
+export interface CommentWithDetails {
+  id: number;
+  postId: number;
+  authorId: string | null;
+  authorName: string;
+  author?: { avatarUrl: string | null } | null;
+  content: string;
+  createdAt: Date;
+  likeCount: number;
+  isLiked: boolean;
+}
+
+export interface PostWithDetails {
+  id: number;
+  title: string;
+  content: string;
+  authorId: string | null;
+  authorName: string;
+  author?: { avatarUrl: string | null } | null;
+  createdAt: Date;
+  comments: CommentWithDetails[];
+  likeCount: number;
+  isLiked: boolean;
+  isAuthor: boolean;
+}
+
+export async function getPaginatedPosts(offset: number = 0, limit: number = 10): Promise<PostWithDetails[]> {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const post = await db.query.posts.findFirst({
-      where: eq(posts.id, postId),
+    const data = await db.query.posts.findMany({
+      orderBy: [desc(posts.createdAt)],
+      limit,
+      offset,
+      with: {
+        author: {
+          columns: {
+            avatarUrl: true
+          }
+        },
+        likes: true,
+        comments: {
+          orderBy: [desc(comments.createdAt)],
+          with: {
+            author: {
+              columns: {
+                avatarUrl: true
+              }
+            },
+            likes: true
+          }
+        }
+      }
     });
 
-    if (!post) return null;
+    return data.map((post) => {
+      const commentsWithLikes = post.comments.map((comment) => ({
+        ...comment,
+        likeCount: comment.likes.length,
+        isLiked: user ? comment.likes.some(cl => cl.userId === user.id) : false
+      }));
+      
+      return {
+        ...post,
+        comments: commentsWithLikes,
+        likeCount: post.likes.length,
+        isLiked: user ? post.likes.some(l => l.userId === user.id) : false,
+        isAuthor: user?.id === post.authorId
+      };
+    });
+  } catch (error) {
+    console.error('[getPaginatedPosts] Error:', error);
+    return [];
+  }
+}
 
-    // 쿼리 병렬 처리로 DB 왕복 횟수 감소
-    const [postLikes, postComments] = await Promise.all([
-      db.select().from(likes).where(eq(likes.postId, postId)),
-      db.query.comments.findMany({
-        where: eq(comments.postId, postId),
-        orderBy: [desc(comments.createdAt)],
+export async function getPostDetail(postId: number): Promise<PostWithDetails | null> {
+  try {
+    const [supabase, post] = await Promise.all([
+      createClient(),
+      db.query.posts.findFirst({
+        where: eq(posts.id, postId),
+        with: {
+          author: {
+            columns: {
+              avatarUrl: true
+            }
+          },
+          likes: true,
+          comments: {
+            orderBy: [desc(comments.createdAt)],
+            with: {
+              author: {
+                columns: {
+                  avatarUrl: true
+                }
+              },
+              likes: true
+            }
+          }
+        }
       })
     ]);
 
-    const commentsWithLikes = await Promise.all(postComments.map(async (comment) => {
-      const cLikes = await db.select().from(commentLikes).where(eq(commentLikes.commentId, comment.id));
-      return {
-        ...comment,
-        likeCount: cLikes.length,
-        isLiked: user ? cLikes.some(cl => cl.userId === user.id) : false,
-      };
+    if (!post) return null;
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const commentsWithLikes = post.comments.map((comment) => ({
+      ...comment,
+      likeCount: comment.likes.length,
+      isLiked: user ? comment.likes.some(cl => cl.userId === user.id) : false,
     }));
 
     return {
       ...post,
       comments: commentsWithLikes,
-      likeCount: postLikes.length,
-      isLiked: user ? postLikes.some(l => l.userId === user.id) : false,
+      likeCount: post.likes.length,
+      isLiked: user ? post.likes.some(l => l.userId === user.id) : false,
       isAuthor: user?.id === post.authorId,
     };
   } catch (error) {

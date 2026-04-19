@@ -1,34 +1,18 @@
 'use client';
 
-import { useState, useTransition, useOptimistic } from 'react';
-import { createComment, deleteComment, updateComment, toggleCommentLike } from '@/app/actions/board';
-import { Button, Card, UserNickname } from '@/app/components/ui/core';
+import { useState, useTransition } from 'react';
+import { createComment, deleteComment, updateComment, toggleCommentLike, CommentWithDetails } from '@/app/actions/board';
+import { Button, Card, UserNickname, UserAvatar } from '@/app/components/ui/core';
 import { useDialog } from '@/app/components/ui/dialog-provider';
-
-interface Comment {
-  id: number;
-  postId: number;
-  authorId: string | null;
-  authorName: string;
-  content: string;
-  createdAt: Date;
-  likeCount: number;
-  isLiked: boolean;
-}
 
 interface CommentSectionProps {
   postId: number;
-  comments: Comment[];
+  comments: CommentWithDetails[];
   currentUserId?: string;
   currentUserName?: string;
   onNicknameClick?: (userId: string) => void;
+  onSuccess?: () => void;
 }
-
-type OptimisticAction = 
-  | { type: 'ADD'; comment: Comment }
-  | { type: 'DELETE'; commentId: number }
-  | { type: 'UPDATE'; commentId: number; content: string }
-  | { type: 'TOGGLE_LIKE'; commentId: number };
 
 const MAX_COMMENT_LENGTH = 200;
 
@@ -36,8 +20,8 @@ export default function CommentSection({
   postId, 
   comments, 
   currentUserId, 
-  currentUserName = '익명',
-  onNicknameClick
+  onNicknameClick,
+  onSuccess
 }: CommentSectionProps) {
   const [content, setContent] = useState('');
   const [editingId, setEditId] = useState<number | null>(null);
@@ -45,25 +29,6 @@ export default function CommentSection({
   const [showComments, setShowComments] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { alert, confirm } = useDialog();
-
-  const [optimisticComments, dispatchOptimistic] = useOptimistic(
-    comments,
-    (state, action: OptimisticAction) => {
-      switch (action.type) {
-        case 'ADD': return [action.comment, ...state];
-        case 'DELETE': return state.filter(c => c.id !== action.commentId);
-        case 'UPDATE': return state.map(c => c.id === action.commentId ? { ...c, content: action.content } : c);
-        case 'TOGGLE_LIKE': return state.map(c => {
-          if (c.id === action.commentId) {
-            const newLiked = !c.isLiked;
-            return { ...c, isLiked: newLiked, likeCount: newLiked ? c.likeCount + 1 : c.likeCount - 1 };
-          }
-          return c;
-        });
-        default: return state;
-      }
-    }
-  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,25 +39,12 @@ export default function CommentSection({
       return;
     }
 
-    setContent('');
-
     startTransition(async () => {
-      dispatchOptimistic({
-        type: 'ADD',
-        comment: {
-          id: Math.random(),
-          postId,
-          authorId: currentUserId || null,
-          authorName: currentUserName,
-          content: trimmed,
-          createdAt: new Date(),
-          likeCount: 0,
-          isLiked: false
-        }
-      });
       const result = await createComment(postId, trimmed);
-      if (!result.success) {
-        setContent(trimmed);
+      if (result.success) {
+        setContent('');
+        onSuccess?.();
+      } else {
         alert(result.message || '댓글 작성 중 오류가 발생했습니다.');
       }
     });
@@ -102,9 +54,10 @@ export default function CommentSection({
     confirm('댓글을 삭제하시겠습니까?', { variant: 'danger' }).then(ok => {
       if (ok) {
         startTransition(async () => {
-          dispatchOptimistic({ type: 'DELETE', commentId });
           const result = await deleteComment(commentId);
-          if (!result.success) {
+          if (result.success) {
+            onSuccess?.();
+          } else {
             alert(result.message || '삭제 중 오류가 발생했습니다.');
           }
         });
@@ -121,10 +74,11 @@ export default function CommentSection({
     }
 
     startTransition(async () => {
-      dispatchOptimistic({ type: 'UPDATE', commentId, content: trimmed });
-      setEditId(null);
       const result = await updateComment(commentId, trimmed);
-      if (!result.success) {
+      if (result.success) {
+        setEditId(null);
+        onSuccess?.();
+      } else {
         alert(result.message || '수정 중 오류가 발생했습니다.');
       }
     });
@@ -132,9 +86,10 @@ export default function CommentSection({
 
   const handleToggleLike = (commentId: number) => {
     startTransition(async () => {
-      dispatchOptimistic({ type: 'TOGGLE_LIKE', commentId });
       const result = await toggleCommentLike(commentId);
-      if (!result.success) {
+      if (result.success) {
+        onSuccess?.();
+      } else {
         alert(result.message || '오류가 발생했습니다.');
       }
     });
@@ -150,7 +105,7 @@ export default function CommentSection({
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
-          답글 보기 {optimisticComments.length > 0 && <span>({optimisticComments.length})</span>}
+          답글 보기 {comments.length > 0 && <span>({comments.length})</span>}
         </button>
       </div>
     );
@@ -160,7 +115,7 @@ export default function CommentSection({
     <div className="mt-4 space-y-3">
       <div className="flex justify-between items-center border-b border-border pb-1">
         <h3 className="text-sm font-semibold">
-          답글 <span className="text-muted font-normal">{optimisticComments.length}</span>
+          답글 <span className="text-muted font-normal">{comments.length}</span>
         </h3>
         <button 
           onClick={() => setShowComments(false)}
@@ -170,26 +125,40 @@ export default function CommentSection({
         </button>
       </div>
 
-      <div className="space-y-2">
-        {optimisticComments.map((comment) => (
-          <div key={comment.id} className="flex gap-2">
-            <Card className="flex-1 p-2 px-3 border-border/60 bg-secondary/10 min-w-0">
-              <div className="flex justify-between items-center mb-1.5 gap-4">
+      <div className="space-y-4">
+        {comments.map((comment) => (
+          <div key={comment.id} className="flex gap-3">
+            <div className="mt-0.5">
+              <UserAvatar 
+                url={comment.author?.avatarUrl} 
+                name={comment.authorName} 
+                size="md" 
+                onClick={() => {
+                  if (comment.authorId) {
+                    onNicknameClick?.(comment.authorId);
+                  } else {
+                    alert('탈퇴하거나 정보가 없는 사용자입니다.');
+                  }
+                }}
+              />
+            </div>
+            <Card className={`flex-1 p-2 px-3 border-border/60 bg-secondary/5 min-w-0 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
+              <div className="flex justify-between items-center mb-1 gap-4">
                 <div className="flex items-center gap-2 overflow-hidden">
-                  <div className="shrink-0">
-                    <UserNickname 
-                      name={comment.authorName}
-                      size="md"
-                      onClick={() => {
-                        if (comment.authorId) {
-                          onNicknameClick?.(comment.authorId);
-                        } else {
-                          alert('탈퇴하거나 정보가 없는 사용자입니다.');
-                        }
-                      }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-muted shrink-0" suppressHydrationWarning>
+                  <UserNickname 
+                    name={comment.authorName}
+                    size="sm"
+                    onClick={() => {
+                      if (comment.authorId) {
+                        onNicknameClick?.(comment.authorId);
+                      } else {
+                        alert('탈퇴하거나 정보가 없는 사용자입니다.');
+                      }
+                    }}
+                    className="text-muted-foreground/80 hover:text-primary transition-colors font-semibold"
+                  />
+                  <span className="text-muted/30 text-[9px]">|</span>
+                  <span className="text-[9px] text-muted-foreground/50 shrink-0 font-medium" suppressHydrationWarning>
                     {new Date(comment.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                   </span>
                 </div>
@@ -225,10 +194,10 @@ export default function CommentSection({
                         if (e.key === 'Escape') setEditId(null);
                       }}
                       maxLength={MAX_COMMENT_LENGTH}
-                      className="w-full px-2 py-1 bg-background border border-border rounded text-[13px] focus:outline-none focus:ring-1 focus:ring-primary pr-12"
+                      className="w-full px-2 py-1 bg-background border border-border rounded text-[12px] focus:outline-none focus:ring-1 focus:ring-primary pr-12"
                       autoFocus
                     />
-                    <span className={`absolute right-2 top-1.5 text-[10px] font-medium ${editContent.length > MAX_COMMENT_LENGTH ? 'text-red-500' : 'text-muted'}`}>
+                    <span className={`absolute right-2 top-1.5 text-[9px] font-medium ${editContent.length > MAX_COMMENT_LENGTH ? 'text-red-500' : 'text-muted'}`}>
                       {editContent.length}/{MAX_COMMENT_LENGTH}
                     </span>
                   </div>
@@ -236,7 +205,7 @@ export default function CommentSection({
                     <button onClick={() => setEditId(null)} className="text-[10px] text-muted-foreground">취소</button>
                     <button 
                       onClick={() => handleUpdate(comment.id)} 
-                      disabled={!editContent.trim() || editContent.length > MAX_COMMENT_LENGTH}
+                      disabled={!editContent.trim() || editContent.length > MAX_COMMENT_LENGTH || isPending}
                       className="text-[10px] text-primary font-bold disabled:opacity-50"
                     >
                       저장
@@ -245,12 +214,13 @@ export default function CommentSection({
                 </div>
               ) : (
                 <div className="flex items-start justify-between gap-4 overflow-hidden">
-                  <div className="text-[13px] leading-snug break-words flex-1">
+                  <div className="text-[12px] leading-relaxed break-words flex-1 text-foreground/90">
                     {comment.content}
                   </div>
                   <div className="shrink-0 mt-0.5">
                     <button 
                       onClick={() => handleToggleLike(comment.id)}
+                      disabled={isPending}
                       className={`flex items-center gap-1 text-[10px] transition-colors ${
                         comment.isLiked ? 'text-red-500' : 'text-muted-foreground hover:text-red-400'
                       }`}

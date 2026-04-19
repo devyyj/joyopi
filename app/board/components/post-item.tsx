@@ -1,39 +1,15 @@
 'use client';
 
 import { useState, useTransition, useOptimistic } from 'react';
-import { Card, Button, UserNickname } from '@/app/components/ui/core';
+import { Card, UserNickname, UserAvatar } from '@/app/components/ui/core';
 import LikeButton from './like-button';
 import CommentSection from './comment-section';
 import UserProfileModal from '@/app/components/user-profile-modal';
-import { deletePost, updatePost } from '@/app/actions/board';
+import { deletePost, updatePost, PostWithDetails } from '@/app/actions/board';
 import { useDialog } from '@/app/components/ui/dialog-provider';
 
-interface CommentWithLikes {
-  id: number;
-  postId: number;
-  authorId: string | null;
-  authorName: string;
-  content: string;
-  createdAt: Date;
-  likeCount: number;
-  isLiked: boolean;
-}
-
-interface PostItemData {
-  id: number;
-  title: string;
-  content: string;
-  authorId: string | null;
-  authorName: string;
-  createdAt: Date;
-  comments: CommentWithLikes[];
-  likeCount: number;
-  isLiked: boolean;
-  isAuthor: boolean;
-}
-
 interface PostItemProps {
-  item: PostItemData;
+  item: PostWithDetails;
   currentUserId?: string;
   currentUserName?: string;
 }
@@ -116,102 +92,112 @@ export default function PostItem({ item, currentUserId, currentUserName }: PostI
   const formattedDate = new Date(item.createdAt).toLocaleDateString() + ' ' + 
                        new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  const handleUserClick = () => {
+    if (item.authorId) {
+      setSelectedUserId(item.authorId);
+    } else {
+      alert('탈퇴하거나 정보가 없는 사용자입니다.');
+    }
+  };
+
   return (
     <article className="space-y-1">
       <Card className="p-0 overflow-hidden shadow-sm border-border/60">
-        {/* Post Header */}
-        <header className="bg-secondary/30 border-b border-border/50">
-          <div className="px-4 py-2 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-            <div className="flex-1 space-y-0.5 min-w-0">
-              {/* User Info Row */}
-              <div className="flex items-center justify-between sm:justify-start gap-2">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <UserNickname 
-                    name={item.authorName}
-                    size="md"
-                    onClick={() => {
-                      if (item.authorId) {
-                        setSelectedUserId(item.authorId);
-                      } else {
-                        alert('탈퇴하거나 정보가 없는 사용자입니다.');
-                      }
-                    }}
-                  />
-                  {/* Desktop Date */}
-                  <span className="hidden sm:inline text-muted text-[11px]">·</span>
-                  <span className="hidden sm:inline text-[10px] text-muted-foreground/70 whitespace-nowrap" suppressHydrationWarning>
-                    {formattedDate}
-                  </span>
-                </div>
-
-                {/* Actions for Mobile */}
-                <div className="flex sm:hidden gap-1 shrink-0">
-                  {item.isAuthor && !isEditing && (
-                    <>
-                      <button onClick={() => setIsEditing(true)} className="text-[10px] text-muted-foreground hover:text-foreground px-1">수정</button>
-                      <button onClick={handleDelete} className="text-[10px] text-red-500/70 hover:text-red-600 px-1">삭제</button>
-                    </>
-                  )}
-                  {isEditing && (
-                    <>
-                      <button onClick={handleUpdate} className="text-[10px] text-primary font-bold px-1">저장</button>
-                      <button onClick={handleCancel} className="text-[10px] text-muted-foreground px-1">취소</button>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* Title & Mobile Date Row */}
-              <div className="space-y-0.5">
-                {isEditing ? (
-                  <div className="space-y-1">
-                    <div className="flex justify-end">
-                      <span className={`text-[9px] ${editTitle.length > MAX_TITLE ? 'text-red-500 font-bold' : 'text-muted'}`}>
-                        제목: {editTitle.length} / {MAX_TITLE}
-                      </span>
-                    </div>
-                    <input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      maxLength={MAX_TITLE}
-                      className="w-full text-base sm:text-lg font-bold bg-background border border-primary/30 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                      autoFocus
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <h2 className="text-base sm:text-lg font-bold text-foreground leading-tight line-clamp-2">
-                      {optimisticPost.title}
-                    </h2>
-                    {/* Mobile Date */}
-                    <div className="sm:hidden text-[10px] text-muted-foreground/60 font-medium" suppressHydrationWarning>
-                      {formattedDate}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Actions for Desktop */}
-            <div className="hidden sm:flex gap-1 shrink-0">
-              {item.isAuthor && !isEditing && (
-                <>
-                  <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => setIsEditing(true)}>수정</Button>
-                  <Button variant="ghost" size="sm" onClick={handleDelete} isLoading={isPending} className="text-red-500/70 hover:text-red-600 h-7 px-2 text-[10px]">삭제</Button>
-                </>
-              )}
-              {isEditing && (
-                <>
-                  <Button variant="primary" size="sm" className="h-7 px-2 text-[10px]" onClick={handleUpdate} isLoading={isPending}>저장</Button>
-                  <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={handleCancel} disabled={isPending}>취소</Button>
-                </>
-              )}
-            </div>
+        {/* 1. Identity Bar (Avatar + ID + Actions) */}
+        <div className="px-4 py-2 bg-secondary/40 border-b border-border/40 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <UserAvatar 
+              url={item.author?.avatarUrl} 
+              name={item.authorName} 
+              size="md" 
+              onClick={handleUserClick}
+            />
+            <UserNickname 
+              name={item.authorName}
+              size="md"
+              onClick={handleUserClick}
+              className="hover:text-primary transition-colors"
+            />
           </div>
+
+          {/* Actions */}
+          <div className="flex gap-1.5 shrink-0 items-center">
+            {item.isAuthor && !isEditing && (
+              <>
+                <button 
+                  onClick={() => setIsEditing(true)} 
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-0.5"
+                >
+                  수정
+                </button>
+                <button 
+                  onClick={handleDelete} 
+                  disabled={isPending}
+                  className="text-[10px] text-red-500/70 hover:text-red-600 transition-colors px-0.5 disabled:opacity-50"
+                >
+                  삭제
+                </button>
+              </>
+            )}
+            {isEditing && (
+              <>
+                <button 
+                  onClick={handleUpdate} 
+                  disabled={isPending}
+                  className="text-[10px] text-primary font-bold hover:opacity-80 transition-opacity px-0.5 disabled:opacity-50"
+                >
+                  저장
+                </button>
+                <button 
+                  onClick={handleCancel} 
+                  disabled={isPending}
+                  className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-0.5 disabled:opacity-50"
+                >
+                  취소
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Content Meta (Title) */}
+        <header className="px-4 py-4 bg-card">
+          {isEditing ? (
+            <div className="space-y-1">
+              <div className="flex justify-end">
+                <span className={`text-[9px] ${editTitle.length > MAX_TITLE ? 'text-red-500 font-bold' : 'text-muted'}`}>
+                  제목: {editTitle.length} / {MAX_TITLE}
+                </span>
+              </div>
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={MAX_TITLE}
+                className="w-full text-base sm:text-lg font-bold bg-background border border-primary/30 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                autoFocus
+              />
+            </div>
+          ) : (
+            <h2 className="text-lg sm:text-xl font-bold text-foreground leading-tight tracking-tight line-clamp-2">
+              {optimisticPost.title}
+            </h2>
+          )}
         </header>
 
         {/* Post Content */}
-        <div className="px-4 py-4 text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+        <div className="px-4 pb-5 pt-0 text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap border-b border-border/20">
+          {!isEditing && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 font-medium mb-3" suppressHydrationWarning>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              {formattedDate}
+            </div>
+          )}
+
           {isEditing ? (
             <div className="space-y-1">
               <div className="flex justify-end">

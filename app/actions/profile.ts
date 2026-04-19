@@ -33,15 +33,45 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
 
     const nickname = (formData.get('nickname') as string)?.trim()
     const bio = (formData.get('bio') as string)?.trim()
+    const avatarFile = formData.get('avatar') as File | null
 
     if (!nickname) return { success: false, message: '닉네임을 입력해주세요.' };
     if (nickname.length > 10) return { success: false, message: '닉네임은 최대 10자까지 가능합니다.' };
-    if (bio && bio.length > 100) return { success: false, message: '자기소개는 최대 100자까지 가능합니다.' };
+    if (bio && bio.length > 100) return { success: false, message: '한줄 자기소개는 최대 100자까지 가능합니다.' };
+    if (bio && (bio.includes('\n') || bio.includes('\r'))) {
+      return { success: false, message: '한줄 자기소개는 줄바꿈 없이 한 줄로만 작성 가능합니다.' };
+    }
+
+    let avatarUrl: string | undefined = undefined
+
+    if (avatarFile && avatarFile.size > 0) {
+      const fileExt = 'webp'
+      const filePath = `${user.id}/avatar.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, avatarFile, {
+          upsert: true,
+          contentType: 'image/webp'
+        })
+
+      if (uploadError) {
+        console.error('Avatar upload error:', uploadError)
+        return { success: false, message: '프로필 이미지 업로드 중 오류가 발생했습니다.' }
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+      
+      avatarUrl = `${publicUrl}?t=${Date.now()}` // 캐시 방지
+    }
 
     await db.update(profiles)
       .set({ 
         nickname, 
         bio,
+        ...(avatarUrl ? { avatarUrl } : {}),
         updatedAt: new Date()
       })
       .where(eq(profiles.id, user.id))
@@ -64,6 +94,7 @@ export async function getPublicProfile(userId: string) {
       columns: {
         nickname: true,
         bio: true,
+        avatarUrl: true,
         createdAt: true,
       }
     })

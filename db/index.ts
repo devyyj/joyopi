@@ -5,7 +5,7 @@ import * as schema from './schema';
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  console.warn("⚠️ DATABASE_URL 환경 변수가 설정되지 않았습니다. 로컬 DB 연결을 시도합니다.");
+  console.warn("[WARNING] DATABASE_URL 환경 변수가 설정되지 않았습니다. 로컬 DB 연결을 시도합니다.");
 }
 
 const url = connectionString || 'postgresql://postgres:password@localhost:5432/postgres';

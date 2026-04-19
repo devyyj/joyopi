@@ -162,6 +162,53 @@ export const ConfirmModal = ({
   );
 };
 
+export const UserAvatar = ({ 
+  url, 
+  name, 
+  size = "md", 
+  onClick,
+  className = ""
+}: { 
+  url?: string | null; 
+  name: string; 
+  size?: "sm" | "md" | "lg" | "xl";
+  onClick?: () => void;
+  className?: string;
+}) => {
+  const sizeClasses = {
+    sm: "w-6 h-6 text-[10px]", // 24px
+    md: "w-8 h-8 text-xs",     // 32px
+    lg: "w-10 h-10 text-sm",    // 40px
+    xl: "w-20 h-20 text-2xl"    // 80px
+  };
+
+  const content = (
+    <div className={`
+      ${sizeClasses[size]} rounded-full overflow-hidden shrink-0 border border-border/50 shadow-sm
+      ${!url ? 'bg-primary/10 text-primary flex items-center justify-center font-bold' : ''}
+      ${className}
+    `}>
+      {url ? (
+        <img src={url} alt={name} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-primary/5">
+          {name[0]}
+        </div>
+      )}
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }} className="hover:opacity-80 transition-opacity cursor-pointer block">
+        {content}
+      </button>
+    );
+  }
+
+  return content;
+};
+
 export const UserNickname = ({ 
   name, 
   onClick, 
@@ -174,24 +221,24 @@ export const UserNickname = ({
   size?: "sm" | "md" | "lg";
 }) => {
   const sizeClasses = {
-    sm: "text-[9px] px-1 py-0.5",
-    md: "text-[10px] px-1.5 py-0.5",
-    lg: "text-[11px] px-2 py-0.5"
+    sm: "text-[12px]", // 11px -> 12px
+    md: "text-[14px]", // 13px -> 14px
+    lg: "text-base"
   };
 
   return (
     <button 
-      onClick={onClick}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
       className={`
-        inline-flex items-center gap-1 font-bold rounded-full transition-all duration-200
-        bg-secondary/50 text-foreground border border-border/50
-        hover:bg-primary/10 hover:border-primary/30 hover:text-primary hover:shadow-sm
-        active:scale-95 cursor-pointer group
+        font-bold text-foreground hover:text-primary transition-colors cursor-pointer
         ${sizeClasses[size]}
         ${className}
       `}
     >
-      <div className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
       {name}
     </button>
   );

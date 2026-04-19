@@ -7,6 +7,7 @@ import { Modal, Card } from './ui/core';
 interface PublicProfile {
   nickname: string;
   bio: string | null;
+  avatarUrl: string | null;
   createdAt: Date;
 }
 
@@ -59,23 +60,30 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
         </div>
       ) : profile ? (
         <div className="space-y-4 py-2">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20">
-              {profile.nickname.substring(0, 1)}
+          <div className="flex items-center gap-5">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary border border-primary/20 overflow-hidden shadow-sm">
+              {profile.avatarUrl ? (
+                <img src={profile.avatarUrl} alt={profile.nickname} className="w-full h-full object-cover" />
+              ) : (
+                profile.nickname.substring(0, 1)
+              )}
             </div>
             <div>
-              <h4 className="text-base font-bold text-foreground">{profile.nickname}</h4>
+              <h4 className="text-xl font-bold text-foreground">{profile.nickname}</h4>
               <p className="text-[10px] text-muted-foreground">
                 가입일: <span suppressHydrationWarning>{new Date(profile.createdAt).toLocaleDateString()}</span>
               </p>
             </div>
           </div>
           
-          <Card className="p-3 bg-secondary/10 border-border/40">
-            <p className="text-xs leading-relaxed text-foreground/80 whitespace-pre-wrap">
-              {profile.bio || "등록된 자기소개가 없습니다."}
-            </p>
-          </Card>
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-wider ml-1">한줄 자기소개</span>
+            <Card className="p-3 bg-secondary/10 border-border/40">
+              <p className="text-xs leading-relaxed text-foreground/80 break-words">
+                {profile.bio || "등록된 한줄 자기소개가 없습니다."}
+              </p>
+            </Card>
+          </div>
         </div>
       ) : (
         <div className="py-6 text-center text-red-500 text-xs">

@@ -10,26 +10,80 @@ interface ProfileFormProps {
   initialData: {
     nickname: string;
     bio: string | null;
+    avatarUrl: string | null;
   };
 }
 
 const MAX_NICKNAME = 10;
 const MAX_BIO = 100;
+const AVATAR_SIZE = 300;
 
 export default function ProfileForm({ initialData }: ProfileFormProps) {
   const { alert, confirm } = useDialog();
   const [nickname, setNickname] = useState(initialData.nickname);
   const [bio, setBio] = useState(initialData.bio || '');
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(initialData.avatarUrl);
+  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
 
   const [state, action, isPending] = useActionState(async (_prevState: ActionResult | null, formData: FormData) => {
+    if (avatarBlob) {
+      formData.set('avatar', avatarBlob, 'avatar.webp');
+    }
     const result = await updateProfile(formData);
     if (result.success) {
       alert('프로필이 성공적으로 저장되었습니다.');
+      setAvatarBlob(null);
     }
     return result;
   }, { success: false });
 
   const [isDeleting, startDeleteTransition] = useTransition();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > AVATAR_SIZE) {
+            height *= AVATAR_SIZE / width;
+            width = AVATAR_SIZE;
+          }
+        } else {
+          if (height > AVATAR_SIZE) {
+            width *= AVATAR_SIZE / height;
+            height = AVATAR_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            setAvatarBlob(blob);
+            setAvatarPreview(URL.createObjectURL(blob));
+          }
+        }, 'image/webp', 0.8);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleDeleteAccount = async () => {
     const ok = await confirm('정말로 회원 탈퇴를 하시겠습니까?\n작성하신 게시글과 댓글은 유지되나 작성자 정보는 삭제(익명화)되어 더 이상 수정이나 삭제가 불가능합니다.', {
@@ -50,6 +104,38 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
   return (
     <div className="space-y-8">
       <form action={action} className="space-y-6">
+        <div className="flex flex-col items-center space-y-4 pb-4">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-secondary border-2 border-border group-hover:border-primary transition-colors shadow-sm">
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="프로필" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted">
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <label 
+              htmlFor="avatar" 
+              className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity text-xs font-medium"
+            >
+              변경
+            </label>
+            <input
+              id="avatar"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </div>
+          <p className="text-[10px] text-muted text-center">
+            이미지는 300x300 크기로 자동 조정되어 저장됩니다.
+          </p>
+        </div>
+
         <div className="space-y-2">
           <div className="flex justify-between items-end">
             <label htmlFor="nickname" className="text-sm font-medium">
@@ -74,21 +160,24 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
         <div className="space-y-2">
           <div className="flex justify-between items-end">
             <label htmlFor="bio" className="text-sm font-medium">
-              자기소개
+              한줄 자기소개
             </label>
             <span className={`text-[10px] ${bio.length > MAX_BIO ? 'text-red-500 font-bold' : 'text-muted'}`}>
               {bio.length} / {MAX_BIO}
             </span>
           </div>
-          <textarea
+          <input
             id="bio"
             name="bio"
+            type="text"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             maxLength={MAX_BIO}
-            rows={4}
-            className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+            className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
             placeholder="자신을 한 줄로 소개해보세요."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault(); // 엔터 키 입력 방지 (폼 제출 방지는 아님)
+            }}
           />
         </div>
 

@@ -17,6 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'YOPI LAND',
   description: '개발자 요피의 실험실이자 다양한 서비스 놀이터',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico', // 나중에 전용 apple-touch-icon.png 추가 가능
+  },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({

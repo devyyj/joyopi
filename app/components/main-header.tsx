@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
 import { signInWithGoogle } from '@/app/actions/auth';
 import { Button } from './ui/core';
@@ -13,9 +14,19 @@ const MainHeader = async () => {
     <header className="sticky top-0 z-50 w-full bg-secondary border-b border-border">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-sm font-semibold tracking-tight hover:text-primary transition-colors flex items-center gap-2">
-            <span className="w-6 h-6 bg-foreground rounded-full" />
-            <span className="hidden sm:inline">YOPI LAND</span>
+          <Link href="/" className="group flex items-center gap-2">
+            <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/40 shadow-sm transition-transform group-hover:scale-105 active:scale-95">
+              <Image 
+                src="/apple-touch-icon.png" 
+                alt="YOPI LAND Logo" 
+                fill 
+                className="object-cover"
+                priority
+              />
+            </div>
+            <span className="text-sm font-bold tracking-tight text-foreground group-hover:text-primary transition-colors hidden sm:inline">
+              YOPI LAND
+            </span>
           </Link>
           <nav className="flex items-center gap-4 ml-2">
             <Link href="/board" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">

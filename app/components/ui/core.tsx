@@ -79,3 +79,120 @@ export const Card = ({ children, className = "" }: { children: React.ReactNode, 
     {children}
   </div>
 );
+
+export const Modal = ({ isOpen, onClose, children, title }: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  children: React.ReactNode;
+  title?: string;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <div 
+        className="fixed inset-0" 
+        onClick={onClose} 
+      />
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border rounded-lg shadow-xl animate-in fade-in zoom-in duration-200">
+        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border px-4 py-3 flex justify-between items-center">
+          <h3 className="text-sm font-bold truncate">{title}</h3>
+          <button 
+            onClick={onClose}
+            className="p-1 hover:bg-secondary rounded-md text-muted-foreground transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div className="p-4">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ConfirmModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  message,
+  confirmText = "확인",
+  cancelText,
+  variant = "primary"
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onConfirm: () => void; 
+  title: string; 
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: "primary" | "danger";
+}) => {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={title}>
+      <div className="space-y-6 py-2">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {message}
+        </p>
+        <div className="flex justify-end gap-2">
+          {cancelText && (
+            <Button variant="outline" size="sm" onClick={onClose}>
+              {cancelText}
+            </Button>
+          )}
+          <Button 
+            variant={variant === "danger" ? "primary" : "primary"} // 현재 primary가 가장 강조됨
+            className={variant === "danger" ? "bg-red-600 border-red-600 hover:bg-red-700 text-white" : ""}
+            size="sm" 
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+          >
+            {confirmText}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+export const UserNickname = ({ 
+  name, 
+  onClick, 
+  className = "", 
+  size = "md" 
+}: { 
+  name: string; 
+  onClick: () => void; 
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}) => {
+  const sizeClasses = {
+    sm: "text-[11px] px-1.5 py-0.5",
+    md: "text-xs px-2 py-0.5",
+    lg: "text-sm px-2.5 py-1"
+  };
+
+  return (
+    <button 
+      onClick={onClick}
+      className={`
+        inline-flex items-center gap-1.5 font-bold rounded-full transition-all duration-200
+        bg-secondary/50 text-foreground border border-border/50
+        hover:bg-primary/10 hover:border-primary/30 hover:text-primary hover:shadow-sm
+        active:scale-95 cursor-pointer group
+        ${sizeClasses[size]}
+        ${className}
+      `}
+    >
+      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+      {name}
+    </button>
+  );
+};

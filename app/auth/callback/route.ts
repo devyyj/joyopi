@@ -31,8 +31,14 @@ export async function GET(request: Request) {
       if (!existingProfile) {
         await db.insert(profiles).values({
           id: user.id,
+          email: user.email!,
           nickname: generateRandomNickname(),
         })
+      } else if (existingProfile.email !== user.email) {
+        // 이메일이 변경된 경우 업데이트 (보안 및 데이터 정합성)
+        await db.update(profiles)
+          .set({ email: user.email! })
+          .where(eq(profiles.id, user.id))
       }
 
       return NextResponse.redirect(`${origin}${next}`)

@@ -33,6 +33,10 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
         try {
           await deleteAccount();
         } catch (error) {
+          // NEXT_REDIRECT 에러는 정상적인 흐름이므로 무시합니다.
+          if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+            return;
+          }
           alert(error instanceof Error ? error.message : '알 수 없는 에러가 발생했습니다.');
         }
       });

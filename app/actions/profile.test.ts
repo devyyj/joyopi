@@ -33,10 +33,6 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }));
 
-vi.mock('@/utils/supabase/admin', () => ({
-  createAdminClient: vi.fn(),
-}));
-
 global.fetch = vi.fn().mockResolvedValue({ ok: true });
 
 describe('Profile Actions', () => {
@@ -78,35 +74,26 @@ describe('Profile Actions', () => {
     await expect(updateProfile(formData)).rejects.toThrow('닉네임을 입력해주세요.');
   });
 
-  it('should delete account and revoke google token', async () => {
+  it('should delete account via edge function', async () => {
     const { deleteAccount } = await import('./profile');
-    const { createAdminClient } = await import('@/utils/supabase/admin');
     
-    (createAdminClient as Mock).mockResolvedValue({
+    // Supabase client의 functions.invoke 모킹
+    const mockInvoke = vi.fn().mockResolvedValue({ data: { message: 'success' }, error: null });
+    (createClient as Mock).mockResolvedValue({
       auth: {
-        admin: {
-          deleteUser: vi.fn().mockResolvedValue({ error: null }),
-        },
+        getUser: vi.fn().mockResolvedValue({ data: { user: mockUser } }),
+        getSession: vi.fn().mockResolvedValue({ data: { session: mockSession } }),
+        signOut: vi.fn().mockResolvedValue({}),
+      },
+      functions: {
+        invoke: mockInvoke,
       },
     });
 
     await deleteAccount();
 
-    expect(createAdminClient).toHaveBeenCalled();
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('oauth2.googleapis.com/revoke'),
-      expect.any(Object)
-    );
-    expect(db.delete).toHaveBeenCalled();
-  });
-
-  it('should throw error early if admin client cannot be created', async () => {
-    const { deleteAccount } = await import('./profile');
-    const { createAdminClient } = await import('@/utils/supabase/admin');
-    
-    (createAdminClient as Mock).mockRejectedValue(new Error('Config missing'));
-
-    await expect(deleteAccount()).rejects.toThrow('서버 설정 오류로 회원 탈퇴를 완료할 수 없습니다.');
-    expect(db.delete).not.toHaveBeenCalled();
+    expect(mockInvoke).toHaveBeenCalledWith('withdraw-user', {
+      body: { googleToken: 'google-token-123' }
+    });
   });
 });

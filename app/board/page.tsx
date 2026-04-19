@@ -60,7 +60,7 @@ export default async function BoardPage() {
         </Link>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {feedItems.length > 0 ? (
           feedItems.map((item) => (
             <PostItem 

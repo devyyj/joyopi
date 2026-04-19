@@ -105,7 +105,7 @@ export default function CommentSection({
         startTransition(async () => {
           dispatchOptimistic({ type: 'DELETE', commentId });
           try {
-            await deleteComment(commentId, postId);
+            await deleteComment(commentId);
           } catch (error) {
             alert(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.');
           }
@@ -177,25 +177,27 @@ export default function CommentSection({
       <div className="space-y-2">
         {optimisticComments.map((comment) => (
           <div key={comment.id} className="flex gap-2">
-            <Card className="flex-1 p-2 px-3 border-border/60 bg-secondary/10">
-              <div className="flex justify-between items-center mb-1.5">
-                <div className="flex items-center gap-2">
-                  <UserNickname 
-                    name={comment.authorName}
-                    size="md"
-                    onClick={() => {
-                      if (comment.authorId) {
-                        onNicknameClick?.(comment.authorId);
-                      } else {
-                        alert('탈퇴하거나 정보가 없는 사용자입니다.');
-                      }
-                    }}
-                  />
-                  <span className="text-[10px] text-muted" suppressHydrationWarning>
+            <Card className="flex-1 p-2 px-3 border-border/60 bg-secondary/10 min-w-0">
+              <div className="flex justify-between items-center mb-1.5 gap-4">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <div className="shrink-0">
+                    <UserNickname 
+                      name={comment.authorName}
+                      size="md"
+                      onClick={() => {
+                        if (comment.authorId) {
+                          onNicknameClick?.(comment.authorId);
+                        } else {
+                          alert('탈퇴하거나 정보가 없는 사용자입니다.');
+                        }
+                      }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted shrink-0" suppressHydrationWarning>
                     {new Date(comment.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {currentUserId && comment.authorId === currentUserId && editingId !== comment.id && (
                     <div className="flex gap-1.5">
                       <button 
@@ -246,9 +248,11 @@ export default function CommentSection({
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="text-[13px] leading-snug truncate">{comment.content}</div>
-                  <div className="mt-1.5 flex items-center gap-3">
+                <div className="flex items-start justify-between gap-4 overflow-hidden">
+                  <div className="text-[13px] leading-snug break-words flex-1">
+                    {comment.content}
+                  </div>
+                  <div className="shrink-0 mt-0.5">
                     <button 
                       onClick={() => handleToggleLike(comment.id)}
                       className={`flex items-center gap-1 text-[10px] transition-colors ${
@@ -261,7 +265,7 @@ export default function CommentSection({
                       {comment.likeCount > 0 && <span>{comment.likeCount}</span>}
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </Card>
           </div>

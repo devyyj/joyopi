@@ -15,10 +15,10 @@ const MainHeader = async () => {
         <div className="flex items-center gap-4">
           <Link href="/" className="text-sm font-semibold tracking-tight hover:text-primary transition-colors flex items-center gap-2">
             <span className="w-6 h-6 bg-foreground rounded-full" />
-            YOPI LAND
+            <span className="hidden sm:inline">YOPI LAND</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/board" className="text-sm font-medium text-muted hover:text-foreground">
+          <nav className="flex items-center gap-4 ml-2">
+            <Link href="/board" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
               게시판
             </Link>
           </nav>

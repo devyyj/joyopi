@@ -174,16 +174,16 @@ export const UserNickname = ({
   size?: "sm" | "md" | "lg";
 }) => {
   const sizeClasses = {
-    sm: "text-[11px] px-1.5 py-0.5",
-    md: "text-xs px-2 py-0.5",
-    lg: "text-sm px-2.5 py-1"
+    sm: "text-[9px] px-1 py-0.5",
+    md: "text-[10px] px-1.5 py-0.5",
+    lg: "text-[11px] px-2 py-0.5"
   };
 
   return (
     <button 
       onClick={onClick}
       className={`
-        inline-flex items-center gap-1.5 font-bold rounded-full transition-all duration-200
+        inline-flex items-center gap-1 font-bold rounded-full transition-all duration-200
         bg-secondary/50 text-foreground border border-border/50
         hover:bg-primary/10 hover:border-primary/30 hover:text-primary hover:shadow-sm
         active:scale-95 cursor-pointer group
@@ -191,7 +191,7 @@ export const UserNickname = ({
         ${className}
       `}
     >
-      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+      <div className="w-1 h-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
       {name}
     </button>
   );

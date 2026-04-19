@@ -105,7 +105,7 @@ export async function createComment(postId: number, content: string) {
   return newComment;
 }
 
-export async function deleteComment(commentId: number, _postId: number) {
+export async function deleteComment(commentId: number) {
   const user = await getAuthUser();
 
   // 소유권 검증

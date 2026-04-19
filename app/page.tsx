@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { posts, likes, comments, profiles } from '@/db/schema';
 import { desc, eq, sql, gt } from 'drizzle-orm';
 import Link from 'next/link';
-import { SectionHeader } from '@/app/components/ui/core';
+import { SectionHeader, Button } from '@/app/components/ui/core';
 import DashboardList from '@/app/components/dashboard-list';
 import { createClient } from '@/utils/supabase/server';
 
@@ -96,13 +96,21 @@ export default async function Home() {
         />
       </div>
 
+      <div className="mt-12 flex justify-center">
+        <Link href="/board">
+          <Button variant="outline" className="px-8 py-2 rounded-full text-xs font-bold gap-2">
+            전체 피드 둘러보기
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </Button>
+        </Link>
+      </div>
+
       <div className="mt-20 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-muted-foreground">
         <p className="text-[10px]">
           &copy; {new Date().getFullYear()} <strong>YOPI LAND</strong>. Built with Next.js 15.
         </p>
-        <Link href="/board" className="text-[11px] font-bold hover:text-primary transition-colors">
-          전체 피드 보기 &rarr;
-        </Link>
       </div>
     </div>
   );

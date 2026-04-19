@@ -12,7 +12,7 @@ interface ProfileFormProps {
   };
 }
 
-const MAX_NICKNAME = 20;
+const MAX_NICKNAME = 10;
 const MAX_BIO = 100;
 
 export default function ProfileForm({ initialData }: ProfileFormProps) {

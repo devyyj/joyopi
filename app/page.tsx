@@ -1,86 +1,75 @@
 import Link from 'next/link';
-import type { Metadata } from 'next';
-import { SectionHeader } from '@/app/components/ui/core';
-
-export const metadata: Metadata = {
-  title: 'YOPI LAND',
-  description: '개발자 요피의 실험실이자 다양한 서비스 놀이터',
-};
+import { SectionHeader, Card, Button } from '@/app/components/ui/core';
 
 const FEATURES = [
   {
     href: '/board',
     title: '자유게시판',
     label: 'Community',
-    description: '구글 로그인으로 자유롭게 소통하는 공간입니다.',
-    emoji: '✨',
+    description: '구글 로그인을 통해 자유롭게 소통하는 공간입니다.',
+    emoji: '💬',
   },
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background selection:bg-indigo-50">
-      <div className="w-full max-w-5xl px-8 py-24">
-        
-        {/* 서비스 헤더 */}
+    <div className="max-w-7xl mx-auto px-4 py-12 md:py-24">
+      {/* Hero Section */}
+      <div className="mb-16">
         <SectionHeader 
-          label="Playground"
-          title="YOPI LAND"
-          description="아이디어가 서비스가 되는 요피의 실험실입니다. 가볍고 즐겁게 둘러보세요."
-          className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-1000"
+          title="Welcome to YOPI LAND"
+          description="최신 기술을 탐구하고 서비스를 빌드하는 개인 개발 실험실입니다. 각 모듈은 독립적으로 작동하며 점진적으로 확장됩니다."
+          label="Lab Home"
         />
+      </div>
 
-        {/* 기능 카드 목록 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {FEATURES.map((f) => (
-            <Link
-              key={f.href}
-              href={f.href}
-              className="group relative block p-8 bg-card border border-slate-200 rounded-2xl shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300 transition-all duration-300"
-            >
-              <div className="flex justify-between items-start mb-10">
-                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-xl group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
-                  {f.emoji}
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300 group-hover:text-indigo-400 transition-colors">
-                  {f.label}
-                </span>
-              </div>
-              
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+      {/* Repository-like Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {FEATURES.map((f) => (
+          <Link key={f.href} href={f.href} className="group">
+            <Card className="h-full p-6 transition-all hover:border-primary/50 flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">{f.emoji}</span>
+                <h2 className="text-lg font-semibold text-primary group-hover:underline">
                   {f.title}
                 </h2>
-                <p className="text-sm text-slate-400 font-medium leading-relaxed">
-                  {f.description}
-                </p>
+                <span className="ml-auto text-[10px] font-medium border border-border px-1.5 py-0.5 rounded-full text-muted">
+                  공개
+                </span>
               </div>
-
-              <div className="mt-8 flex items-center gap-2 text-xs font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                <span>자세히 보기</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+              <p className="text-sm text-muted mb-6 flex-1">
+                {f.description}
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-indigo-500" />
+                  TypeScript
+                </div>
+                <div>오늘 업데이트됨</div>
               </div>
-            </Link>
-          ))}
-        </div>
+            </Card>
+          </Link>
+        ))}
 
-        {/* 푸터 안내 */}
-        <footer className="mt-32 border-t border-slate-50 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-            joyopi.com &copy; 2026
-          </p>
-          <div className="flex gap-8">
-            <a href="#" className="text-xs font-bold text-slate-300 hover:text-indigo-500 uppercase tracking-widest transition-colors">
-              About
-            </a>
-            <a href="#" className="text-xs font-bold text-slate-300 hover:text-indigo-500 uppercase tracking-widest transition-colors">
-              Contact
-            </a>
-          </div>
-        </footer>
+        {/* Placeholder Card */}
+        <Card className="p-6 border-dashed flex flex-col items-center justify-center text-center bg-transparent opacity-60">
+          <p className="text-sm font-medium text-muted mb-2">새로운 실험이 곧 시작됩니다</p>
+          <Button variant="outline" size="sm" disabled>
+            기능 제안하기
+          </Button>
+        </Card>
       </div>
-    </main>
+
+      {/* Footer */}
+      <footer className="mt-24 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted">
+        <div className="flex items-center gap-4">
+          <span className="font-semibold text-foreground">YOPI LAND</span>
+          <span>© 2026 joyopi.com</span>
+        </div>
+        <div className="flex gap-6">
+          <Link href="#" className="hover:text-primary">About</Link>
+        </div>
+      </footer>
+    </div>
   );
 }

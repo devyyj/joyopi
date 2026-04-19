@@ -15,18 +15,28 @@ export async function createPost(formData: FormData) {
     throw new Error('로그인이 필요합니다.')
   }
 
-  const title = formData.get('title') as string
-  const content = formData.get('content') as string
+  const title = (formData.get('title') as string)?.trim()
+  const content = (formData.get('content') as string)?.trim()
 
   if (!title || !content) {
     throw new Error('제목과 내용을 입력해주세요.')
   }
 
+  const { db } = await import('@/db')
+  const { profiles } = await import('@/db/schema')
+  const { eq } = await import('drizzle-orm')
+
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, user.id)
+  })
+
+  const authorName = profile?.nickname || '익명'
+
   await db.insert(posts).values({
     title,
     content,
     authorId: user.id,
-    authorName: user.user_metadata?.full_name || user.user_metadata?.name || '익명',
+    authorName,
   })
 
   revalidatePath('/board')
@@ -41,8 +51,8 @@ export async function updatePost(id: number, formData: FormData) {
     throw new Error('로그인이 필요합니다.')
   }
 
-  const title = formData.get('title') as string
-  const content = formData.get('content') as string
+  const title = (formData.get('title') as string)?.trim()
+  const content = (formData.get('content') as string)?.trim()
 
   if (!title || !content) {
     throw new Error('제목과 내용을 입력해주세요.')

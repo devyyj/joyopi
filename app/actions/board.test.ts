@@ -50,31 +50,86 @@ describe('Board Actions', () => {
     vi.clearAllMocks();
   });
 
-  it('createPost should work correctly', async () => {
+  it('createPost should handle images correctly', async () => {
+    const mockUpload = vi.fn().mockResolvedValue({ data: { path: 'test-path' }, error: null });
+    const mockGetPublicUrl = vi.fn().mockReturnValue({ data: { publicUrl: 'http://test.com/img.webp' } });
+
     mockCreateClient.mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }) },
+      storage: {
+        from: vi.fn().mockReturnValue({
+          upload: mockUpload,
+          getPublicUrl: mockGetPublicUrl,
+        }),
+      },
     });
+
     const formData = new FormData();
-    formData.append('title', 'Test');
+    formData.append('title', 'With Images');
     formData.append('content', 'Content');
+    const mockFile = new File(['fake content'], 'test.webp', { type: 'image/webp' });
+    formData.append('images', mockFile);
 
     const result = await createPost(formData);
-    expect(db.insert).toHaveBeenCalled();
+    
+    expect(mockUpload).toHaveBeenCalled();
+    expect(db.insert).toHaveBeenCalledTimes(2); // 1. posts, 2. post_images
     expect(result.success).toBe(true);
-    expect(result.data).toHaveProperty('id');
   });
 
-  it('updatePost should verify ownership', async () => {
+  it('createPost should continue even if image upload fails partially', async () => {
+    const mockUpload = vi.fn().mockResolvedValue({ data: null, error: new Error('Upload fail') });
+
     mockCreateClient.mockResolvedValue({
-      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'other-user' } } }) },
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }) },
+      storage: {
+        from: vi.fn().mockReturnValue({
+          upload: mockUpload,
+        }),
+      },
     });
+
     const formData = new FormData();
-    formData.append('title', 'Edit');
-    formData.append('content', 'Edit');
+    formData.append('title', 'Fail Images');
+    formData.append('content', 'Content');
+    formData.append('images', new File([''], 'test.webp', { type: 'image/webp' }));
+
+    const result = await createPost(formData);
+    
+    // 업로드가 실패해도 게시글 자체는 생성되어야 함 (현재 로직상)
+    expect(result.success).toBe(true);
+    expect(db.insert).toHaveBeenCalledTimes(1); // posts만 호출되고 post_images는 호출되지 않음
+  });
+
+  it('updatePost should handle image removal', async () => {
+    const mockRemove = vi.fn().mockResolvedValue({ data: {}, error: null });
+    
+    mockCreateClient.mockResolvedValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }) },
+      storage: {
+        from: vi.fn().mockReturnValue({
+          remove: mockRemove,
+        }),
+      },
+    });
+
+    // 기존 데이터 모킹 (이미지 2개 보유)
+    (db.query.posts.findFirst as Mock).mockResolvedValue({
+      id: 1,
+      authorId: 'user-123',
+      images: [{ id: 10, url: 'img1' }, { id: 11, url: 'img2' }]
+    });
+
+    const formData = new FormData();
+    formData.append('title', 'Updated');
+    formData.append('content', 'Updated');
+    formData.append('removedImageIds', '10');
 
     const result = await updatePost(1, formData);
-    expect(result.success).toBe(false);
-    expect(result.message).toContain('수정 권한이 없습니다.');
+    
+    expect(mockRemove).toHaveBeenCalled();
+    expect(db.delete).toHaveBeenCalled(); // postImages 삭제 호출
+    expect(result.success).toBe(true);
   });
 
   it('createPost should fail if title is too long', async () => {

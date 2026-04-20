@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { getPublicProfile } from '@/app/actions/profile';
 import { Modal, Card } from './ui/core';
 
@@ -61,9 +62,15 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
       ) : profile ? (
         <div className="space-y-4 py-2">
           <div className="flex items-center gap-5">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary border border-primary/20 overflow-hidden shadow-sm">
+            <div className="relative w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary border border-primary/20 overflow-hidden shadow-sm">
               {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt={profile.nickname} className="w-full h-full object-cover" />
+                <Image 
+                  src={profile.avatarUrl} 
+                  alt={profile.nickname} 
+                  fill
+                  className="object-cover" 
+                  sizes="80px"
+                />
               ) : (
                 profile.nickname.substring(0, 1)
               )}

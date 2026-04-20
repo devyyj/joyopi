@@ -28,6 +28,13 @@ export const posts = pgTable('posts', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const postImages = pgTable('post_images', {
+  id: serial('id').primaryKey(),
+  postId: integer('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const postsRelations = relations(posts, ({ one, many }) => ({
   author: one(profiles, {
     fields: [posts.authorId],
@@ -35,6 +42,14 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   }),
   comments: many(comments),
   likes: many(likes),
+  images: many(postImages),
+}));
+
+export const postImagesRelations = relations(postImages, ({ one }) => ({
+  post: one(posts, {
+    fields: [postImages.postId],
+    references: [posts.id],
+  }),
 }));
 
 export const comments = pgTable('comments', {

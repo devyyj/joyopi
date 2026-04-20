@@ -34,18 +34,14 @@ export default function CommentSection({
     e.preventDefault();
     const trimmed = content.trim();
     if (!trimmed) return;
-    if (trimmed.length > MAX_COMMENT_LENGTH) {
-      alert(`답글은 최대 ${MAX_COMMENT_LENGTH}자까지 작성 가능합니다.`);
-      return;
-    }
-
+    
     startTransition(async () => {
       const result = await createComment(postId, trimmed);
-      if (result.success) {
+      if (!result.success) {
+        alert(result.message || '댓글 작성 중 오류가 발생했습니다.');
+      } else {
         setContent('');
         onSuccess?.();
-      } else {
-        alert(result.message || '댓글 작성 중 오류가 발생했습니다.');
       }
     });
   };
@@ -55,10 +51,10 @@ export default function CommentSection({
       if (ok) {
         startTransition(async () => {
           const result = await deleteComment(commentId);
-          if (result.success) {
-            onSuccess?.();
-          } else {
+          if (!result.success) {
             alert(result.message || '삭제 중 오류가 발생했습니다.');
+          } else {
+            onSuccess?.();
           }
         });
       }
@@ -68,18 +64,14 @@ export default function CommentSection({
   const handleUpdate = (commentId: number) => {
     const trimmed = editContent.trim();
     if (!trimmed) return;
-    if (trimmed.length > MAX_COMMENT_LENGTH) {
-      alert(`답글은 최대 ${MAX_COMMENT_LENGTH}자까지 작성 가능합니다.`);
-      return;
-    }
 
     startTransition(async () => {
       const result = await updateComment(commentId, trimmed);
-      if (result.success) {
+      if (!result.success) {
+        alert(result.message || '수정 중 오류가 발생했습니다.');
+      } else {
         setEditId(null);
         onSuccess?.();
-      } else {
-        alert(result.message || '수정 중 오류가 발생했습니다.');
       }
     });
   };
@@ -87,10 +79,10 @@ export default function CommentSection({
   const handleToggleLike = (commentId: number) => {
     startTransition(async () => {
       const result = await toggleCommentLike(commentId);
-      if (result.success) {
-        onSuccess?.();
-      } else {
+      if (!result.success) {
         alert(result.message || '오류가 발생했습니다.');
+      } else {
+        onSuccess?.();
       }
     });
   };
@@ -133,13 +125,7 @@ export default function CommentSection({
                 url={comment.author?.avatarUrl} 
                 name={comment.authorName} 
                 size="md" 
-                onClick={() => {
-                  if (comment.authorId) {
-                    onNicknameClick?.(comment.authorId);
-                  } else {
-                    alert('탈퇴하거나 정보가 없는 사용자입니다.');
-                  }
-                }}
+                onClick={() => comment.authorId && onNicknameClick?.(comment.authorId)}
               />
             </div>
             <Card className={`flex-1 p-2 px-3 border-border/60 bg-secondary/5 min-w-0 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
@@ -148,13 +134,7 @@ export default function CommentSection({
                   <UserNickname 
                     name={comment.authorName}
                     size="sm"
-                    onClick={() => {
-                      if (comment.authorId) {
-                        onNicknameClick?.(comment.authorId);
-                      } else {
-                        alert('탈퇴하거나 정보가 없는 사용자입니다.');
-                      }
-                    }}
+                    onClick={() => comment.authorId && onNicknameClick?.(comment.authorId)}
                     className="text-muted-foreground/80 hover:text-primary transition-colors font-semibold"
                   />
                   <span className="text-muted/30 text-[9px]">|</span>
@@ -197,15 +177,11 @@ export default function CommentSection({
                       className="w-full px-2 py-1 bg-background border border-border rounded text-[12px] focus:outline-none focus:ring-1 focus:ring-primary pr-12"
                       autoFocus
                     />
-                    <span className={`absolute right-2 top-1.5 text-[9px] font-medium ${editContent.length > MAX_COMMENT_LENGTH ? 'text-red-500' : 'text-muted'}`}>
-                      {editContent.length}/{MAX_COMMENT_LENGTH}
-                    </span>
                   </div>
                   <div className="flex justify-end gap-1.5">
                     <button onClick={() => setEditId(null)} className="text-[10px] text-muted-foreground">취소</button>
                     <button 
                       onClick={() => handleUpdate(comment.id)} 
-                      disabled={!editContent.trim() || editContent.length > MAX_COMMENT_LENGTH || isPending}
                       className="text-[10px] text-primary font-bold disabled:opacity-50"
                     >
                       저장
@@ -250,11 +226,6 @@ export default function CommentSection({
               className="w-full px-3 py-2 bg-secondary/20 border border-border rounded-md text-[13px] focus:outline-none focus:ring-1 focus:ring-primary pr-16"
               disabled={isPending}
             />
-            <div className="absolute right-3 top-2.5 flex items-center gap-2">
-              <span className={`text-[10px] font-medium ${content.length > MAX_COMMENT_LENGTH ? 'text-red-500' : 'text-muted'}`}>
-                {content.length}/{MAX_COMMENT_LENGTH}
-              </span>
-            </div>
           </div>
           <div className="flex justify-end">
             <Button 

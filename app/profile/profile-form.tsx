@@ -2,6 +2,7 @@
 
 import { updateProfile, deleteAccount } from '@/app/actions/profile';
 import { Button } from '@/app/components/ui/core';
+import NextImage from 'next/image';
 import { useActionState, useTransition, useState } from 'react';
 import { useDialog } from '@/app/components/ui/dialog-provider';
 import { ActionResult } from '@/app/actions/board';
@@ -106,9 +107,15 @@ export default function ProfileForm({ initialData }: ProfileFormProps) {
       <form action={action} className="space-y-6">
         <div className="flex flex-col items-center space-y-4 pb-4">
           <div className="relative group">
-            <div className="w-32 h-32 rounded-full overflow-hidden bg-secondary border-2 border-border group-hover:border-primary transition-colors shadow-sm">
+            <div className="relative w-32 h-32 rounded-full overflow-hidden bg-secondary border-2 border-border group-hover:border-primary transition-colors shadow-sm">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="프로필" className="w-full h-full object-cover" />
+                <NextImage 
+                  src={avatarPreview} 
+                  alt="프로필" 
+                  fill
+                  className="object-cover" 
+                  sizes="128px"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted">
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">

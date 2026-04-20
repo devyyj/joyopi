@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface SectionHeaderProps {
   label?: string;
@@ -175,6 +176,8 @@ export const UserAvatar = ({
   onClick?: () => void;
   className?: string;
 }) => {
+  const [hasError, setHasError] = React.useState(false);
+  
   const sizeClasses = {
     sm: "w-6 h-6 text-[10px]", // 24px
     md: "w-8 h-8 text-xs",     // 32px
@@ -182,16 +185,25 @@ export const UserAvatar = ({
     xl: "w-20 h-20 text-2xl"    // 80px
   };
 
+  const showFallback = !url || hasError;
+
   const content = (
     <div className={`
-      ${sizeClasses[size]} rounded-full overflow-hidden shrink-0 border border-border/50 shadow-sm
-      ${!url ? 'bg-primary/10 text-primary flex items-center justify-center font-bold' : ''}
+      relative ${sizeClasses[size]} rounded-full overflow-hidden shrink-0 border border-border/50 shadow-sm
+      ${showFallback ? 'bg-primary/10 text-primary flex items-center justify-center font-bold' : ''}
       ${className}
     `}>
-      {url ? (
-        <img src={url} alt={name} className="w-full h-full object-cover" />
+      {!showFallback ? (
+        <Image 
+          src={url!} 
+          alt={name} 
+          fill
+          className="object-cover" 
+          onError={() => setHasError(true)}
+          sizes="(max-width: 80px) 100vw, 80px"
+        />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-primary/5">
+        <div className="w-full h-full flex items-center justify-center bg-primary/5 uppercase">
           {name[0]}
         </div>
       )}

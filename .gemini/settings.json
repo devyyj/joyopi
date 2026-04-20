@@ -4,5 +4,53 @@
       "url": "https://mcp.supabase.com/mcp?project_ref=fzkqxnteepfgfgrgrnts",
       "type": "http"
     }
+  },
+  "hooks": {
+    "AfterTool": [
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "name": "after-edit",
+            "type": "command",
+            "command": "node ./.gemini/hooks/after-edit.js"
+          }
+        ]
+      },
+      {
+        "matcher": "replace",
+        "hooks": [
+          {
+            "name": "after-edit",
+            "type": "command",
+            "command": "node ./.gemini/hooks/after-edit.js"
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "name": "before-commit",
+            "type": "command",
+            "command": "node ./.gemini/hooks/before-commit.js"
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "inject-context",
+            "type": "command",
+            "command": "node ./.gemini/hooks/inject-context.js"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -15,7 +15,7 @@ export default function LikeButton({ postId, initialLiked, likeCount, onSuccess 
   const [isPending, startTransition] = useTransition();
   const { alert } = useDialog();
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     startTransition(async () => {
       const result = await toggleLike(postId);
       if (!result.success) {
@@ -48,7 +48,7 @@ export default function LikeButton({ postId, initialLiked, likeCount, onSuccess 
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
       </svg>
       {likeCount > 0 && <span className="text-xs font-medium">{likeCount}</span>}
-      {isPending && <span className="text-[10px] animate-pulse text-muted ml-1">...</span>}
+      {isPending && <span className="text-[10px] animate-pulse text-muted ml-1 italic">...</span>}
     </button>
   );
 }

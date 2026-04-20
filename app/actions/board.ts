@@ -2,9 +2,9 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { db } from '@/db';
-import { posts, comments, likes, profiles, commentLikes } from '@/db/schema';
+import { posts, comments, likes, profiles, commentLikes, postImages } from '@/db/schema';
 import { revalidatePath } from 'next/cache';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 
 // 공통 결과 타입
 export type ActionResult<T = unknown> = {
@@ -39,11 +39,13 @@ export async function createPost(formData: FormData): Promise<ActionResult<{ id:
 
     const title = (formData.get('title') as string)?.trim();
     const content = (formData.get('content') as string)?.trim();
+    const images = formData.getAll('images') as File[];
 
     if (!title || !content) return { success: false, message: '제목과 내용을 입력해주세요.' };
     if (title.length > 50) return { success: false, message: '제목은 최대 50자까지 가능합니다.' };
     if (content.length > 5000) return { success: false, message: '내용은 최대 5,000자까지 가능합니다.' };
 
+    // 1. 게시글 저장
     const [newPost] = await db.insert(posts).values({
       title,
       content,
@@ -51,7 +53,39 @@ export async function createPost(formData: FormData): Promise<ActionResult<{ id:
       authorName: profile.nickname,
     }).returning();
 
-    // /board 페이지만 갱신하여 응답 속도 향상
+    // 2. 이미지 업로드 및 DB 저장
+    if (images.length > 0) {
+      const supabase = await createClient();
+      const imageRecords: { postId: number; url: string }[] = [];
+
+      for (const file of images) {
+        if (file.size === 0) continue;
+        
+        const fileName = `${newPost.id}/${crypto.randomUUID()}.webp`;
+        const { data, error } = await supabase.storage
+          .from('post-images')
+          .upload(fileName, file, { contentType: 'image/webp' });
+
+        if (error) {
+          console.error('Image upload error:', error);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(data.path);
+
+        imageRecords.push({
+          postId: newPost.id,
+          url: publicUrl
+        });
+      }
+
+      if (imageRecords.length > 0) {
+        await db.insert(postImages).values(imageRecords);
+      }
+    }
+
     revalidatePath('/board');
     return { success: true, data: { id: newPost.id } };
   } catch (error) {
@@ -67,14 +101,63 @@ export async function updatePost(id: number, formData: FormData): Promise<Action
 
     const title = (formData.get('title') as string)?.trim();
     const content = (formData.get('content') as string)?.trim();
+    const newImages = formData.getAll('images') as File[];
+    const removedImageIds = formData.getAll('removedImageIds').map(id => parseInt(id as string));
 
     if (!title || !content) return { success: false, message: '제목과 내용을 입력해주세요.' };
     if (title.length > 50) return { success: false, message: '제목은 최대 50자까지 가능합니다.' };
     if (content.length > 5000) return { success: false, message: '내용은 최대 5,000자까지 가능합니다.' };
 
-    const existing = await db.query.posts.findFirst({ where: eq(posts.id, id) });
+    const existing = await db.query.posts.findFirst({ 
+      where: eq(posts.id, id),
+      with: { images: true }
+    });
     if (!existing || existing.authorId !== user.id) return { success: false, message: '수정 권한이 없습니다.' };
 
+    const supabase = await createClient();
+
+    // 1. 이미지 삭제 처리
+    if (removedImageIds.length > 0) {
+      const imagesToDelete = existing.images.filter(img => removedImageIds.includes(img.id));
+      
+      for (const img of imagesToDelete) {
+        const path = img.url.split('/').slice(-2).join('/'); // post-id/uuid.webp 형식 추출
+        await supabase.storage.from('post-images').remove([path]);
+      }
+
+      await db.delete(postImages).where(and(
+        eq(postImages.postId, id),
+        inArray(postImages.id, removedImageIds)
+      ));
+    }
+
+    // 2. 새 이미지 추가 처리
+    if (newImages.length > 0) {
+      const imageRecords: { postId: number; url: string }[] = [];
+
+      for (const file of newImages) {
+        if (file.size === 0) continue;
+        
+        const fileName = `${id}/${crypto.randomUUID()}.webp`;
+        const { data, error } = await supabase.storage
+          .from('post-images')
+          .upload(fileName, file, { contentType: 'image/webp' });
+
+        if (!error) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('post-images')
+            .getPublicUrl(data.path);
+
+          imageRecords.push({ postId: id, url: publicUrl });
+        }
+      }
+
+      if (imageRecords.length > 0) {
+        await db.insert(postImages).values(imageRecords);
+      }
+    }
+
+    // 3. 게시글 정보 업데이트
     await db.update(posts)
       .set({ title, content, updatedAt: new Date() })
       .where(and(eq(posts.id, id), eq(posts.authorId, user.id)));
@@ -92,9 +175,23 @@ export async function deletePost(id: number): Promise<ActionResult> {
     const user = await getAuthUser();
     if (!user) return { success: false, message: '로그인이 필요합니다.' };
 
-    const existing = await db.query.posts.findFirst({ where: eq(posts.id, id) });
+    const existing = await db.query.posts.findFirst({ 
+      where: eq(posts.id, id),
+      with: { images: true }
+    });
     if (!existing || existing.authorId !== user.id) return { success: false, message: '삭제 권한이 없습니다.' };
 
+    const supabase = await createClient();
+
+    // 1. 스토리지 파일 삭제
+    if (existing.images.length > 0) {
+      const paths = existing.images.map(img => img.url.split('/').slice(-2).join('/'));
+      await supabase.storage.from('post-images').remove(paths);
+      
+      // 폴더(게시글 ID 기반) 자체를 비우는 기능은 Supabase에서 명시적인 API가 없으므로 파일 단위 삭제 권장
+    }
+
+    // 2. DB 삭제 (CASCADE 설정으로 postImages도 자동 삭제됨)
     await db.delete(posts).where(and(eq(posts.id, id), eq(posts.authorId, user.id)));
     
     revalidatePath('/board');
@@ -129,7 +226,6 @@ export async function createComment(postId: number, content: string): Promise<Ac
       content: trimmedContent,
     });
 
-    // 특정 경로만 타겟팅하여 재검증 속도 향상
     revalidatePath('/board');
     return { success: true };
   } catch (error) {
@@ -242,6 +338,11 @@ export interface CommentWithDetails {
   isLiked: boolean;
 }
 
+export interface PostImage {
+  id: number;
+  url: string;
+}
+
 export interface PostWithDetails {
   id: number;
   title: string;
@@ -251,6 +352,7 @@ export interface PostWithDetails {
   author?: { avatarUrl: string | null } | null;
   createdAt: Date;
   comments: CommentWithDetails[];
+  images: PostImage[];
   likeCount: number;
   isLiked: boolean;
   isAuthor: boolean;
@@ -272,6 +374,7 @@ export async function getPaginatedPosts(offset: number = 0, limit: number = 10):
           }
         },
         likes: true,
+        images: true,
         comments: {
           orderBy: [desc(comments.createdAt)],
           with: {
@@ -296,6 +399,7 @@ export async function getPaginatedPosts(offset: number = 0, limit: number = 10):
       return {
         ...post,
         comments: commentsWithLikes,
+        images: post.images,
         likeCount: post.likes.length,
         isLiked: user ? post.likes.some(l => l.userId === user.id) : false,
         isAuthor: user?.id === post.authorId
@@ -303,7 +407,7 @@ export async function getPaginatedPosts(offset: number = 0, limit: number = 10):
     });
   } catch (error) {
     console.error('[getPaginatedPosts] Error:', error);
-    return [];
+    throw error; // 에러를 숨기지 않고 상위로 던짐
   }
 }
 
@@ -320,6 +424,7 @@ export async function getPostDetail(postId: number): Promise<PostWithDetails | n
             }
           },
           likes: true,
+          images: true,
           comments: {
             orderBy: [desc(comments.createdAt)],
             with: {
@@ -348,12 +453,13 @@ export async function getPostDetail(postId: number): Promise<PostWithDetails | n
     return {
       ...post,
       comments: commentsWithLikes,
+      images: post.images,
       likeCount: post.likes.length,
       isLiked: user ? post.likes.some(l => l.userId === user.id) : false,
       isAuthor: user?.id === post.authorId,
     };
   } catch (error) {
-    console.error(error);
-    return null;
+    console.error('[getPostDetail] Error:', error);
+    throw error;
   }
 }

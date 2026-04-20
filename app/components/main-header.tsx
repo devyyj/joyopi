@@ -22,6 +22,7 @@ const MainHeader = async () => {
                 fill 
                 className="object-cover"
                 priority
+                sizes="32px"
               />
             </div>
             <span className="text-sm font-bold tracking-tight text-foreground group-hover:text-primary transition-colors hidden sm:inline">

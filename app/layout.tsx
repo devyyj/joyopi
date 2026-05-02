@@ -22,8 +22,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'YOPI LAND',
-  description: '개발자 요피의 실험실이자 다양한 서비스 놀이터',
+  title: '조요피 연구소 (YOPI LAB)',
+  description: '개발자 조요피의 실험실이자 다양한 서비스 놀이터',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',

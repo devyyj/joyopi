@@ -1,4 +1,4 @@
-# YOPI LAND (요피 랜드)
+# 조요피 연구소 (YOPI LAB)
 
 Next.js 15와 Supabase를 활용한 초고속 반응형 커뮤니티 및 개인 개발 포털입니다.
 
@@ -39,5 +39,6 @@ npm run verify
 ```
 
 ## 📄 관련 문서
-- [프로젝트 정의서 (docs/00_요피랜드.md)](./docs/00_요피랜드.md)
+- [프로젝트 정의서 (docs/00_조요피연구소.md)](./docs/00_조요피연구소.md)
+- [자유게시판 상세 명세 (docs/01_자유게시판.md)](./docs/01_자유게시판.md)
 - [엔지니어링 가이드 (GEMINI.md)](./GEMINI.md)

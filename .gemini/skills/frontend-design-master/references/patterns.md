@@ -1,6 +1,6 @@
-# YOPI LAND UI Patterns (Tailwind CSS v4)
+# YOPI LAB UI Patterns (Tailwind CSS v4)
 
-이 문서는 "요피 랜드" 테마를 일관되게 구현하기 위한 코드 조각들을 제공합니다.
+이 문서는 "조요피 연구소" 테마를 일관되게 구현하기 위한 코드 조각들을 제공합니다.
 
 ## 1. Glassmorphism Card (글래스모피즘 카드)
 단순한 흰색 배경 대신, 배경이 미세하게 비치고 테두리에 그라데이션이 있는 카드를 지향합니다.

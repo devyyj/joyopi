@@ -18,7 +18,7 @@ const MainHeader = async () => {
             <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/40 shadow-sm transition-transform group-hover:scale-105 active:scale-95">
               <Image 
                 src="/apple-touch-icon.png" 
-                alt="YOPI LAND Logo" 
+                alt="조요피 연구소 Logo" 
                 fill 
                 className="object-cover"
                 priority
@@ -26,12 +26,15 @@ const MainHeader = async () => {
               />
             </div>
             <span className="text-sm font-bold tracking-tight text-foreground group-hover:text-primary transition-colors hidden sm:inline">
-              YOPI LAND
+              YOPI LAB
             </span>
           </Link>
           <nav className="flex items-center gap-4 ml-2">
             <Link href="/board" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
               게시판
+            </Link>
+            <Link href="/echo" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
+              에코
             </Link>
           </nav>
         </div>

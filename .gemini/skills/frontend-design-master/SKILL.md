@@ -1,11 +1,11 @@
 ---
 name: frontend-design-master
-description: 프론트엔드 디자인 및 UX 최적화 전문 스킬. 세련된 레이아웃, 감각적인 애니메이션, 일관된 디자인 시스템(YOPI LAND 테마)을 적용할 때 사용합니다.
+description: 프론트엔드 디자인 및 UX 최적화 전문 스킬. 세련된 레이아웃, 감각적인 애니메이션, 일관된 디자인 시스템(조요피 연구소 테마)을 적용할 때 사용합니다.
 ---
 
-# Frontend Design Master (YOPI LAND Edition)
+# Frontend Design Master (YOPI LAB Edition)
 
-이 스킬은 "요피 랜드"의 핵심 가치인 '놀이터(Playground)'와 '실험실'의 분위기를 UI로 구현하기 위한 지침입니다.
+이 스킬은 "조요피 연구소"의 핵심 가치인 '놀이터(Playground)'와 '실험실'의 분위기를 UI로 구현하기 위한 지침입니다.
 
 ## 1. 핵심 디자인 원칙
 - **Vibrancy**: 정적인 무채색보다는 생동감 있는 포인트 컬러(Indigo, Emerald, Violet)와 그라데이션을 사용합니다.

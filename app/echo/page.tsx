@@ -129,10 +129,14 @@ export default function EchoPage() {
 
   const handleSendEcho = useCallback(() => {
     if (role === 'sender') {
+      // 1. 낙관적 업데이트: 로컬 타이머를 즉시 연장
+      setRemainingTime((prev) => prev + 60);
+
+      // 2. 스피커에게 신호 전송
       channelRef.current?.send({
         type: 'broadcast',
         event: 'ECHO_REQUEST',
-        payload: { senderId: 'me' }, // 나중에 유저 정보로 대체 가능
+        payload: { senderId: 'me' },
       });
     }
   }, [role]);

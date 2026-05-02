@@ -63,27 +63,41 @@ export default function SpeakerPage() {
     }
   }, [isPlaying]);
 
+  const presenceId = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const saved = sessionStorage.getItem('echo-presence-id');
+    if (saved) return saved;
+    const id = crypto.randomUUID();
+    sessionStorage.setItem('echo-presence-id', id);
+    return id;
+  }, []);
+
   // 실시간 채널 설정
   useEffect(() => {
+    if (!presenceId) return;
+
     const channel = supabase.channel('echo-room', {
       config: {
         presence: {
-          key: 'speaker',
+          key: presenceId,
         },
       },
     });
 
-    interface PresenceState {
-      [key: string]: { role: string; joinedAt: string }[];
+    interface EchoPresence {
+      role: string;
+      joinedAt: string;
     }
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState() as unknown as PresenceState;
-        const users = Object.values(state).flat().length;
-        const speakers = state.speaker ? state.speaker.length : 0;
-        setConnectedUsers(users);
-        setSpeakerCount(speakers);
+        const state = channel.presenceState();
+        const userIds = Object.keys(state);
+        
+        setConnectedUsers(userIds.length);
+        setSpeakerCount(userIds.filter(id => 
+          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
+        ).length);
       })
       .on('broadcast', { event: 'ECHO_REQUEST' }, () => {
         setRemainingTime((prev) => prev + 60);
@@ -95,7 +109,10 @@ export default function SpeakerPage() {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel.track({ role: 'speaker', joinedAt: new Date().toISOString() });
+          await channel.track({ 
+            role: 'speaker', 
+            joinedAt: new Date().toISOString() 
+          });
         }
       });
 
@@ -114,7 +131,7 @@ export default function SpeakerPage() {
       window.removeEventListener('pagehide', handleLeave);
       handleLeave();
     };
-  }, [supabase]);
+  }, [supabase, presenceId]);
 
   const handleStopEcho = () => {
     channelRef.current?.send({

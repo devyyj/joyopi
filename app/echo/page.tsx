@@ -39,14 +39,17 @@ export default function EchoLandingPage() {
         const state = channel.presenceState();
         const userIds = Object.keys(state);
         
+        const speaker = userIds.filter(id => 
+          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
+        ).length;
+        const sender = userIds.filter(id => 
+          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
+        ).length;
+
         setCounts({
-          total: userIds.length,
-          speaker: userIds.filter(id => 
-            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
-          ).length,
-          sender: userIds.filter(id => 
-            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
-          ).length,
+          total: speaker + sender,
+          speaker,
+          sender,
         });
       })
       .subscribe(async (status) => {
@@ -69,7 +72,7 @@ export default function EchoLandingPage() {
         <h1 className="text-2xl font-bold mb-2">메아리에 참여하세요</h1>
         <p className="text-sm text-muted">
           현재 {counts.total}명이 접속 중입니다. 
-          {counts.speaker > 0 && ` (스피커: ${counts.speaker}명, 샌더: ${counts.sender}명)`}
+          {counts.total > 0 && ` (스피커: ${counts.speaker}명, 샌더: ${counts.sender}명)`}
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">

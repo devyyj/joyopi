@@ -15,6 +15,7 @@ export default function SpeakerPage() {
   const [speakerCount, setSpeakerCount] = useState<number>(0);
   const [senderCount, setSenderCount] = useState<number>(0);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   
   const connectedUsers = speakerCount + senderCount;
   
@@ -240,6 +241,46 @@ export default function SpeakerPage() {
   const handleManualExit = useCallback(() => {
     addLogToDb('사용자가 퇴장했습니다. (이유: 사용자 요청)', 'leave');
   }, [addLogToDb]);
+
+  const handleEnableAudio = useCallback(() => {
+    if (audioRef.current) {
+      // 브라우저 정책 대응: 사용자 인터랙션 시점에 무음 재생 시도로 오디오 컨텍스트 활성화
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          // 성공 시 즉시 일시정지 (실제 재생은 isPlaying 상태에 따라 제어됨)
+          audioRef.current?.pause();
+          setIsAudioEnabled(true);
+          addLogToDb('오디오 출력이 활성화되었습니다.', 'info');
+        }).catch(err => {
+          addLogToDb(`오디오 활성화 실패: ${err.message}`, 'error');
+        });
+      }
+    }
+  }, [addLogToDb]);
+
+  if (!isAudioEnabled) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] p-4 text-center">
+        <div className="max-w-md space-y-6">
+          <div className="text-4xl">📢</div>
+          <h2 className="text-2xl font-bold">오디오 출력을 활성화해주세요</h2>
+          <p className="text-muted-foreground">
+            브라우저 정책에 따라 메아리 소리를 들으려면 <br />
+            사용자의 직접적인 클릭이 한 번 필요합니다.
+          </p>
+          <Button size="lg" className="w-full h-16 text-lg font-bold" onClick={handleEnableAudio}>
+            오디오 시작하기
+          </Button>
+          <div className="pt-4">
+            <Link href="/echo">
+              <Button variant="ghost">돌아가기</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] p-4">

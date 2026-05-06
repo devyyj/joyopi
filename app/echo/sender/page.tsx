@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/app/components/ui/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { formatTime } from '../utils/echo-logic';
+import { formatTime } from '@/app/echo/utils/echo-logic';
 import { EchoLog, LogEntry } from '../components/echo-log';
 
 import { createEchoLog, getEchoLogs } from '@/app/actions/echo';

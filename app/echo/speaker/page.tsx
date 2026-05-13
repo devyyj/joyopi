@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/app/components/ui/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { formatTime } from '@/app/echo/utils/echo-logic';
+import { formatTime, mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
 import { EchoLog, LogEntry } from '../components/echo-log';
 
 import { createEchoLog, getEchoLogs } from '@/app/actions/echo';
@@ -45,6 +45,9 @@ export default function SpeakerPage() {
   }, []);
 
   const addLogToDb = useCallback(async (message: string, eventType: string, userId?: string, payload?: unknown) => {
+    const logId = crypto.randomUUID();
+    const timestamp = new Date();
+    
     // 1. DB 저장 (영속성)
     await createEchoLog({
       role: 'speaker',
@@ -54,18 +57,30 @@ export default function SpeakerPage() {
       payload
     });
 
-    // 2. 실시간 브로드캐스트 (즉각적인 UI 업데이트)
+    // 2. 실시간 브로드캐스트 (즉각적인 UI 업데이트 - 타인용)
     channelRef.current?.send({
       type: 'broadcast',
       event: 'LOG_EVENT',
       payload: {
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
+        id: logId,
+        timestamp: timestamp.toISOString(),
         message,
         eventType,
         userId: userId || presenceId,
       },
     });
+
+    // 3. 로컬 상태 업데이트 (즉각적인 UI 업데이트 - 본인용)
+    setLogs((prev) => [
+      ...prev,
+      {
+        id: logId,
+        timestamp,
+        message,
+        type: mapEventTypeToLogType(eventType),
+        userId: userId || presenceId,
+      } as LogEntry
+    ].slice(-100));
   }, [presenceId]);
 
   // 사운드 초기화 및 클린업
@@ -170,6 +185,11 @@ export default function SpeakerPage() {
           // 본인의 퇴장(HMR 등으로 인한)은 무시
           if (key === presenceId) return;
 
+          // 중복 로깅 방지: 현재 접속자 중 ID가 가장 작은 사람만 DB에 기록 및 브로드캐스트 수행
+          const state = channel.presenceState();
+          const currentIds = Object.keys(state).sort();
+          if (currentIds[0] !== presenceId) return;
+
           const p = (leftPresences as unknown as EchoPresence[])[0];
           const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
           addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
@@ -197,58 +217,55 @@ export default function SpeakerPage() {
               id: payload.id,
               timestamp: new Date(payload.timestamp),
               message: payload.message,
-              type: (payload.eventType === 'request' || payload.eventType === 'sync') ? 'success' :
-                    (payload.eventType === 'leave' || payload.eventType === 'stop') ? 'warning' :
-                    payload.eventType === 'error' ? 'error' : 'info' as const,
+              type: mapEventTypeToLogType(payload.eventType),
               userId: payload.userId,
             } as LogEntry
           ].slice(-100));
         })
-        .subscribe(async (status) => {
-          if (!mounted) return;
-
-          if (status === 'SUBSCRIBED') {
-            retryCount = 0;
-            await addLogToDb('사용자가 입장했습니다. (역할: 스피커)', 'join');
-            await channel.track({ 
-              role: 'speaker', 
-              joinedAt: new Date().toISOString() 
-            });
-            
-            // 입장 즉시 다른 스피커에게 상태 요청 (시간 동기화)
-            channel.send({
+        .on('broadcast', { event: 'ECHO_QUERY' }, () => {
+          if (remainingTimeRef.current > 0) {
+            channelRef.current?.send({
               type: 'broadcast',
-              event: 'ECHO_QUERY',
-              payload: { requesterId: presenceId }
+              event: 'ECHO_SYNC',
+              payload: { remainingTime: remainingTimeRef.current }
             });
-          }
-
-          if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-            if (retryCount < MAX_RETRIES) {
-              const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-              retryCount++;
-              addLogToDb(`연결이 끊겼습니다. ${delay/1000}초 후 재시도합니다... (시도: ${retryCount}/${MAX_RETRIES})`, 'warning');
-              setTimeout(() => {
-                if (mounted) setupChannel();
-              }, delay);
-            } else {
-              addLogToDb('서버와의 연결이 완전히 중단되었습니다. 새로고침이 필요합니다.', 'error');
-            }
           }
         });
 
-      // 다른 스피커의 상태 요청에 응답
-      channel.on('broadcast', { event: 'ECHO_QUERY' }, () => {
-        if (remainingTimeRef.current > 0) {
+      channelRef.current = channel;
+
+      channel.subscribe(async (status) => {
+        if (!mounted) return;
+
+        if (status === 'SUBSCRIBED') {
+          retryCount = 0;
+          await addLogToDb('사용자가 입장했습니다. (역할: 스피커)', 'join');
+          await channel.track({ 
+            role: 'speaker', 
+            joinedAt: new Date().toISOString() 
+          });
+          
+          // 입장 즉시 다른 스피커에게 상태 요청 (시간 동기화)
           channel.send({
             type: 'broadcast',
-            event: 'ECHO_SYNC',
-            payload: { remainingTime: remainingTimeRef.current }
+            event: 'ECHO_QUERY',
+            payload: { requesterId: presenceId }
           });
         }
-      });
 
-      channelRef.current = channel;
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          if (retryCount < MAX_RETRIES) {
+            const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+            retryCount++;
+            addLogToDb(`연결이 끊겼습니다. ${delay/1000}초 후 재시도합니다... (시도: ${retryCount}/${MAX_RETRIES})`, 'warning');
+            setTimeout(() => {
+              if (mounted) setupChannel();
+            }, delay);
+          } else {
+            addLogToDb('서버와의 연결이 완전히 중단되었습니다. 새로고침이 필요합니다.', 'error');
+          }
+        }
+      });
     };
 
     setupChannel();

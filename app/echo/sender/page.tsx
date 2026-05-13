@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/app/components/ui/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { formatTime } from '@/app/echo/utils/echo-logic';
+import { formatTime, mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
 import { EchoLog, LogEntry } from '../components/echo-log';
 
 import { createEchoLog, getEchoLogs } from '@/app/actions/echo';
@@ -42,6 +42,9 @@ export default function SenderPage() {
   }, []);
 
   const addLogToDb = useCallback(async (message: string, eventType: string, userId?: string, payload?: unknown) => {
+    const logId = crypto.randomUUID();
+    const timestamp = new Date();
+
     // 1. DB 저장 (영속성)
     await createEchoLog({
       role: 'sender',
@@ -51,18 +54,30 @@ export default function SenderPage() {
       payload
     });
 
-    // 2. 실시간 브로드캐스트 (즉각적인 UI 업데이트)
+    // 2. 실시간 브로드캐스트 (즉각적인 UI 업데이트 - 타인용)
     channelRef.current?.send({
       type: 'broadcast',
       event: 'LOG_EVENT',
       payload: {
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
+        id: logId,
+        timestamp: timestamp.toISOString(),
         message,
         eventType,
         userId: userId || presenceId,
       },
     });
+
+    // 3. 로컬 상태 업데이트 (즉각적인 UI 업데이트 - 본인용)
+    setLogs((prev) => [
+      ...prev,
+      {
+        id: logId,
+        timestamp,
+        message,
+        type: mapEventTypeToLogType(eventType),
+        userId: userId || presenceId,
+      } as LogEntry
+    ].slice(-100));
   }, [presenceId]);
 
   // 실시간 채널 설정
@@ -102,6 +117,11 @@ export default function SenderPage() {
         // 본인의 퇴장(HMR 등으로 인한)은 무시
         if (key === presenceId) return;
 
+        // 중복 로깅 방지: 현재 접속자 중 ID가 가장 작은 사람만 DB에 기록 및 브로드캐스트 수행
+        const state = channel.presenceState();
+        const currentIds = Object.keys(state).sort();
+        if (currentIds[0] !== presenceId) return;
+
         const p = (leftPresences as unknown as EchoPresence[])[0];
         const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
         addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
@@ -120,24 +140,23 @@ export default function SenderPage() {
             id: payload.id,
             timestamp: new Date(payload.timestamp),
             message: payload.message,
-            type: (payload.eventType === 'request' || payload.eventType === 'sync') ? 'success' :
-                  (payload.eventType === 'leave' || payload.eventType === 'stop') ? 'warning' :
-                  payload.eventType === 'error' ? 'error' : 'info' as const,
+            type: mapEventTypeToLogType(payload.eventType),
             userId: payload.userId,
           } as LogEntry
         ].slice(-100));
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await addLogToDb('사용자가 입장했습니다. (역할: 샌더)', 'join');
-          await channel.track({ 
-            role: 'sender', 
-            joinedAt: new Date().toISOString() 
-          });
-        }
       });
 
     channelRef.current = channel;
+
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await addLogToDb('사용자가 입장했습니다. (역할: 샌더)', 'join');
+        await channel.track({ 
+          role: 'sender', 
+          joinedAt: new Date().toISOString() 
+        });
+      }
+    });
 
     // 브라우저 종료 시 사유 전송 시도
     const handleBeforeUnload = () => {

@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { echoLogs } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 
+import { mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
+
 export interface CreateEchoLogParams {
   userId?: string;
   role: string;
@@ -49,20 +51,5 @@ export async function getEchoLogs(limit = 10) {
   } catch (error) {
     console.error('Failed to fetch echo logs:', error);
     return { success: false, error: 'Failed to fetch logs' };
-  }
-}
-
-function mapEventTypeToLogType(eventType: string): 'info' | 'success' | 'warning' | 'error' {
-  switch (eventType) {
-    case 'request':
-    case 'sync':
-      return 'success';
-    case 'leave':
-    case 'stop':
-      return 'warning';
-    case 'error':
-      return 'error';
-    default:
-      return 'info';
   }
 }

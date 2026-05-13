@@ -136,73 +136,122 @@ export default function SpeakerPage() {
   useEffect(() => {
     if (!presenceId) return;
 
-    // 1. 실시간 브로드캐스트/프레즌스 채널
-    const channel = supabase.channel('echo-room', {
-      config: {
-        presence: {
-          key: presenceId,
+    let mounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+
+    const setupChannel = () => {
+      const channel = supabase.channel('echo-room', {
+        config: {
+          presence: {
+            key: presenceId,
+          },
         },
-      },
-    });
+      });
 
-    interface EchoPresence {
-      role: string;
-      joinedAt: string;
-    }
+      interface EchoPresence {
+        role: string;
+        joinedAt: string;
+      }
 
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const userIds = Object.keys(state);
-        
-        setSpeakerCount(userIds.filter(id => 
-          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
-        ).length);
-        setSenderCount(userIds.filter(id => 
-          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
-        ).length);
-      })
-      .on('presence', { event: 'join' }, () => {
-        // 본인의 입장은 subscribe에서 처리
-      })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        const p = (leftPresences as unknown as EchoPresence[])[0];
-        const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
-        addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
-      })
-      .on('broadcast', { event: 'ECHO_REQUEST' }, () => {
-        setRemainingTime((prev) => prev + 60);
-      })
-      .on('broadcast', { event: 'ECHO_STOP' }, () => {
-        setRemainingTime(0);
-        audioRef.current?.pause();
-        if (audioRef.current) audioRef.current.currentTime = 0;
-      })
-      .on('broadcast', { event: 'LOG_EVENT' }, ({ payload }) => {
-        setLogs((prev) => [
-          ...prev,
-          {
-            id: payload.id,
-            timestamp: new Date(payload.timestamp),
-            message: payload.message,
-            type: (payload.eventType === 'request' || payload.eventType === 'sync') ? 'success' :
-                  (payload.eventType === 'leave' || payload.eventType === 'stop') ? 'warning' :
-                  payload.eventType === 'error' ? 'error' : 'info' as const,
-            userId: payload.userId,
-          } as LogEntry
-        ].slice(-100));
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await addLogToDb('사용자가 입장했습니다. (역할: 스피커)', 'join');
-          await channel.track({ 
-            role: 'speaker', 
-            joinedAt: new Date().toISOString() 
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const userIds = Object.keys(state);
+          
+          setSpeakerCount(userIds.filter(id => 
+            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
+          ).length);
+          setSenderCount(userIds.filter(id => 
+            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
+          ).length);
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+          // 본인의 퇴장(HMR 등으로 인한)은 무시
+          if (key === presenceId) return;
+
+          const p = (leftPresences as unknown as EchoPresence[])[0];
+          const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
+          addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
+        })
+        .on('broadcast', { event: 'ECHO_REQUEST' }, () => {
+          setRemainingTime((prev) => prev + 60);
+        })
+        .on('broadcast', { event: 'ECHO_SYNC' }, ({ payload }) => {
+          // 다른 스피커로부터 동기화 신호를 받으면 본인보다 긴 시간일 경우에만 수용
+          // (스피커가 여러 명일 때 시간이 튀는 것 방지)
+          if (payload.remainingTime > remainingTimeRef.current) {
+            setRemainingTime(payload.remainingTime);
+          }
+        })
+        .on('broadcast', { event: 'ECHO_STOP' }, () => {
+          setRemainingTime(0);
+          audioRef.current?.pause();
+          if (audioRef.current) audioRef.current.currentTime = 0;
+        })
+        .on('broadcast', { event: 'LOG_EVENT' }, ({ payload }) => {
+          if (!mounted) return;
+          setLogs((prev) => [
+            ...prev,
+            {
+              id: payload.id,
+              timestamp: new Date(payload.timestamp),
+              message: payload.message,
+              type: (payload.eventType === 'request' || payload.eventType === 'sync') ? 'success' :
+                    (payload.eventType === 'leave' || payload.eventType === 'stop') ? 'warning' :
+                    payload.eventType === 'error' ? 'error' : 'info' as const,
+              userId: payload.userId,
+            } as LogEntry
+          ].slice(-100));
+        })
+        .subscribe(async (status) => {
+          if (!mounted) return;
+
+          if (status === 'SUBSCRIBED') {
+            retryCount = 0;
+            await addLogToDb('사용자가 입장했습니다. (역할: 스피커)', 'join');
+            await channel.track({ 
+              role: 'speaker', 
+              joinedAt: new Date().toISOString() 
+            });
+            
+            // 입장 즉시 다른 스피커에게 상태 요청 (시간 동기화)
+            channel.send({
+              type: 'broadcast',
+              event: 'ECHO_QUERY',
+              payload: { requesterId: presenceId }
+            });
+          }
+
+          if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            if (retryCount < MAX_RETRIES) {
+              const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+              retryCount++;
+              addLogToDb(`연결이 끊겼습니다. ${delay/1000}초 후 재시도합니다... (시도: ${retryCount}/${MAX_RETRIES})`, 'warning');
+              setTimeout(() => {
+                if (mounted) setupChannel();
+              }, delay);
+            } else {
+              addLogToDb('서버와의 연결이 완전히 중단되었습니다. 새로고침이 필요합니다.', 'error');
+            }
+          }
+        });
+
+      // 다른 스피커의 상태 요청에 응답
+      channel.on('broadcast', { event: 'ECHO_QUERY' }, () => {
+        if (remainingTimeRef.current > 0) {
+          channel.send({
+            type: 'broadcast',
+            event: 'ECHO_SYNC',
+            payload: { remainingTime: remainingTimeRef.current }
           });
         }
       });
 
-    channelRef.current = channel;
+      channelRef.current = channel;
+    };
+
+    setupChannel();
 
     // 브라우저 종료 시 사유 전송 시도
     const handleBeforeUnload = () => {
@@ -211,8 +260,9 @@ export default function SpeakerPage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      mounted = false;
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      channel.unsubscribe();
+      channelRef.current?.unsubscribe();
     };
   }, [supabase, presenceId, addLogToDb]);
 

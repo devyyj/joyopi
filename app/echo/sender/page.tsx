@@ -99,10 +99,14 @@ export default function SenderPage() {
         // 샌더는 본인의 입장은 로깅하지 않거나, 스피커가 로깅하게 둘 수도 있음.
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        // 본인의 퇴장(HMR 등으로 인한)은 무시
+        if (key === presenceId) return;
+
         const p = (leftPresences as unknown as EchoPresence[])[0];
         const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
         addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
       })
+
       .on('broadcast', { event: 'ECHO_SYNC' }, ({ payload }) => {
         setRemainingTime(payload.remainingTime);
       })

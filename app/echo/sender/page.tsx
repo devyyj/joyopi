@@ -31,6 +31,22 @@ export default function SenderPage() {
   
   const supabase = useMemo(() => createClient(), []);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 로컬 타이머 (동기화 신호 사이의 공백을 메움)
+  useEffect(() => {
+    if (isPlaying && !timerRef.current) {
+      timerRef.current = setInterval(() => {
+        setRemainingTime((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    } else if (!isPlaying && timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isPlaying]);
 
   // 초기 로그 로드
   useEffect(() => {

@@ -123,14 +123,12 @@ export default function SpeakerPage() {
       timerRef.current = setInterval(() => {
         setRemainingTime((prev) => {
           const next = Math.max(0, prev - 1);
-          // 5초마다 또는 마지막에 동기화 신호 전송 (네트워크 부하 감소)
-          if (next % 5 === 0 || next === 0) {
-            channelRef.current?.send({
-              type: 'broadcast',
-              event: 'ECHO_SYNC',
-              payload: { remainingTime: next },
-            });
-          }
+          // 1초마다 동기화 신호 전송 (사용자 요청: 1초 단위 업데이트)
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'ECHO_SYNC',
+            payload: { remainingTime: next },
+          });
           return next;
         });
       }, 1000);
@@ -146,6 +144,23 @@ export default function SpeakerPage() {
       });
     }
   }, [isPlaying, addLogToDb]);
+
+  // 유휴 상태 하트비트 (연결 유지 강화)
+  useEffect(() => {
+    if (isPlaying) return;
+
+    const heartbeatInterval = setInterval(() => {
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'ECHO_HEARTBEAT',
+          payload: { timestamp: new Date().toISOString() },
+        });
+      }
+    }, 30000); // 30초마다 핑
+
+    return () => clearInterval(heartbeatInterval);
+  }, [isPlaying]);
 
   // 실시간 채널 설정
   useEffect(() => {

@@ -170,7 +170,21 @@ export default function SpeakerPage() {
     let retryCount = 0;
     const MAX_RETRIES = 5;
 
-    const setupChannel = () => {
+    const setupChannel = async (reason?: string) => {
+      if (!mounted) return;
+      
+      const debugInfo = {
+        reason: reason || 'initial',
+        online: navigator.onLine,
+        visibility: document.visibilityState,
+        retryCount
+      };
+
+      // 기존 채널이 있다면 명시적으로 제거하여 리스너 누수 방지
+      if (channelRef.current) {
+        await supabase.removeChannel(channelRef.current);
+      }
+
       const channel = supabase.channel('echo-room', {
         config: {
           presence: {
@@ -186,6 +200,7 @@ export default function SpeakerPage() {
 
       channel
         .on('presence', { event: 'sync' }, () => {
+          if (!mounted) return;
           const state = channel.presenceState();
           const userIds = Object.keys(state);
           
@@ -197,10 +212,8 @@ export default function SpeakerPage() {
           ).length);
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          // 본인의 퇴장(HMR 등으로 인한)은 무시
-          if (key === presenceId) return;
+          if (!mounted || key === presenceId) return;
 
-          // 중복 로깅 방지: 현재 접속자 중 ID가 가장 작은 사람만 DB에 기록 및 브로드캐스트 수행
           const state = channel.presenceState();
           const currentIds = Object.keys(state).sort();
           if (currentIds[0] !== presenceId) return;
@@ -210,16 +223,17 @@ export default function SpeakerPage() {
           addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
         })
         .on('broadcast', { event: 'ECHO_REQUEST' }, () => {
+          if (!mounted) return;
           setRemainingTime((prev) => prev + 60);
         })
         .on('broadcast', { event: 'ECHO_SYNC' }, ({ payload }) => {
-          // 다른 스피커로부터 동기화 신호를 받으면 본인보다 긴 시간일 경우에만 수용
-          // (스피커가 여러 명일 때 시간이 튀는 것 방지)
+          if (!mounted) return;
           if (payload.remainingTime > remainingTimeRef.current) {
             setRemainingTime(payload.remainingTime);
           }
         })
         .on('broadcast', { event: 'ECHO_STOP' }, () => {
+          if (!mounted) return;
           setRemainingTime(0);
           audioRef.current?.pause();
           if (audioRef.current) audioRef.current.currentTime = 0;
@@ -238,6 +252,7 @@ export default function SpeakerPage() {
           ].slice(-100));
         })
         .on('broadcast', { event: 'ECHO_QUERY' }, () => {
+          if (!mounted) return;
           if (remainingTimeRef.current > 0) {
             channelRef.current?.send({
               type: 'broadcast',
@@ -249,18 +264,19 @@ export default function SpeakerPage() {
 
       channelRef.current = channel;
 
-      channel.subscribe(async (status) => {
+      channel.subscribe(async (status, err) => {
         if (!mounted) return;
+
+        const logPayload = { status, error: err?.message, ...debugInfo };
 
         if (status === 'SUBSCRIBED') {
           retryCount = 0;
-          await addLogToDb('사용자가 입장했습니다. (역할: 스피커)', 'join');
+          await addLogToDb(`서버 연결 성공 (사유: ${debugInfo.reason})`, 'join', undefined, logPayload);
           await channel.track({ 
             role: 'speaker', 
             joinedAt: new Date().toISOString() 
           });
           
-          // 입장 즉시 다른 스피커에게 상태 요청 (시간 동기화)
           channel.send({
             type: 'broadcast',
             event: 'ECHO_QUERY',
@@ -268,33 +284,61 @@ export default function SpeakerPage() {
           });
         }
 
-        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+        if (status === 'TIMED_OUT') {
+          addLogToDb('서버 응답 시간 초과. 재연결을 시도합니다.', 'warning', undefined, logPayload);
+          setupChannel('timeout');
+        }
+
+        if (status === 'CLOSED') {
           if (retryCount < MAX_RETRIES) {
             const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
             retryCount++;
-            addLogToDb(`연결이 끊겼습니다. ${delay/1000}초 후 재시도합니다... (시도: ${retryCount}/${MAX_RETRIES})`, 'warning');
+            addLogToDb(`연결이 중단되었습니다. ${delay/1000}초 후 자동 재접속합니다.`, 'warning', undefined, logPayload);
             setTimeout(() => {
-              if (mounted) setupChannel();
+              if (mounted) setupChannel('closed_retry');
             }, delay);
           } else {
-            addLogToDb('서버와의 연결이 완전히 중단되었습니다. 새로고침이 필요합니다.', 'error');
+            addLogToDb('최대 재접속 시도 횟수를 초과했습니다. 페이지 새로고침이 필요합니다.', 'error', undefined, logPayload);
           }
+        }
+
+        if (status === 'CHANNEL_ERROR') {
+          addLogToDb(`채널 오류 발생: ${err?.message || '알 수 없는 오류'}`, 'error', undefined, logPayload);
+          // CHANNEL_ERROR 시에는 Supabase 내부의 재시도를 기다리거나 수동으로 짧은 뒤에 재시도
+          setTimeout(() => {
+            if (mounted && channelRef.current?.state !== 'joined') {
+              setupChannel('channel_error_retry');
+            }
+          }, 3000);
         }
       });
     };
 
-    setupChannel();
+    setupChannel('init');
 
-    // 브라우저 종료 시 사유 전송 시도
-    const handleBeforeUnload = () => {
-      addLogToDb('사용자가 퇴장했습니다. (이유: 브라우저 종료)', 'leave');
+    // 자동 복구: 페이지 가시성 변화 및 온라인 상태 복구 대응
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && (!channelRef.current || channelRef.current.state !== 'joined')) {
+        addLogToDb('페이지가 활성화되어 소켓 연결을 재점검합니다.', 'info');
+        setupChannel('visibility_change');
+      }
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    const handleOnline = () => {
+      addLogToDb('네트워크가 복구되었습니다. 소켓 재연결을 시도합니다.', 'info');
+      setupChannel('online');
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
 
     return () => {
       mounted = false;
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      channelRef.current?.unsubscribe();
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
   }, [supabase, presenceId, addLogToDb]);
 

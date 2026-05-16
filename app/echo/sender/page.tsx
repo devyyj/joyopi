@@ -100,92 +100,139 @@ export default function SenderPage() {
   useEffect(() => {
     if (!presenceId) return;
 
-    // 1. 실시간 브로드캐스트/프레즌스 채널
-    const channel = supabase.channel('echo-room', {
-      config: {
-        presence: {
-          key: presenceId,
+    let mounted = true;
+
+    const setupChannel = async (reason?: string) => {
+      if (!mounted) return;
+
+      const debugInfo = {
+        reason: reason || 'initial',
+        online: navigator.onLine,
+        visibility: document.visibilityState
+      };
+
+      // 기존 채널이 있다면 명시적으로 제거하여 리스너 누수 방지
+      if (channelRef.current) {
+        await supabase.removeChannel(channelRef.current);
+      }
+
+      const channel = supabase.channel('echo-room', {
+        config: {
+          presence: {
+            key: presenceId,
+          },
         },
-      },
-    });
-
-    interface EchoPresence {
-      role: string;
-      joinedAt: string;
-    }
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const userIds = Object.keys(state);
-        
-        setSpeakerCount(userIds.filter(id => 
-          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
-        ).length);
-        setSenderCount(userIds.filter(id => 
-          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
-        ).length);
-      })
-      .on('presence', { event: 'join' }, () => {
-        // 샌더는 본인의 입장은 로깅하지 않거나, 스피커가 로깅하게 둘 수도 있음.
-      })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        // 본인의 퇴장(HMR 등으로 인한)은 무시
-        if (key === presenceId) return;
-
-        // 중복 로깅 방지: 현재 접속자 중 ID가 가장 작은 사람만 DB에 기록 및 브로드캐스트 수행
-        const state = channel.presenceState();
-        const currentIds = Object.keys(state).sort();
-        if (currentIds[0] !== presenceId) return;
-
-        const p = (leftPresences as unknown as EchoPresence[])[0];
-        const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
-        addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
-      })
-
-      .on('broadcast', { event: 'ECHO_SYNC' }, ({ payload }) => {
-        setRemainingTime(payload.remainingTime);
-      })
-      .on('broadcast', { event: 'ECHO_STOP' }, () => {
-        setRemainingTime(0);
-      })
-      .on('broadcast', { event: 'LOG_EVENT' }, ({ payload }) => {
-        setLogs((prev) => [
-          ...prev,
-          {
-            id: payload.id,
-            timestamp: new Date(payload.timestamp),
-            message: payload.message,
-            type: mapEventTypeToLogType(payload.eventType),
-            userId: payload.userId,
-          } as LogEntry
-        ].slice(-100));
       });
 
-    channelRef.current = channel;
-
-    channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        await addLogToDb('사용자가 입장했습니다. (역할: 샌더)', 'join');
-        await channel.track({ 
-          role: 'sender', 
-          joinedAt: new Date().toISOString() 
-        });
+      interface EchoPresence {
+        role: string;
+        joinedAt: string;
       }
-    });
 
-    // 브라우저 종료 시 사유 전송 시도
-    const handleBeforeUnload = () => {
-      addLogToDb('사용자가 퇴장했습니다. (이유: 브라우저 종료)', 'leave');
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          if (!mounted) return;
+          const state = channel.presenceState();
+          const userIds = Object.keys(state);
+
+          setSpeakerCount(userIds.filter(id => 
+            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
+          ).length);
+          setSenderCount(userIds.filter(id => 
+            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
+          ).length);
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+          if (!mounted || key === presenceId) return;
+
+          const state = channel.presenceState();
+          const currentIds = Object.keys(state).sort();
+          if (currentIds[0] !== presenceId) return;
+
+          const p = (leftPresences as unknown as EchoPresence[])[0];
+          const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
+          addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
+        })
+        .on('broadcast', { event: 'ECHO_SYNC' }, ({ payload }) => {
+          if (!mounted) return;
+          setRemainingTime(payload.remainingTime);
+        })
+        .on('broadcast', { event: 'ECHO_STOP' }, () => {
+          if (!mounted) return;
+          setRemainingTime(0);
+        })
+        .on('broadcast', { event: 'LOG_EVENT' }, ({ payload }) => {
+          if (!mounted) return;
+          setLogs((prev) => [
+            ...prev,
+            {
+              id: payload.id,
+              timestamp: new Date(payload.timestamp),
+              message: payload.message,
+              type: mapEventTypeToLogType(payload.eventType),
+              userId: payload.userId,
+            } as LogEntry
+          ].slice(-100));
+        });
+
+      channelRef.current = channel;
+
+      channel.subscribe(async (status, err) => {
+        if (!mounted) return;
+
+        const logPayload = { status, error: err?.message, ...debugInfo };
+
+        if (status === 'SUBSCRIBED') {
+          await addLogToDb(`서버 연결 성공 (사유: ${debugInfo.reason})`, 'join', undefined, logPayload);
+          await channel.track({ 
+            role: 'sender', 
+            joinedAt: new Date().toISOString() 
+          });
+        }
+
+        if (status === 'TIMED_OUT') {
+          addLogToDb('서버 응답 시간 초과. 재연결을 시도합니다.', 'warning', undefined, logPayload);
+          setupChannel('timeout');
+        }
+
+        if (status === 'CHANNEL_ERROR') {
+          addLogToDb(`채널 오류 발생: ${err?.message || '알 수 없는 오류'}`, 'error', undefined, logPayload);
+          setTimeout(() => {
+            if (mounted && channelRef.current?.state !== 'joined') {
+              setupChannel('channel_error_retry');
+            }
+          }, 3000);
+        }
+      });
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    setupChannel('init');
+
+    // 자동 복구: 페이지 가시성 변화 및 온라인 상태 복구 대응
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && (!channelRef.current || channelRef.current.state !== 'joined')) {
+        addLogToDb('페이지가 활성화되어 소켓 연결을 재점검합니다.', 'info');
+        setupChannel('visibility_change');
+      }
+    };
+
+    const handleOnline = () => {
+      addLogToDb('네트워크가 복구되었습니다. 소켓 재연결을 시도합니다.', 'info');
+      setupChannel('online');
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      channel.unsubscribe();
+      mounted = false;
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
   }, [supabase, presenceId, addLogToDb]);
-
   const handleSendEcho = useCallback(() => {
     // 1. 낙관적 업데이트: 로컬 타이머를 즉시 연장
     setRemainingTime((prev) => prev + 60);

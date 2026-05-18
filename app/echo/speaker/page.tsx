@@ -1,23 +1,15 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/app/components/ui/core';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { formatTime, mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
-import { EchoLog, LogEntry } from '../components/echo-log';
-
-import { createEchoLog, getEchoLogs } from '@/app/actions/echo';
+import { formatTime } from '@/app/echo/utils/echo-logic';
+import { EchoLog } from '../components/echo-log';
+import { useEchoSocket } from '../hooks/use-echo-socket';
 
 export default function SpeakerPage() {
   const [remainingTime, setRemainingTime] = useState(0);
-  const [speakerCount, setSpeakerCount] = useState<number>(0);
-  const [senderCount, setSenderCount] = useState<number>(0);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-  
-  const connectedUsers = speakerCount + senderCount;
   
   const presenceId = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -29,59 +21,57 @@ export default function SpeakerPage() {
   }, []);
 
   const isPlaying = remainingTime > 0;
-  
-  const supabase = useMemo(() => createClient(), []);
-  const channelRef = useRef<RealtimeChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const remainingTimeRef = useRef(remainingTime);
 
-  // 초기 로그 로드
   useEffect(() => {
-    getEchoLogs().then(res => {
-      if (res.success && res.data) {
-        setLogs(res.data as LogEntry[]);
-      }
-    });
+    remainingTimeRef.current = remainingTime;
+  }, [remainingTime]);
+
+  const sendBroadcastRef = useRef<((event: string, payload: Record<string, unknown>) => boolean) | null>(null);
+
+  // 소켓 브로드캐스트 핸들러
+  const handleBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
+    switch (event) {
+      case 'ECHO_REQUEST':
+        setRemainingTime((prev) => prev + 60);
+        break;
+      case 'ECHO_SYNC':
+        if (typeof payload.remainingTime === 'number' && payload.remainingTime > remainingTimeRef.current) {
+          setRemainingTime(payload.remainingTime);
+        }
+        break;
+      case 'ECHO_STOP':
+        setRemainingTime(0);
+        audioRef.current?.pause();
+        if (audioRef.current) audioRef.current.currentTime = 0;
+        break;
+      case 'ECHO_QUERY':
+        if (remainingTimeRef.current > 0) {
+          sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: remainingTimeRef.current });
+        }
+        break;
+    }
   }, []);
 
-  const addLogToDb = useCallback(async (message: string, eventType: string, userId?: string, payload?: unknown) => {
-    const logId = crypto.randomUUID();
-    const timestamp = new Date();
-    
-    // 1. DB 저장 (영속성)
-    await createEchoLog({
-      role: 'speaker',
-      eventType,
-      message,
-      userId: userId || presenceId,
-      payload
-    });
+  const {
+    speakerCount,
+    senderCount,
+    logs,
+    addLog,
+    sendBroadcast,
+  } = useEchoSocket({
+    role: 'speaker',
+    presenceId,
+    onBroadcast: handleBroadcast
+  });
 
-    // 2. 실시간 브로드캐스트 (즉각적인 UI 업데이트 - 타인용)
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'LOG_EVENT',
-      payload: {
-        id: logId,
-        timestamp: timestamp.toISOString(),
-        message,
-        eventType,
-        userId: userId || presenceId,
-      },
-    });
+  useEffect(() => {
+    sendBroadcastRef.current = sendBroadcast as (event: string, payload: Record<string, unknown>) => boolean;
+  }, [sendBroadcast]);
 
-    // 3. 로컬 상태 업데이트 (즉각적인 UI 업데이트 - 본인용)
-    setLogs((prev) => [
-      ...prev,
-      {
-        id: logId,
-        timestamp,
-        message,
-        type: mapEventTypeToLogType(eventType),
-        userId: userId || presenceId,
-      } as LogEntry
-    ].slice(-100));
-  }, [presenceId]);
+  const connectedUsers = speakerCount + senderCount;
 
   // 사운드 초기화 및 클린업
   useEffect(() => {
@@ -101,17 +91,11 @@ export default function SpeakerPage() {
     };
   }, []);
 
-  // 린트 경고 해결을 위한 Ref
-  const remainingTimeRef = useRef(remainingTime);
-  useEffect(() => {
-    remainingTimeRef.current = remainingTime;
-  }, [remainingTime]);
-
   // 오디오 재생 및 타이머 동기화 로직
   useEffect(() => {
     if (isPlaying) {
       audioRef.current?.play().catch((err) => {
-        addLogToDb(`오디오 재생 실패: ${err.message}`, 'error');
+        addLog(`오디오 재생 실패: ${err.message}`, 'error');
       });
     } else {
       audioRef.current?.pause();
@@ -119,271 +103,67 @@ export default function SpeakerPage() {
     }
 
     if (isPlaying && !timerRef.current) {
-      addLogToDb(`메아리를 재생합니다. (남은 시간: ${formatTime(remainingTimeRef.current)})`, 'sync');
+      addLog(`메아리를 재생합니다. (남은 시간: ${formatTime(remainingTimeRef.current)})`, 'sync');
       timerRef.current = setInterval(() => {
         setRemainingTime((prev) => {
           const next = Math.max(0, prev - 1);
-          // 1초마다 동기화 신호 전송 (사용자 요청: 1초 단위 업데이트)
-          channelRef.current?.send({
-            type: 'broadcast',
-            event: 'ECHO_SYNC',
-            payload: { remainingTime: next },
-          });
+          // 1초마다 동기화 신호 전송
+          sendBroadcast('ECHO_SYNC', { remainingTime: next });
           return next;
         });
       }, 1000);
     } else if (!isPlaying && timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
-      addLogToDb('메아리 재생이 완료되었습니다.', 'info');
+      addLog('메아리 재생이 완료되었습니다.', 'info');
       // 정지 시 즉시 동기화
-      channelRef.current?.send({
-        type: 'broadcast',
-        event: 'ECHO_SYNC',
-        payload: { remainingTime: 0 },
-      });
+      sendBroadcast('ECHO_SYNC', { remainingTime: 0 });
     }
-  }, [isPlaying, addLogToDb]);
+  }, [isPlaying, addLog, sendBroadcast]);
 
   // 유휴 상태 하트비트 (연결 유지 강화)
   useEffect(() => {
     if (isPlaying) return;
 
     const heartbeatInterval = setInterval(() => {
-      if (channelRef.current) {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'ECHO_HEARTBEAT',
-          payload: { timestamp: new Date().toISOString() },
-        });
-      }
-    }, 30000); // 30초마다 핑
+      sendBroadcast('ECHO_HEARTBEAT', { timestamp: new Date().toISOString() });
+    }, 30000);
 
     return () => clearInterval(heartbeatInterval);
-  }, [isPlaying]);
-
-  // 실시간 채널 설정
-  useEffect(() => {
-    if (!presenceId) return;
-
-    let mounted = true;
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
-
-    const setupChannel = async (reason?: string) => {
-      if (!mounted) return;
-      
-      const debugInfo = {
-        reason: reason || 'initial',
-        online: navigator.onLine,
-        visibility: document.visibilityState,
-        retryCount
-      };
-
-      // 기존 채널이 있다면 명시적으로 제거하여 리스너 누수 방지
-      if (channelRef.current) {
-        await supabase.removeChannel(channelRef.current);
-      }
-
-      const channel = supabase.channel('echo-room', {
-        config: {
-          presence: {
-            key: presenceId,
-          },
-        },
-      });
-
-      interface EchoPresence {
-        role: string;
-        joinedAt: string;
-      }
-
-      channel
-        .on('presence', { event: 'sync' }, () => {
-          if (!mounted) return;
-          const state = channel.presenceState();
-          const userIds = Object.keys(state);
-          
-          setSpeakerCount(userIds.filter(id => 
-            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
-          ).length);
-          setSenderCount(userIds.filter(id => 
-            (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
-          ).length);
-        })
-        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          if (!mounted || key === presenceId) return;
-
-          const state = channel.presenceState();
-          const currentIds = Object.keys(state).sort();
-          if (currentIds[0] !== presenceId) return;
-
-          const p = (leftPresences as unknown as EchoPresence[])[0];
-          const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
-          addLogToDb(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
-        })
-        .on('broadcast', { event: 'ECHO_REQUEST' }, () => {
-          if (!mounted) return;
-          setRemainingTime((prev) => prev + 60);
-        })
-        .on('broadcast', { event: 'ECHO_SYNC' }, ({ payload }) => {
-          if (!mounted) return;
-          if (payload.remainingTime > remainingTimeRef.current) {
-            setRemainingTime(payload.remainingTime);
-          }
-        })
-        .on('broadcast', { event: 'ECHO_STOP' }, () => {
-          if (!mounted) return;
-          setRemainingTime(0);
-          audioRef.current?.pause();
-          if (audioRef.current) audioRef.current.currentTime = 0;
-        })
-        .on('broadcast', { event: 'LOG_EVENT' }, ({ payload }) => {
-          if (!mounted) return;
-          setLogs((prev) => [
-            ...prev,
-            {
-              id: payload.id,
-              timestamp: new Date(payload.timestamp),
-              message: payload.message,
-              type: mapEventTypeToLogType(payload.eventType),
-              userId: payload.userId,
-            } as LogEntry
-          ].slice(-100));
-        })
-        .on('broadcast', { event: 'ECHO_QUERY' }, () => {
-          if (!mounted) return;
-          if (remainingTimeRef.current > 0) {
-            channelRef.current?.send({
-              type: 'broadcast',
-              event: 'ECHO_SYNC',
-              payload: { remainingTime: remainingTimeRef.current }
-            });
-          }
-        });
-
-      channelRef.current = channel;
-
-      channel.subscribe(async (status, err) => {
-        if (!mounted) return;
-
-        const logPayload = { status, error: err?.message, ...debugInfo };
-
-        if (status === 'SUBSCRIBED') {
-          retryCount = 0;
-          await addLogToDb(`서버 연결 성공 (사유: ${debugInfo.reason})`, 'join', undefined, logPayload);
-          await channel.track({ 
-            role: 'speaker', 
-            joinedAt: new Date().toISOString() 
-          });
-          
-          channel.send({
-            type: 'broadcast',
-            event: 'ECHO_QUERY',
-            payload: { requesterId: presenceId }
-          });
-        }
-
-        if (status === 'TIMED_OUT') {
-          addLogToDb('서버 응답 시간 초과. 재연결을 시도합니다.', 'warning', undefined, logPayload);
-          setupChannel('timeout');
-        }
-
-        if (status === 'CLOSED') {
-          if (retryCount < MAX_RETRIES) {
-            const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-            retryCount++;
-            addLogToDb(`연결이 중단되었습니다. ${delay/1000}초 후 자동 재접속합니다.`, 'warning', undefined, logPayload);
-            setTimeout(() => {
-              if (mounted) setupChannel('closed_retry');
-            }, delay);
-          } else {
-            addLogToDb('최대 재접속 시도 횟수를 초과했습니다. 페이지 새로고침이 필요합니다.', 'error', undefined, logPayload);
-          }
-        }
-
-        if (status === 'CHANNEL_ERROR') {
-          addLogToDb(`채널 오류 발생: ${err?.message || '알 수 없는 오류'}`, 'error', undefined, logPayload);
-          // CHANNEL_ERROR 시에는 Supabase 내부의 재시도를 기다리거나 수동으로 짧은 뒤에 재시도
-          setTimeout(() => {
-            if (mounted && channelRef.current?.state !== 'joined') {
-              setupChannel('channel_error_retry');
-            }
-          }, 3000);
-        }
-      });
-    };
-
-    setupChannel('init');
-
-    // 자동 복구: 페이지 가시성 변화 및 온라인 상태 복구 대응
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && (!channelRef.current || channelRef.current.state !== 'joined')) {
-        addLogToDb('페이지가 활성화되어 소켓 연결을 재점검합니다.', 'info');
-        setupChannel('visibility_change');
-      }
-    };
-
-    const handleOnline = () => {
-      addLogToDb('네트워크가 복구되었습니다. 소켓 재연결을 시도합니다.', 'info');
-      setupChannel('online');
-    };
-
-    window.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('online', handleOnline);
-
-    return () => {
-      mounted = false;
-      window.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('online', handleOnline);
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
-    };
-  }, [supabase, presenceId, addLogToDb]);
+  }, [isPlaying, sendBroadcast]);
 
   const handleSendEcho = useCallback(() => {
     setRemainingTime((prev) => prev + 60);
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'ECHO_REQUEST',
-      payload: { senderId: presenceId },
-    });
-    addLogToDb('스피커가 직접 메아리를 보냈습니다. (+1분)', 'request', presenceId);
-  }, [presenceId, addLogToDb]);
+    sendBroadcast('ECHO_REQUEST', { senderId: presenceId });
+    addLog('스피커가 직접 메아리를 보냈습니다. (+1분)', 'request', presenceId);
+  }, [presenceId, addLog, sendBroadcast]);
 
   const handleStopEcho = useCallback(() => {
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'ECHO_STOP',
-      payload: { triggeredBy: presenceId },
-    });
+    sendBroadcast('ECHO_STOP', { triggeredBy: presenceId });
     setRemainingTime(0);
     audioRef.current?.pause();
     if (audioRef.current) audioRef.current.currentTime = 0;
-    addLogToDb('스피커가 모든 메아리를 중지시켰습니다.', 'stop', presenceId);
-  }, [presenceId, addLogToDb]);
+    addLog('스피커가 모든 메아리를 중지시켰습니다.', 'stop', presenceId);
+  }, [presenceId, addLog, sendBroadcast]);
 
   const handleManualExit = useCallback(() => {
-    addLogToDb('사용자가 퇴장했습니다. (이유: 사용자 요청)', 'leave');
-  }, [addLogToDb]);
+    addLog('사용자가 퇴장했습니다. (이유: 사용자 요청)', 'leave');
+  }, [addLog]);
 
   const handleEnableAudio = useCallback(() => {
     if (audioRef.current) {
-      // 브라우저 정책 대응: 사용자 인터랙션 시점에 무음 재생 시도로 오디오 컨텍스트 활성화
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          // 성공 시 즉시 일시정지 (실제 재생은 isPlaying 상태에 따라 제어됨)
           audioRef.current?.pause();
           setIsAudioEnabled(true);
-          addLogToDb('오디오 출력이 활성화되었습니다.', 'info');
+          addLog('오디오 출력이 활성화되었습니다.', 'info');
         }).catch(err => {
-          addLogToDb(`오디오 활성화 실패: ${err.message}`, 'error');
+          addLog(`오디오 활성화 실패: ${err.message}`, 'error');
         });
       }
     }
-  }, [addLogToDb]);
+  }, [addLog]);
 
   if (!isAudioEnabled) {
     return (
@@ -464,4 +244,3 @@ export default function SpeakerPage() {
     </div>
   );
 }
-

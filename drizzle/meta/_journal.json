@@ -15,6 +15,20 @@
       "when": 1777985371421,
       "tag": "0001_goofy_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779880434825,
+      "tag": "0002_living_nick_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779881207884,
+      "tag": "0003_certain_moira_mactaggert",
+      "breakpoints": true
     }
   ]
 }

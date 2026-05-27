@@ -36,6 +36,9 @@ const MainHeader = async () => {
             <Link href="/echo" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
               에코
             </Link>
+            <Link href="/meals" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
+              돼지 일기
+            </Link>
           </nav>
         </div>
 

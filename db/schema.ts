@@ -16,6 +16,7 @@ export const profilesRelations = relations(profiles, ({ many }) => ({
   comments: many(comments),
   likes: many(likes),
   commentLikes: many(commentLikes),
+  meals: many(meals),
 }));
 
 export const posts = pgTable('posts', {
@@ -118,4 +119,40 @@ export const echoLogs = pgTable('echo_logs', {
   payload: text('payload'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const meals = pgTable('meals', {
+  id: serial('id').primaryKey(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  menuName: text('menu_name').notNull(),
+  mealType: text('meal_type').notNull(), // 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'night_snack'
+  satisfaction: integer('satisfaction').notNull(), // 1-5
+  memo: text('memo'),
+  tags: text('tags').array(),
+  eatenAt: timestamp('eaten_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const mealImages = pgTable('meal_images', {
+  id: serial('id').primaryKey(),
+  mealId: integer('meal_id').notNull().references(() => meals.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const mealsRelations = relations(meals, ({ one, many }) => ({
+  user: one(profiles, {
+    fields: [meals.userId],
+    references: [profiles.id],
+  }),
+  images: many(mealImages),
+}));
+
+export const mealImagesRelations = relations(mealImages, ({ one }) => ({
+  meal: one(meals, {
+    fields: [mealImages.mealId],
+    references: [meals.id],
+  }),
+}));
+
 

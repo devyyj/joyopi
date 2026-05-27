@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/app/components/ui/core';
+import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { MealStats } from '../types';
 
 interface PiggyAnalyticsProps {
@@ -11,8 +12,15 @@ interface PiggyAnalyticsProps {
 }
 
 export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyAnalyticsProps) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [activeRating, setActiveRating] = useState<number | null>(null);
+
+  // 하이드레이션 및 set-state-in-effect Cascading 방어
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 캐릭터별 테마 스타일 반환
   const getCharacterTheme = (type: string) => {
@@ -62,131 +70,7 @@ export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyA
 
   const theme = getCharacterTheme(stats.character.type);
 
-  // HTML5 Canvas 활용 만족도(1~5) 프리미엄 입체 파이 그래프 렌더링 (ResizeObserver 기반 완전 대응)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const parent = canvas.parentElement;
-    if (!parent) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-
-    const draw = () => {
-      // 0px 방지를 위해 부모 노드 기준 크기 측정
-      const rect = parent.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
-
-      if (width === 0 || height === 0) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.scale(dpr, dpr);
-
-      // 배경 청소
-      ctx.clearRect(0, 0, width, height);
-
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const radius = Math.min(width, height) / 2.6;
-
-      // 실제 만족도 통계로 데이터셋 계산
-      const dist = stats.satisfactionDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-      const total = Object.values(dist).reduce((a, b) => a + b, 0);
-
-      const satisfactionDistribution = [
-        { level: 5, color: '#e2ff00', ratio: total > 0 ? (dist[5] || 0) / total : 0 },
-        { level: 4, color: '#FF6B4A', ratio: total > 0 ? (dist[4] || 0) / total : 0 },
-        { level: 3, color: '#a855f7', ratio: total > 0 ? (dist[3] || 0) / total : 0 },
-        { level: 2, color: '#34d399', ratio: total > 0 ? (dist[2] || 0) / total : 0 },
-        { level: 1, color: '#ef4444', ratio: total > 0 ? (dist[1] || 0) / total : 0 }
-      ];
-
-      if (total > 0) {
-        // 1. 입체적 느낌을 위한 드롭 섀도우 효과 설정
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-        ctx.shadowBlur = 12;
-        ctx.shadowOffsetX = 3;
-        ctx.shadowOffsetY = 6;
-
-        let startAngle = -Math.PI / 2; // 12시 방향부터 시작
-
-        satisfactionDistribution.forEach((slice) => {
-          if (slice.ratio <= 0) return;
-          const sliceAngle = slice.ratio * Math.PI * 2;
-          const endAngle = startAngle + sliceAngle;
-
-          // 꽉 찬 파이 조각 (부채꼴) 그리기
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY);
-          ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-          ctx.closePath();
-          ctx.fillStyle = slice.color;
-          ctx.fill();
-
-          // 조각 사이 경계선 디자인 (입체적인 틈새 효과 부여)
-          ctx.strokeStyle = '#121214'; // 카드 내부 어두운 배경 톤과 매칭
-          ctx.lineWidth = 3.5;
-          ctx.stroke();
-
-          startAngle = endAngle;
-        });
-
-        // 2. 텍스트 라벨 렌더링 (그림자 효과 제거 후 드로우)
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-
-        // 좌측 상단 총 횟수 요약 배지 디자인
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.beginPath();
-        ctx.roundRect(12, 12, 85, 22, 6);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 9px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(`📊 총 ${total}회 기록`, 18, 26);
-      } else {
-        // 기록이 없을 때 빈 은은한 회색 파이 원형
-        ctx.shadowColor = 'transparent';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('식사 기록 없음', centerX, centerY + 3);
-      }
-    };
-
-    // ResizeObserver 등록
-    const resizeObserver = new ResizeObserver(() => {
-      animationFrameId = requestAnimationFrame(draw);
-    });
-    resizeObserver.observe(parent);
-
-    // 최초 드로우 실행
-    draw();
-
-    return () => {
-      resizeObserver.disconnect();
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [stats]);
-
-  // 공유 텍스트 클립보드 복사 (가격 제거)
+  // 공유 텍스트 클립보드 복사
   const handleShare = () => {
     const shareText = `[조요피 연구소 - 돼지 일기 🐖]
 이번 주 나의 식생활 분석 캐릭터는?
@@ -208,7 +92,7 @@ https://joyopi.vercel.app/meals`;
     });
   };
 
-  // 식사 종류별 게이지 최대값 도출 (CSS 바 백분율용)
+  // 식사 종류별 게이지 최대값 도출
   const dist = stats.mealTypeDistribution || {};
   const maxCount = Math.max(...(Object.values(dist) as number[]), 1);
 
@@ -222,6 +106,41 @@ https://joyopi.vercel.app/meals`;
     };
     return mapping[type] || type;
   };
+
+  // 만족도 백분율 계산 및 데이터 정리
+  const satisfactionDist = stats.satisfactionDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  const totalSatisfaction = Object.values(satisfactionDist).reduce((a, b) => a + b, 0);
+
+  const satisfactionData = [
+    { rating: 5, label: '5점 👑', name: '👑 최고의 맛!', color: '#fbbf24', fontColor: 'text-[#fbbf24]', badge: 'bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/20 hover:bg-[#fbbf24]/20', desc: '최상의 식사! 입 안 가득 축제가 벌어진 완벽한 식사였네요.' },
+    { rating: 4, label: '4점 🥰', name: '🥰 아주 맛있어요', color: '#fb923c', fontColor: 'text-[#fb923c]', badge: 'bg-[#fb923c]/10 text-[#fb923c] border-[#fb923c]/20 hover:bg-[#fb923c]/20', desc: '든든하고 행복하게! 만족스럽고 즐거운 훌륭한 한 끼였습니다.' },
+    { rating: 3, label: '3점 😋', name: '😋 무난해요', color: '#c084fc', fontColor: 'text-[#c084fc]', badge: 'bg-[#c084fc]/10 text-[#c084fc] border-[#c084fc]/20 hover:bg-[#c084fc]/20', desc: '매일 먹어도 편안한! 모나지 않고 소소하며 든든한 식사입니다.' },
+    { rating: 2, label: '2점 🥱', name: '🥱 조금 아쉽네요', color: '#818cf8', fontColor: 'text-[#818cf8]', badge: 'bg-[#818cf8]/10 text-[#818cf8] border-[#818cf8]/20 hover:bg-[#818cf8]/20', desc: '조금 아쉬운 타이밍! 다음 끼니에는 더 근사한 맛을 찾아가 볼까요?' },
+    { rating: 1, label: '1점 😭', name: '😭 흑역사 식단', color: '#f87171', fontColor: 'text-[#f87171]', badge: 'bg-[#f87171]/10 text-[#f87171] border-[#f87171]/20 hover:bg-[#f87171]/20', desc: '이건 선 넘었지! 너무 아쉽거나 급하게 때운 식사였습니다. 힘내세요!' },
+  ];
+
+  // 만족도 차트용 리포트 가공 (0개 이상인 조각들만 필터링)
+  const chartData = satisfactionData
+    .map(item => {
+      const value = satisfactionDist[item.rating as 1 | 2 | 3 | 4 | 5] || 0;
+      const ratio = totalSatisfaction > 0 ? value / totalSatisfaction : 0;
+      const percentage = Math.round(ratio * 100);
+      return { ...item, value, ratio, percentage };
+    })
+    .filter(item => item.value > 0);
+
+  // 디폴트로 보여줄 상세 정보 도출 (가장 많은 회수를 차지한 만족도)
+  const defaultSegment = [...satisfactionData]
+    .map(item => {
+      const value = satisfactionDist[item.rating as 1 | 2 | 3 | 4 | 5] || 0;
+      const ratio = totalSatisfaction > 0 ? value / totalSatisfaction : 0;
+      const percentage = Math.round(ratio * 100);
+      return { ...item, value, ratio, percentage };
+    })
+    .sort((a, b) => b.value - a.value)[0];
+
+  const currentDisplaySegment = chartData.find(s => s.rating === activeRating) || 
+    (chartData.length > 0 ? chartData.find(s => s.rating === defaultSegment.rating) || chartData[0] : null);
 
   return (
     <div className="space-y-6">
@@ -271,7 +190,6 @@ https://joyopi.vercel.app/meals`;
             </p>
           </div>
 
-          {/* 지출, 1끼 평균 대신 1x2 그리드로 최애 메뉴와 그리운 맛만 깔끔 노출 */}
           <div className="mt-6 pt-4 border-t border-border/20 flex flex-col gap-2.5 z-10">
             <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold text-muted-foreground">
               <div className="bg-background/25 border border-border/20 rounded p-2 text-center col-span-1">
@@ -359,42 +277,128 @@ https://joyopi.vercel.app/meals`;
           </div>
         </Card>
 
-        {/* 3. HTML5 Canvas 만족도 도넛 비중 차트 */}
+        {/* 3. 극도로 정갈하고 깨끗한 Recharts 기반 '모던 플랫 파이 차트' */}
         <Card className="lg:col-span-1 p-5 flex flex-col justify-between">
           <div className="space-y-1">
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              🍩 식사 만족도 분포도
-            </h4>
+            <div className="flex justify-between items-center">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                🍩 식사 만족도 분포도
+              </h4>
+              <span className="bg-secondary text-foreground border border-border/50 rounded p-0.5 px-2 text-[9px] font-bold">
+                📊 총 {totalSatisfaction}회 기록
+              </span>
+            </div>
             <p className="text-[10px] text-muted-foreground">
-              기록된 식사 만족도(1~5점) 단계별 비율 현황
+              기록된 만족도(1~5점) 점유 현황 및 원형 차트
             </p>
           </div>
 
-          {/* Canvas 영역 */}
-          <div className="relative aspect-[4/3] bg-secondary/10 border border-border/30 rounded-lg overflow-hidden mt-3 flex items-center justify-center">
-            <canvas ref={canvasRef} className="w-full h-full block" />
+          {/* 파이 차트 렌더링 영역 */}
+          <div className="relative aspect-[4/3] bg-secondary/10 border border-border/30 rounded-lg overflow-hidden mt-3 flex items-center justify-center min-h-[180px]">
+            {(() => {
+              if (!mounted) {
+                return (
+                  <div className="text-[10px] font-bold text-muted-foreground animate-pulse">
+                    차트 엔진 로드 중...
+                  </div>
+                );
+              }
+
+              if (totalSatisfaction === 0) {
+                return (
+                  <div className="text-center text-xs text-muted-foreground font-semibold flex flex-col items-center gap-1.5">
+                    <span className="text-xl">🍩</span>
+                    <span>식사 기록이 아직 없습니다.</span>
+                  </div>
+                );
+              }
+
+              return (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="52%"
+                      outerRadius="78%"
+                      paddingAngle={2.5}
+                      dataKey="value"
+                      stroke="#1e1e24"
+                      strokeWidth={1.5}
+                    >
+                      {chartData.map((entry) => {
+                        const isCurrentActive = activeRating === entry.rating;
+                        return (
+                          <Cell
+                            key={`cell-${entry.rating}`}
+                            fill={entry.color}
+                            onMouseEnter={() => setActiveRating(entry.rating)}
+                            onMouseLeave={() => setActiveRating(null)}
+                            className={`transition-all duration-200 cursor-pointer outline-none ${
+                              isCurrentActive 
+                                ? 'opacity-100 filter drop-shadow-[0_0_6px_rgba(255,255,255,0.15)]' 
+                                : activeRating !== null 
+                                  ? 'opacity-40' 
+                                  : 'opacity-90 hover:opacity-100'
+                            }`}
+                          />
+                        );
+                      })}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              );
+            })()}
           </div>
 
-          {/* 오색 네온 뱃지 수치 범례 */}
-          <div className="grid grid-cols-5 gap-1 mt-4 pt-3 border-t border-border/40 text-[10px] font-bold text-center">
-            {[
-              { label: '5점 👑', color: 'bg-[#e2ff00]/15 text-[#e2ff00] border-[#e2ff00]/30', key: 5 },
-              { label: '4점 🥰', color: 'bg-[#FF6B4A]/15 text-[#FF6B4A] border-[#FF6B4A]/30', key: 4 },
-              { label: '3점 😋', color: 'bg-[#a855f7]/15 text-[#a855f7] border-[#a855f7]/30', key: 3 },
-              { label: '2점 🥱', color: 'bg-[#34d399]/15 text-[#34d399] border-[#34d399]/30', key: 2 },
-              { label: '1점 😭', color: 'bg-[#ef4444]/15 text-[#ef4444] border-[#ef4444]/30', key: 1 },
-            ].map((item) => {
-              const count = stats.satisfactionDistribution?.[item.key] || 0;
-              const ratio = stats.count > 0 ? Math.round((count / stats.count) * 100) : 0;
-              return (
-                <div key={item.key} className={`p-1 rounded-md border flex flex-col justify-between items-center ${item.color}`}>
-                  <span className="opacity-90 text-[8px] tracking-tight">{item.label}</span>
-                  <span className="text-[10px] font-extrabold mt-0.5">{count}회</span>
-                  <span className="text-[7.5px] opacity-60 font-semibold mt-0.5">{ratio}%</span>
-                </div>
-              );
-            })}
-          </div>
+          {/* 차트 세그먼트와 실시간 호버 연동형 글래스모피즘 피드백 보드 */}
+          {totalSatisfaction > 0 && currentDisplaySegment && (
+            <div 
+              className="bg-secondary/20 border border-border/40 p-3 rounded-lg flex flex-col justify-between gap-1 min-h-[75px] transition-all duration-200 mt-4"
+              data-testid="satisfaction-detail-feedback"
+            >
+              <div className="flex justify-between items-center">
+                <span className={`text-[10px] font-extrabold flex items-center gap-1 ${currentDisplaySegment.fontColor}`}>
+                  {currentDisplaySegment.name}
+                </span>
+                <span className="text-[9px] text-muted-foreground font-semibold">
+                  {currentDisplaySegment.value}회 기록 ({currentDisplaySegment.percentage}%)
+                </span>
+              </div>
+              <p className="text-[10px] text-foreground/80 leading-relaxed font-medium">
+                {currentDisplaySegment.desc}
+              </p>
+            </div>
+          )}
+
+          {/* 5색 글래스모피즘 스코어 칩 범례 */}
+          {totalSatisfaction > 0 && (
+            <div className="grid grid-cols-5 gap-1 pt-3 border-t border-border/30 text-[9px] font-bold text-center mt-4">
+              {satisfactionData.map((item) => {
+                const count = satisfactionDist[item.rating as 1 | 2 | 3 | 4 | 5] || 0;
+                const ratio = totalSatisfaction > 0 ? Math.round((count / totalSatisfaction) * 100) : 0;
+                const isCurrentActive = activeRating === item.rating;
+
+                return (
+                  <div
+                    key={item.rating}
+                    onMouseEnter={() => count > 0 && setActiveRating(item.rating)}
+                    onMouseLeave={() => setActiveRating(null)}
+                    className={`p-1.5 rounded-md border flex flex-col justify-between items-center transition-all duration-200 cursor-pointer ${
+                      count > 0 ? item.badge : 'bg-secondary/5 text-muted-foreground/40 border-border/20 cursor-not-allowed opacity-30'
+                    } ${
+                      isCurrentActive ? 'scale-105 shadow-md border-white/20' : ''
+                    }`}
+                  >
+                    <span className="text-[7.5px] tracking-tight">{item.label}</span>
+                    <span className="text-[10px] font-extrabold mt-0.5">{count}회</span>
+                    <span className="text-[7px] opacity-60 font-semibold mt-0.5">{ratio}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
       </div>
     </div>

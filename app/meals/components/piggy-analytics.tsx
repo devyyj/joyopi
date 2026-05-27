@@ -62,7 +62,7 @@ export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyA
 
   const theme = getCharacterTheme(stats.character.type);
 
-  // HTML5 Canvas 활용 만족도(1~5) 도넛 분포 차트 렌더링 (ResizeObserver 기반 완전 대응)
+  // HTML5 Canvas 활용 만족도(1~5) 프리미엄 입체 파이 그래프 렌더링 (ResizeObserver 기반 완전 대응)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -94,9 +94,8 @@ export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyA
       const centerX = width / 2;
       const centerY = height / 2;
       const radius = Math.min(width, height) / 2.6;
-      const thickness = 14;
 
-      // 실제 전달받은 만족도 통계로 데이터셋 계산
+      // 실제 만족도 통계로 데이터셋 계산
       const dist = stats.satisfactionDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       const total = Object.values(dist).reduce((a, b) => a + b, 0);
 
@@ -108,46 +107,67 @@ export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyA
         { level: 1, color: '#ef4444', ratio: total > 0 ? (dist[1] || 0) / total : 0 }
       ];
 
-      let startAngle = -Math.PI / 2; // 12시 방향부터 시작
-
       if (total > 0) {
+        // 1. 입체적 느낌을 위한 드롭 섀도우 효과 설정
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 6;
+
+        let startAngle = -Math.PI / 2; // 12시 방향부터 시작
+
         satisfactionDistribution.forEach((slice) => {
           if (slice.ratio <= 0) return;
           const sliceAngle = slice.ratio * Math.PI * 2;
           const endAngle = startAngle + sliceAngle;
 
-          // 원호 조각 그리기
+          // 꽉 찬 파이 조각 (부채꼴) 그리기
           ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
           ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-          ctx.strokeStyle = slice.color;
-          ctx.lineWidth = thickness;
-          ctx.lineCap = 'round';
+          ctx.closePath();
+          ctx.fillStyle = slice.color;
+          ctx.fill();
+
+          // 조각 사이 경계선 디자인 (입체적인 틈새 효과 부여)
+          ctx.strokeStyle = '#121214'; // 카드 내부 어두운 배경 톤과 매칭
+          ctx.lineWidth = 3.5;
           ctx.stroke();
 
           startAngle = endAngle;
         });
 
-        // 도넛 중심에 총 기록 횟수 렌더링
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${total}회`, centerX, centerY - 2);
+        // 2. 텍스트 라벨 렌더링 (그림자 효과 제거 후 드로우)
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = 'bold 8px sans-serif';
-        ctx.fillText('식사 기록', centerX, centerY + 10);
+        // 좌측 상단 총 횟수 요약 배지 디자인
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.beginPath();
+        ctx.roundRect(12, 12, 85, 22, 6);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`📊 총 ${total}회 기록`, 18, 26);
       } else {
-        // 기록이 없을 때 빈 회색 링
+        // 기록이 없을 때 빈 은은한 회색 파이 원형
+        ctx.shadowColor = 'transparent';
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        ctx.lineWidth = thickness;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = 'bold 9px sans-serif';
+        ctx.font = 'bold 10px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('기록 없음', centerX, centerY + 2);
+        ctx.fillText('식사 기록 없음', centerX, centerY + 3);
       }
     };
 

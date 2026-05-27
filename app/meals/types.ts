@@ -23,6 +23,7 @@ export interface MealStats {
   nightSnackRatio: number;
   count: number;
   mealTypeDistribution: Record<string, number>;
+  satisfactionDistribution: Record<number, number>;
   character: {
     type: string;
     description: string;

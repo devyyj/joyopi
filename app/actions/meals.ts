@@ -274,6 +274,7 @@ export async function getMealStats(period: '7days' | '30days') {
         nightSnackRatio: 0,
         count: 0,
         mealTypeDistribution: {},
+        satisfactionDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         character: { type: '소식 웰빙 돼지', description: '기록된 식사 정보가 없습니다.' },
         mostEaten: { menuName: '없음', count: 0 },
         longestUnEaten: { menuName: '없음', daysAgo: 0 },
@@ -295,6 +296,7 @@ export async function getMealStats(period: '7days' | '30days') {
         nightSnackRatio: 0,
         count: 0,
         mealTypeDistribution: {},
+        satisfactionDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
         character: { type: '소식 웰빙 돼지', description: '식사 일기가 텅 비어 있습니다. 오늘 먹은 맛있는 식사부터 기록해 보세요!' },
         mostEaten: { menuName: '없음', count: 0 },
         longestUnEaten: { menuName: '없음', daysAgo: 0 },
@@ -305,12 +307,18 @@ export async function getMealStats(period: '7days' | '30days') {
     let nightSnackCount = 0;
 
     const mealTypeCounts: Record<string, number> = {};
+    const satisfactionCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
     list.forEach((meal) => {
       satisfactionSum += meal.satisfaction;
 
       // 식사 타입 분포
       mealTypeCounts[meal.mealType] = (mealTypeCounts[meal.mealType] || 0) + 1;
+
+      // 만족도 분포 집계
+      if (meal.satisfaction >= 1 && meal.satisfaction <= 5) {
+        satisfactionCounts[meal.satisfaction] = (satisfactionCounts[meal.satisfaction] || 0) + 1;
+      }
 
       // 야식 여부 판정 (22:00 ~ 04:00)
       const eatenHour = new Date(meal.eatenAt).getHours();
@@ -409,6 +417,7 @@ export async function getMealStats(period: '7days' | '30days') {
       nightSnackRatio,
       count,
       mealTypeDistribution: mealTypeCounts,
+      satisfactionDistribution: satisfactionCounts,
       character: {
         type: charType,
         description: charDesc,
@@ -422,6 +431,7 @@ export async function getMealStats(period: '7days' | '30days') {
       nightSnackRatio: 0,
       count: 0,
       mealTypeDistribution: {},
+      satisfactionDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       character: { type: '소식 웰빙 돼지', description: '통계 집계 중 알 수 없는 에러가 발생했습니다.' },
       mostEaten: { menuName: '없음', count: 0 },
       longestUnEaten: { menuName: '없음', daysAgo: 0 },

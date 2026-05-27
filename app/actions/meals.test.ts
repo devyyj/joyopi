@@ -236,6 +236,7 @@ describe('Meals Server Actions (TDD)', () => {
       const stats = await getMealStats('7days');
       expect(stats).toBeDefined();
       expect(stats.nightSnackRatio).toBe(33); // 3개 중 1개가 22시 이후 (33%)
+      expect(stats.satisfactionDistribution).toEqual({ 1: 0, 2: 0, 3: 0, 4: 1, 5: 2 });
       expect(stats.character.type).toBe('미식가 황제 돼지');
       expect(stats.mostEaten.menuName).toBe('제육볶음'); // 2회 섭취로 최애
       expect(stats.longestUnEaten.menuName).toBe('제육볶음'); // 최종 19시로 교촌치킨(23:30)보다 오래됨

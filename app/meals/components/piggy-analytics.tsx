@@ -62,98 +62,108 @@ export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyA
 
   const theme = getCharacterTheme(stats.character.type);
 
-  // HTML5 Canvas 활용 만족도(1~5) 도넛 분포 차트 렌더링
+  // HTML5 Canvas 활용 만족도(1~5) 도넛 분포 차트 렌더링 (ResizeObserver 기반 완전 대응)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const parent = canvas.parentElement;
+    if (!parent) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // 레티나 디스플레이 대응
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    let animationFrameId: number;
 
-    const width = rect.width;
-    const height = rect.height;
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 2.6;
-    const thickness = 14;
+    const draw = () => {
+      // 0px 방지를 위해 부모 노드 기준 크기 측정
+      const rect = parent.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
 
-    // 배경 청소
-    ctx.clearRect(0, 0, width, height);
+      if (width === 0 || height === 0) return;
 
-    // 가상의 만족도 분포 데이터 (실제 리포트에서 1~5 만족도 비중 계산)
-    // stats에 별도로 만족도 개수가 없을 것을 대비해 모의/기록된 리포트 기준 비중 처리
-    // 가독성과 UI 완성도를 위해 디폴트 또는 모의 비중 계산
-    const satisfactionDistribution = [
-      { level: 5, color: '#e2ff00', ratio: 0.35, label: '👑 5점' },
-      { level: 4, color: '#FF6B4A', ratio: 0.30, label: '🥰 4점' },
-      { level: 3, color: '#a855f7', ratio: 0.20, label: '😋 3점' },
-      { level: 2, color: '#34d399', ratio: 0.10, label: '🥱 2점' },
-      { level: 1, color: '#ef4444', ratio: 0.05, label: '😭 1점' }
-    ];
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
 
-    // 캐릭터 성향에 맞춰 도넛 분포 중심 비중을 위트 있게 커스텀 반영
-    if (stats.character.type === '미식가 황제 돼지') {
-      satisfactionDistribution[0].ratio = 0.65; // 5점 비중 극대화
-      satisfactionDistribution[1].ratio = 0.25;
-      satisfactionDistribution[2].ratio = 0.10;
-      satisfactionDistribution[3].ratio = 0.00;
-      satisfactionDistribution[4].ratio = 0.00;
-    } else if (stats.character.type === '소식 웰빙 돼지') {
-      satisfactionDistribution[0].ratio = 0.10;
-      satisfactionDistribution[1].ratio = 0.50; // 4점 중심
-      satisfactionDistribution[2].ratio = 0.30;
-      satisfactionDistribution[3].ratio = 0.10;
-      satisfactionDistribution[4].ratio = 0.00;
-    }
+      // 배경 청소
+      ctx.clearRect(0, 0, width, height);
 
-    let startAngle = -Math.PI / 2; // 12시 방향부터 시작
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = Math.min(width, height) / 2.6;
+      const thickness = 14;
 
-    if (stats.count > 0) {
-      satisfactionDistribution.forEach((slice) => {
-        if (slice.ratio <= 0) return;
-        const sliceAngle = slice.ratio * Math.PI * 2;
-        const endAngle = startAngle + sliceAngle;
+      // 실제 전달받은 만족도 통계로 데이터셋 계산
+      const dist = stats.satisfactionDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      const total = Object.values(dist).reduce((a, b) => a + b, 0);
 
-        // 원호 조각 그리기
+      const satisfactionDistribution = [
+        { level: 5, color: '#e2ff00', ratio: total > 0 ? (dist[5] || 0) / total : 0 },
+        { level: 4, color: '#FF6B4A', ratio: total > 0 ? (dist[4] || 0) / total : 0 },
+        { level: 3, color: '#a855f7', ratio: total > 0 ? (dist[3] || 0) / total : 0 },
+        { level: 2, color: '#34d399', ratio: total > 0 ? (dist[2] || 0) / total : 0 },
+        { level: 1, color: '#ef4444', ratio: total > 0 ? (dist[1] || 0) / total : 0 }
+      ];
+
+      let startAngle = -Math.PI / 2; // 12시 방향부터 시작
+
+      if (total > 0) {
+        satisfactionDistribution.forEach((slice) => {
+          if (slice.ratio <= 0) return;
+          const sliceAngle = slice.ratio * Math.PI * 2;
+          const endAngle = startAngle + sliceAngle;
+
+          // 원호 조각 그리기
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+          ctx.strokeStyle = slice.color;
+          ctx.lineWidth = thickness;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          startAngle = endAngle;
+        });
+
+        // 도넛 중심에 총 기록 횟수 렌더링
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${total}회`, centerX, centerY - 2);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = 'bold 8px sans-serif';
+        ctx.fillText('식사 기록', centerX, centerY + 10);
+      } else {
+        // 기록이 없을 때 빈 회색 링
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.strokeStyle = slice.color;
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
         ctx.lineWidth = thickness;
-        ctx.lineCap = 'round';
         ctx.stroke();
 
-        startAngle = endAngle;
-      });
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('기록 없음', centerX, centerY + 2);
+      }
+    };
 
-      // 도넛 중심에 총 기록 횟수 렌더링
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${stats.count}회`, centerX, centerY - 2);
+    // ResizeObserver 등록
+    const resizeObserver = new ResizeObserver(() => {
+      animationFrameId = requestAnimationFrame(draw);
+    });
+    resizeObserver.observe(parent);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = 'bold 8px sans-serif';
-      ctx.fillText('식사 기록', centerX, centerY + 10);
-    } else {
-      // 기록이 없을 때 빈 회색 링
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = thickness;
-      ctx.stroke();
+    // 최초 드로우 실행
+    draw();
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('기록 없음', centerX, centerY + 2);
-    }
+    return () => {
+      resizeObserver.disconnect();
+      cancelAnimationFrame(animationFrameId);
+    };
   }, [stats]);
 
   // 공유 텍스트 클립보드 복사 (가격 제거)
@@ -341,8 +351,29 @@ https://joyopi.vercel.app/meals`;
           </div>
 
           {/* Canvas 영역 */}
-          <div className="relative aspect-[4/3] bg-secondary/10 border border-border/30 rounded-lg overflow-hidden mt-3">
+          <div className="relative aspect-[4/3] bg-secondary/10 border border-border/30 rounded-lg overflow-hidden mt-3 flex items-center justify-center">
             <canvas ref={canvasRef} className="w-full h-full block" />
+          </div>
+
+          {/* 오색 네온 뱃지 수치 범례 */}
+          <div className="grid grid-cols-5 gap-1 mt-4 pt-3 border-t border-border/40 text-[10px] font-bold text-center">
+            {[
+              { label: '5점 👑', color: 'bg-[#e2ff00]/15 text-[#e2ff00] border-[#e2ff00]/30', key: 5 },
+              { label: '4점 🥰', color: 'bg-[#FF6B4A]/15 text-[#FF6B4A] border-[#FF6B4A]/30', key: 4 },
+              { label: '3점 😋', color: 'bg-[#a855f7]/15 text-[#a855f7] border-[#a855f7]/30', key: 3 },
+              { label: '2점 🥱', color: 'bg-[#34d399]/15 text-[#34d399] border-[#34d399]/30', key: 2 },
+              { label: '1점 😭', color: 'bg-[#ef4444]/15 text-[#ef4444] border-[#ef4444]/30', key: 1 },
+            ].map((item) => {
+              const count = stats.satisfactionDistribution?.[item.key] || 0;
+              const ratio = stats.count > 0 ? Math.round((count / stats.count) * 100) : 0;
+              return (
+                <div key={item.key} className={`p-1 rounded-md border flex flex-col justify-between items-center ${item.color}`}>
+                  <span className="opacity-90 text-[8px] tracking-tight">{item.label}</span>
+                  <span className="text-[10px] font-extrabold mt-0.5">{count}회</span>
+                  <span className="text-[7.5px] opacity-60 font-semibold mt-0.5">{ratio}%</span>
+                </div>
+              );
+            })}
           </div>
         </Card>
       </div>

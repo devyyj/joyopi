@@ -41,10 +41,6 @@ export interface MealStats {
   count: number;
   mealTypeDistribution: Record<string, number>;
   satisfactionDistribution: Record<number, number>;
-  character: {
-    type: string;
-    description: string;
-  };
   mostEaten: {
     menuName: string;
     count: number;

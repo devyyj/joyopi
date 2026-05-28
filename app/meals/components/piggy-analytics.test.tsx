@@ -22,10 +22,6 @@ describe('PiggyAnalytics - Flat Pie Chart TDD', () => {
   const mockStats: MealStats = {
     count: 3,
     nightSnackRatio: 33,
-    character: {
-      type: '미식가 황제 돼지',
-      description: '맛있는 음식에 플렉스하는 왕!',
-    },
     mostEaten: {
       menuName: '제육볶음',
       count: 2,

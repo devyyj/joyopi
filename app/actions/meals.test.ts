@@ -180,8 +180,8 @@ describe('Meals Server Actions (TDD)', () => {
       ];
       (db.query.meals.findMany as Mock).mockResolvedValue(mockMeals);
 
-      const result = await getMeals('2026-05-27');
-      expect(result).toEqual(mockMeals);
+      const result = await getMeals({ from: '2026-05-27', to: '2026-05-27' });
+      expect(result.meals).toEqual(mockMeals);
     });
   });
 
@@ -211,7 +211,7 @@ describe('Meals Server Actions (TDD)', () => {
           menuName: '제육볶음',
           mealType: 'lunch',
           satisfaction: 5,
-          eatenAt: new Date('2026-05-27T12:00:00'), // Z를 제외해 로컬 타임존 보장
+          eatenAt: new Date('2026-05-20T12:00:00'), // 7일 전 점심
           tags: ['#혼밥', '#행복'],
         },
         {
@@ -219,7 +219,7 @@ describe('Meals Server Actions (TDD)', () => {
           menuName: '교촌치킨',
           mealType: 'night_snack',
           satisfaction: 5,
-          eatenAt: new Date('2026-05-27T23:30:00'), // 로컬 야식(23시) 보장
+          eatenAt: new Date('2026-05-10T23:30:00'), // 17일 전 야식 (제육볶음보다 훨씬 오래됨)
           tags: ['#스트레스', '#야식'],
         },
         {
@@ -227,19 +227,22 @@ describe('Meals Server Actions (TDD)', () => {
           menuName: '제육볶음',
           mealType: 'dinner',
           satisfaction: 4,
-          eatenAt: new Date('2026-05-27T19:00:00'),
+          eatenAt: new Date('2026-05-22T19:00:00'), // 5일 전 저녁 (제육볶음 최신)
           tags: ['#든든함'],
         },
       ];
+      // findMany는 2번 호출됨 (list, allMeals) - 동일 mock 데이터를 반환
       (db.query.meals.findMany as Mock).mockResolvedValue(mockMeals);
 
-      const stats = await getMealStats('7days');
+      const stats = await getMealStats('2026-05-20', '2026-05-27');
       expect(stats).toBeDefined();
       expect(stats.nightSnackRatio).toBe(33); // 3개 중 1개가 22시 이후 (33%)
       expect(stats.satisfactionDistribution).toEqual({ 1: 0, 2: 0, 3: 0, 4: 1, 5: 2 });
       expect(stats.character.type).toBe('미식가 황제 돼지');
       expect(stats.mostEaten.menuName).toBe('제육볶음'); // 2회 섭취로 최애
-      expect(stats.longestUnEaten.menuName).toBe('제육볶음'); // 최종 19시로 교촌치킨(23:30)보다 오래됨
+      // 교촌치킨: 마지막 섭취 5/10(23:30) → 17일 전, 제육볶음: 마지막 섭취 5/22(19:00) → 5일 전
+      // 따라서 더 오래된 것은 교촌치킨
+      expect(stats.longestUnEaten.menuName).toBe('교촌치킨');
     });
   });
 });

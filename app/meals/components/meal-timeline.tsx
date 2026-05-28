@@ -1,30 +1,43 @@
-'use client';
-
 import React, { useState, useOptimistic, startTransition } from 'react';
 import SafeImage from '@/app/board/components/safe-image';
 import { ConfirmModal } from '@/app/components/ui/core';
-import { deleteMeal, updateMeal } from '@/app/actions/meals';
+import { deleteMeal, updateMeal, getMeals } from '@/app/actions/meals';
 import MealFormModal from './meal-form-modal';
-import { Meal } from '../types';
+import { Meal, DateRange } from '../types';
 
 interface MealTimelineProps {
   initialMeals: Meal[];
+  initialNextCursor: number | null;
+  initialHasMore: boolean;
+  range: DateRange;
   onRefresh: () => void;
 }
 
-export default function MealTimeline({ initialMeals, onRefresh }: MealTimelineProps) {
+export default function MealTimeline({ initialMeals, initialNextCursor, initialHasMore, range, onRefresh }: MealTimelineProps) {
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deletingMealId, setDeletingMealId] = useState<number | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  // 인라인 간편 편집 필드 상태 (가격 삭제, 만족도만 남김)
+  // 페이지네이션 상태
+  const [meals, setMeals] = useState<Meal[]>(initialMeals);
+  const [nextCursor, setNextCursor] = useState<number | null>(initialNextCursor);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [prevInitialMeals, setPrevInitialMeals] = useState<Meal[]>(initialMeals);
+  if (initialMeals !== prevInitialMeals) {
+    setMeals(initialMeals);
+    setNextCursor(initialNextCursor);
+    setHasMore(initialHasMore);
+    setPrevInitialMeals(initialMeals);
+  }
   const [inlineEditMealId, setInlineEditMealId] = useState<number | null>(null);
   const [inlineField, setInlineField] = useState<'satisfaction' | null>(null);
 
   // 낙관적 업데이트 (Optimistic UI) 적용
   const [optimisticMeals, setOptimisticMeals] = useOptimistic(
-    initialMeals,
+    meals,
     (state, action: { type: 'delete' | 'update' | 'update_inline'; id: number; data?: Partial<Meal> }) => {
       if (action.type === 'delete') {
         return state.filter((m) => m.id !== action.id);
@@ -55,7 +68,30 @@ export default function MealTimeline({ initialMeals, onRefresh }: MealTimelinePr
     if (!response.success) {
       alert(response.message || '삭제에 실패했습니다. 다시 시도해 주세요.');
     }
+    // 삭제 후 로컬 목록에서도 제거
+    setMeals((prev) => prev.filter((m) => m.id !== targetId));
     onRefresh();
+  };
+
+  // 더 불러오기
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore || !nextCursor) return;
+    setIsLoadingMore(true);
+    try {
+      const result = await getMeals({
+        from: range.from,
+        to: range.to,
+        cursor: nextCursor,
+        limit: 10,
+      });
+      setMeals((prev) => [...prev, ...(result.meals as Meal[])]);
+      setNextCursor(result.nextCursor);
+      setHasMore(result.hasMore);
+    } catch (e) {
+      console.error('[loadMore Error]:', e);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   // 인라인 만족도 저장
@@ -273,6 +309,18 @@ export default function MealTimeline({ initialMeals, onRefresh }: MealTimelinePr
           </div>
         );
       })}
+
+      {hasMore && (
+        <div className="flex justify-center pt-4">
+          <button
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="px-6 py-2.5 text-xs font-bold text-primary hover:text-primary-foreground bg-primary/10 hover:bg-primary border border-primary/20 hover:border-primary rounded-md transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoadingMore ? '불러오는 중...' : '🍴 더 보기'}
+          </button>
+        </div>
+      )}
 
       {/* 모달 렌더링 */}
       {isEditModalOpen && editingMeal && (

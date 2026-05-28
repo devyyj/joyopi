@@ -38,10 +38,18 @@ export default async function Home() {
       const offset = d.getTimezoneOffset() * 60000;
       const todayStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
       
-      const mealsToday = await getMeals(todayStr);
-      todayMealsCount = mealsToday.length;
+      const mealsTodayResult = await getMeals({
+        from: todayStr,
+        to: todayStr,
+        limit: 50,
+      });
+      todayMealsCount = mealsTodayResult.meals.length;
 
-      const stats = await getMealStats('7days');
+      const fromDate = new Date(d.getTime() - offset);
+      fromDate.setDate(fromDate.getDate() - 6);
+      const fromStr = fromDate.toISOString().split('T')[0];
+
+      const stats = await getMealStats(fromStr, todayStr);
       if (stats && stats.count > 0) {
         piggyCharacter = stats.character;
       }
@@ -96,6 +104,56 @@ export default async function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 md:py-10 space-y-12">
+      {/* 🐖 돼지 일기 퀵 인사이트 카드 배너 */}
+      <Card className="p-6 bg-gradient-to-r from-orange-950/20 via-background to-secondary/15 border border-primary/20 rounded-xl relative overflow-hidden group">
+        {/* 아우라 효과 */}
+        <div className="absolute right-6 bottom-[-20px] text-8xl opacity-15 pointer-events-none select-none group-hover:scale-110 transition-transform duration-500">
+          🐖
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold">
+              <span>NEW</span> 웰니스 마이크로 서비스
+            </div>
+            <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
+              오늘 먹은 끼니와 기분을 분석하는 <span className="text-primary font-extrabold">돼지 일기</span>
+            </h3>
+            
+            {user ? (
+              <div className="text-xs text-muted-foreground font-semibold space-y-1">
+                <p>
+                  오늘의 식사 기록: <span className="text-foreground font-bold">{todayMealsCount}회</span>
+                </p>
+                {piggyCharacter ? (
+                  <p>
+                    최근 7일 나의 먹방 성향: <span className="text-primary font-bold">✨ {piggyCharacter.type}</span>
+                  </p>
+                ) : (
+                  <p className="text-[11px] italic">
+                    ※ 7일 이내에 식사 일지를 작성하면 맛있는 성향 캐릭터 분석 카드가 나타납니다!
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground font-medium max-w-xl">
+                내가 매일 먹은 식사와 기분, 만족도를 간편히 기록해 귀여운 성향 캐릭터를 만나보세요. 
+                로그인 후 지금 즉시 시작할 수 있습니다.
+              </p>
+            )}
+          </div>
+
+          <Link href="/meals" className="shrink-0 w-full md:w-auto">
+            <Button variant="primary" size="md" className="w-full md:w-auto font-bold flex items-center justify-center gap-1.5">
+              {user ? '나의 식사 일기장 가기' : '돼지 일기 시작하기'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
       {/* 3단 대시보드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
         <DashboardList 
@@ -146,58 +204,6 @@ export default async function Home() {
             </svg>
           </Button>
         </Link>
-      </div>
-
-      {/* 🐖 돼지 일기 퀵 인사이트 카드 배너 */}
-      <div className="pt-4">
-        <Card className="p-6 bg-gradient-to-r from-orange-950/20 via-background to-secondary/15 border border-primary/20 rounded-xl relative overflow-hidden group">
-          {/* 아우라 효과 */}
-          <div className="absolute right-6 bottom-[-20px] text-8xl opacity-15 pointer-events-none select-none group-hover:scale-110 transition-transform duration-500">
-            🐖
-          </div>
-
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold">
-                <span>NEW</span> 웰니스 마이크로 서비스
-              </div>
-              <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
-                오늘 먹은 끼니와 기분을 분석하는 <span className="text-primary font-extrabold">돼지 일기</span>
-              </h3>
-              
-              {user ? (
-                <div className="text-xs text-muted-foreground font-semibold space-y-1">
-                  <p>
-                    오늘의 식사 기록: <span className="text-foreground font-bold">{todayMealsCount}회</span>
-                  </p>
-                  {piggyCharacter ? (
-                    <p>
-                      최근 7일 나의 먹방 성향: <span className="text-primary font-bold">✨ {piggyCharacter.type}</span>
-                    </p>
-                  ) : (
-                    <p className="text-[11px] italic">
-                      ※ 7일 이내에 식사 일지를 작성하면 맛있는 성향 캐릭터 분석 카드가 나타납니다!
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground font-medium max-w-xl">
-                  내가 매일 먹은 식사와 기분, 만족도를 간편히 기록해 귀여운 성향 캐릭터를 만나보세요. 
-                  로그인 후 지금 즉시 시작할 수 있습니다.
-                </p>
-              )}
-            </div>
-
-            <Link href="/meals" className="shrink-0 w-full md:w-auto">
-              <Button variant="primary" size="md" className="w-full md:w-auto font-bold flex items-center justify-center gap-1.5">
-                {user ? '나의 식사 일기장 가기' : '돼지 일기 시작하기'}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Button>
-            </Link>
-          </div>
-        </Card>
       </div>
 
       <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-muted-foreground">

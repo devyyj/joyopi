@@ -45,16 +45,29 @@ describe('PiggyAnalytics - Flat Pie Chart TDD', () => {
       2: 0,
       1: 0,
     },
+    mostEatenList: [
+      { menuName: '제육볶음', count: 2 },
+      { menuName: '김치찌개', count: 1 }
+    ],
+    longestUnEatenList: [
+      { menuName: '김치찌개', daysAgo: 3 },
+      { menuName: '제육볶음', daysAgo: 1 }
+    ],
+    weeklyDateRange: {
+      start: `${new Date().getFullYear()}.01.01.`,
+      end: `${new Date().getFullYear()}.01.07.`,
+    },
   };
 
-  it('1. 기본 돼지 지수 리포트 내용이 화면에 잘 잡히는지 확인', () => {
-    render(<PiggyAnalytics stats={mockStats} period="7days" onPeriodChange={() => {}} />);
-    expect(screen.getByText('미식가 황제 돼지')).toBeInTheDocument();
-    expect(screen.getByText('맛있는 음식에 플렉스하는 왕!')).toBeInTheDocument();
+  it('1. 최애 메뉴 및 그리운 맛 합본 카드가 화면에 잘 잡히는지 확인', () => {
+    render(<PiggyAnalytics stats={mockStats} />);
+    
+    expect(screen.getByText('👑 최애 메뉴 TOP 5')).toBeInTheDocument();
+    expect(screen.getByText('🕰️ 그리운 맛 TOP 5')).toBeInTheDocument();
   });
 
   it('2. [Red Test] Recharts 라이브러리 연동 및 차트 구성 요소 마운트 검증', async () => {
-    render(<PiggyAnalytics stats={mockStats} period="7days" onPeriodChange={() => {}} />);
+    render(<PiggyAnalytics stats={mockStats} />);
     
     // Recharts 모킹 컨테이너가 렌더링되었는지 비동기적으로 대기 및 검사
     const responsiveContainer = await screen.findByTestId('responsive-container');
@@ -70,7 +83,7 @@ describe('PiggyAnalytics - Flat Pie Chart TDD', () => {
   });
 
   it('3. [Red Test] 5색 플랫 파스텔 배색 및 하단 피드백 돔 연동 검증', async () => {
-    render(<PiggyAnalytics stats={mockStats} period="7days" onPeriodChange={() => {}} />);
+    render(<PiggyAnalytics stats={mockStats} />);
 
     // 하단 글래스모피즘 피드백 보드가 정상 렌더링되었는지 비동기적으로 대기 및 확인
     const feedbackArea = await screen.findByTestId('satisfaction-detail-feedback');

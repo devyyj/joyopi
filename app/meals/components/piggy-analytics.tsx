@@ -7,12 +7,9 @@ import { MealStats } from '../types';
 
 interface PiggyAnalyticsProps {
   stats: MealStats;
-  period: '7days' | '30days';
-  onPeriodChange: (p: '7days' | '30days') => void;
 }
 
-export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyAnalyticsProps) {
-  const [copied, setCopied] = useState(false);
+export default function PiggyAnalytics({ stats }: PiggyAnalyticsProps) {
   const [mounted, setMounted] = useState(false);
   const [activeRating, setActiveRating] = useState<number | null>(null);
 
@@ -21,76 +18,6 @@ export default function PiggyAnalytics({ stats, period, onPeriodChange }: PiggyA
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
-
-  // 캐릭터별 테마 스타일 반환
-  const getCharacterTheme = (type: string) => {
-    switch (type) {
-      case '야식 파이터 돼지':
-        return {
-          bg: 'bg-card border-border border-t-4 border-t-red-500/80',
-          badge: 'bg-red-500/10 text-red-400 border-red-500/20',
-          accent: 'text-red-400',
-          emoji: '🍗',
-          tagline: '밤 10시 이후 침샘 폭발의 1인자!',
-        };
-      case '소식 웰빙 돼지':
-        return {
-          bg: 'bg-card border-border border-t-4 border-t-emerald-500/80',
-          badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-          accent: 'text-emerald-400',
-          emoji: '🥗',
-          tagline: '양보단 세련된 퀄리티의 비건 요정!',
-        };
-      case '가성비 요정 돼지':
-        return {
-          bg: 'bg-card border-border border-t-4 border-t-amber-500/80',
-          badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-          accent: 'text-amber-400',
-          emoji: '💸',
-          tagline: '만원 이하 최강의 만족도 장인!',
-        };
-      case '미식가 황제 돼지':
-        return {
-          bg: 'bg-card border-border border-t-4 border-t-purple-500/80',
-          badge: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-          accent: 'text-purple-400',
-          emoji: '👑',
-          tagline: '미식과 플렉스에 영혼을 바친 지배자!',
-        };
-      default:
-        return {
-          bg: 'bg-card border-border border-t-4 border-t-orange-500/80',
-          badge: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-          accent: 'text-orange-400',
-          emoji: '🐖',
-          tagline: '맛의 중용을 아는 든든한 연구원!',
-        };
-    }
-  };
-
-  const theme = getCharacterTheme(stats.character.type);
-
-  // 공유 텍스트 클립보드 복사
-  const handleShare = () => {
-    const shareText = `[조요피 연구소 - 돼지 일기 🐖]
-이번 주 나의 식생활 분석 캐릭터는?
-👉 ** ${stats.character.type} **
-
-"${stats.character.description}"
-
-📊 나의 주간 리포트 요약 (최근 ${period === '7days' ? '7' : '30'}일)
-- 최애 메뉴 👑: ${stats.mostEaten.count >= 2 ? `${stats.mostEaten.menuName}(${stats.mostEaten.count}회)` : '골고루 섭취 중'}
-- 그리운 맛 🕰️: ${stats.longestUnEaten.daysAgo > 0 ? `${stats.longestUnEaten.menuName}(${stats.longestUnEaten.daysAgo}일 전)` : '다채로운 식단'}
-- 야식 먹방 비율: ${stats.nightSnackRatio}%
-
-나만의 맛있는 식사 일기 기록하러 가기 🍩
-https://joyopi.vercel.app/meals`;
-
-    navigator.clipboard.writeText(shareText).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
 
   // 식사 종류별 게이지 최대값 도출
   const dist = stats.mealTypeDistribution || {};
@@ -144,94 +71,58 @@ https://joyopi.vercel.app/meals`;
 
   return (
     <div className="space-y-6">
-      {/* 기간 선택 스위치 */}
-      <div className="flex justify-between items-center bg-secondary/30 p-1 rounded-lg border border-border">
-        <span className="text-xs font-bold text-muted-foreground pl-2">🐖 먹방 통계 분석</span>
-        <div className="flex gap-1 text-[11px] font-bold">
-          <button
-            onClick={() => onPeriodChange('7days')}
-            className={`px-3 py-1 rounded cursor-pointer transition-colors ${
-              period === '7days' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'
-            }`}
-          >
-            최근 7일
-          </button>
-          <button
-            onClick={() => onPeriodChange('30days')}
-            className={`px-3 py-1 rounded cursor-pointer transition-colors ${
-              period === '30days' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'
-            }`}
-          >
-            최근 30일
-          </button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* 1. 돼지 캐릭터 리포트 카드 (주간 요약) */}
-        <Card className={`lg:col-span-1 border ${theme.bg} p-5 flex flex-col justify-between`}>
-          <div className="space-y-3 z-10">
-            <div className="flex justify-between items-start">
-              <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${theme.badge}`}>
-                Weekly Report
-              </span>
-              <span className="text-2xl">{theme.emoji}</span>
-            </div>
-
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground tracking-tight">{theme.tagline}</p>
-              <h3 className={`text-xl font-bold tracking-tight mt-0.5 ${theme.accent}`}>
-                {stats.character.type}
-              </h3>
-            </div>
-
-            <p className="text-xs text-foreground/80 leading-relaxed font-medium">
-              {stats.character.description}
-            </p>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-border/20 flex flex-col gap-2.5 z-10">
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold text-muted-foreground">
-              <div className="bg-background/25 border border-border/20 rounded p-2 text-center col-span-1">
-                <span className="block text-[10px] text-muted tracking-tight">최애 메뉴 👑</span>
-                <span className="text-[11px] font-bold text-foreground truncate block mt-0.5" title={stats.mostEaten.menuName}>
-                  {stats.mostEaten.count >= 2 
-                    ? `${stats.mostEaten.menuName} (${stats.mostEaten.count}회)` 
-                    : stats.mostEaten.count === 1
-                      ? `${stats.mostEaten.menuName} (1회)`
-                      : '기록 없음'
-                  }
-                </span>
-              </div>
-              <div className="bg-background/25 border border-border/20 rounded p-2 text-center col-span-1">
-                <span className="block text-[10px] text-muted tracking-tight">그리운 맛 🕰️</span>
-                <span className="text-[11px] font-bold text-foreground truncate block mt-0.5" title={stats.longestUnEaten.menuName}>
-                  {stats.longestUnEaten.daysAgo > 0 
-                    ? `${stats.longestUnEaten.menuName} (${stats.longestUnEaten.daysAgo}일 전)` 
-                    : '식단 다채로움'
-                  }
-                </span>
+        {/* 1. 최애 메뉴 & 그리운 맛 TOP 5 합본 카드 */}
+        <Card className="lg:col-span-1 p-5 border border-border bg-card flex flex-col justify-between" data-testid="top5-stats-card">
+          <div className="space-y-4">
+            {/* 최애 메뉴 TOP 5 */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                👑 최애 메뉴 TOP 5
+              </h4>
+              <div className="space-y-1.5">
+                {stats.mostEatenList && stats.mostEatenList.length > 0 ? (
+                  stats.mostEatenList.slice(0, 5).map((item, idx) => (
+                    <div key={item.menuName} className="flex items-center justify-between text-[11px] font-semibold p-1.5 bg-secondary/15 border border-border/20 rounded">
+                      <span className="text-foreground flex items-center gap-1.5">
+                        <span className="text-primary font-bold">#{idx + 1}</span> {item.menuName}
+                      </span>
+                      <span className="text-muted-foreground text-[10px]">{item.count}회</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-[10px] text-muted-foreground font-semibold">
+                    최애 메뉴가 없습니다.
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* 클립보드 공유 버튼 */}
-            <button
-              onClick={handleShare}
-              className="relative w-full py-2 bg-primary hover:opacity-90 text-primary-foreground border border-primary text-xs font-bold rounded-md shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-              {copied ? '복사 완료!' : '결과 공유하기'}
+            {/* 경계 구분선 */}
+            <div className="border-t border-border/40" />
 
-              {/* 미니 토스트 알림 */}
-              {copied && (
-                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-neutral-900 border border-border rounded text-[10px] font-bold text-white shadow-xl animate-bounce">
-                  클립보드에 복사되었습니다! 🍩
-                </span>
-              )}
-            </button>
+            {/* 그리운 맛 TOP 5 */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                🕰️ 그리운 맛 TOP 5
+              </h4>
+              <div className="space-y-1.5">
+                {stats.longestUnEatenList && stats.longestUnEatenList.length > 0 ? (
+                  stats.longestUnEatenList.slice(0, 5).map((item, idx) => (
+                    <div key={item.menuName} className="flex items-center justify-between text-[11px] font-semibold p-1.5 bg-secondary/15 border border-border/20 rounded">
+                      <span className="text-foreground flex items-center gap-1.5">
+                        <span className="text-indigo-400 font-bold">#{idx + 1}</span> {item.menuName}
+                      </span>
+                      <span className="text-muted-foreground text-[10px]">{item.daysAgo}일째</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-[10px] text-muted-foreground font-semibold">
+                    그리운 메뉴가 없습니다.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </Card>
 

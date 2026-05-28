@@ -3,7 +3,7 @@
 import { db } from '@/db';
 import { meals, mealImages } from '@/db/schema';
 import { createClient } from '@/utils/supabase/server';
-import { eq, and, gte, lte, desc, SQL } from 'drizzle-orm';
+import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 // 입력값 검증 도우미 (가격 및 포만감 검증 코드 제거)
@@ -108,38 +108,54 @@ export async function createMeal(formData: FormData) {
   }
 }
 
-// 2. 식사 기록 조회
-export async function getMeals(dateStr?: string) {
+// 2. 식사 기록 조회 (커서 기반 페이지네이션)
+export async function getMeals(params: {
+  from: string;    // YYYY-MM-DD
+  to: string;      // YYYY-MM-DD
+  cursor?: number; // 마지막으로 받은 meal.id (없으면 첫 페이지)
+  limit?: number;  // 기본값 10
+}) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return [];
+    if (!user) return { meals: [], nextCursor: null, hasMore: false };
 
-    let dateQuery: SQL | undefined = eq(meals.userId, user.id);
-    if (dateStr) {
-      const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
-      const endOfDay = new Date(`${dateStr}T23:59:59.999Z`);
-      dateQuery = and(
-        eq(meals.userId, user.id),
-        gte(meals.eatenAt, startOfDay),
-        lte(meals.eatenAt, endOfDay)
-      );
-    }
+    const { from, to, cursor, limit = 10 } = params;
 
-    // findMany 또는 leftJoin 사용
+    // KST 기준 날짜 범위 (from 시작 00:00 ~ to 종료 23:59:59)
+    const startOfFrom = new Date(`${from}T00:00:00+09:00`);
+    const endOfTo = new Date(`${to}T23:59:59+09:00`);
+
+    // 커서 기반 필터 조건 구성
+    const whereCondition = cursor
+      ? and(
+          eq(meals.userId, user.id),
+          gte(meals.eatenAt, startOfFrom),
+          lte(meals.eatenAt, endOfTo),
+          lte(meals.id, cursor - 1)  // id < cursor (DESC 정렬)
+        )
+      : and(
+          eq(meals.userId, user.id),
+          gte(meals.eatenAt, startOfFrom),
+          lte(meals.eatenAt, endOfTo)
+        );
+
     const list = await db.query.meals.findMany({
-      where: dateQuery,
-      with: {
-        images: true,
-      },
-      orderBy: [desc(meals.eatenAt)],
+      where: whereCondition,
+      with: { images: true },
+      orderBy: [desc(meals.eatenAt), desc(meals.id)],
+      limit: limit + 1, // 1개 더 가져와서 hasMore 판단
     });
 
-    return list;
+    const hasMore = list.length > limit;
+    const resultMeals = hasMore ? list.slice(0, limit) : list;
+    const nextCursor = hasMore ? (resultMeals.at(-1)?.id ?? null) : null;
+
+    return { meals: resultMeals, nextCursor, hasMore };
   } catch (error) {
     console.error('[getMeals Error]:', error);
-    return [];
+    return { meals: [], nextCursor: null, hasMore: false };
   }
 }
 
@@ -264,10 +280,14 @@ export async function deleteMeal(mealId: number) {
 }
 
 // 5. 식생활 통계 집계
-export async function getMealStats(period: '7days' | '30days') {
+export async function getMealStats(from: string, to: string) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+
+    // from/to 기반 날짜 필터 (KST 기준)
+    const startDate = new Date(`${from}T00:00:00+09:00`);
+    const endDate = new Date(`${to}T23:59:59+09:00`);
 
     if (!user) {
       return {
@@ -278,16 +298,18 @@ export async function getMealStats(period: '7days' | '30days') {
         character: { type: '소식 웰빙 돼지', description: '기록된 식사 정보가 없습니다.' },
         mostEaten: { menuName: '없음', count: 0 },
         longestUnEaten: { menuName: '없음', daysAgo: 0 },
+        mostEatenList: [],
+        longestUnEatenList: [],
       };
     }
 
-    const days = period === '7days' ? 7 : 30;
-    const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - days);
-
-    // 최근 n일 식사 리스트 조회
+    // 선택 기간 내 식사 리스트 조회
     const list = await db.query.meals.findMany({
-      where: and(eq(meals.userId, user.id), gte(meals.eatenAt, sinceDate))
+      where: and(
+        eq(meals.userId, user.id),
+        gte(meals.eatenAt, startDate),
+        lte(meals.eatenAt, endDate)
+      )
     });
 
     const count = list.length;
@@ -300,6 +322,8 @@ export async function getMealStats(period: '7days' | '30days') {
         character: { type: '소식 웰빙 돼지', description: '식사 일기가 텅 비어 있습니다. 오늘 먹은 맛있는 식사부터 기록해 보세요!' },
         mostEaten: { menuName: '없음', count: 0 },
         longestUnEaten: { menuName: '없음', daysAgo: 0 },
+        mostEatenList: [],
+        longestUnEatenList: [],
       };
     }
 
@@ -330,38 +354,36 @@ export async function getMealStats(period: '7days' | '30days') {
     const avgSatisfaction = satisfactionSum / count;
     const nightSnackRatio = Math.round((nightSnackCount / count) * 100);
 
-    // 1. 가장 자주 먹은 음식 집계 (전체 식사 기준)
-    const allMeals = await db.query.meals.findMany({
-      where: eq(meals.userId, user.id),
-      orderBy: [desc(meals.eatenAt)],
-    });
+    // 최애/그리운 맛 집계는 선택 기간 내 데이터 기준
+    const allMeals = list;
 
     let mostEaten = { menuName: '없음', count: 0 };
     let longestUnEaten = { menuName: '없음', daysAgo: 0 };
+    let mostEatenList: Array<{ menuName: string; count: number }> = [];
+    let longestUnEatenList: Array<{ menuName: string; daysAgo: number }> = [];
 
     if (allMeals.length > 0) {
+      // 메뉴별 횟수 집계
       const menuCounts: Record<string, number> = {};
       allMeals.forEach((m) => {
         const name = m.menuName.trim();
         menuCounts[name] = (menuCounts[name] || 0) + 1;
       });
 
-      let maxCount = 0;
-      let maxMenu = '';
-      Object.entries(menuCounts).forEach(([menu, cnt]) => {
-        if (cnt > maxCount) {
-          maxCount = cnt;
-          maxMenu = menu;
-        }
-      });
+      // 최애 메뉴 TOP 5 (횟수 내림차순)
+      mostEatenList = Object.entries(menuCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([menuName, cnt]) => ({ menuName, count: cnt }));
 
-      if (maxCount >= 2) {
-        mostEaten = { menuName: maxMenu, count: maxCount };
+      const [topMenu] = mostEatenList;
+      if (topMenu && topMenu.count >= 2) {
+        mostEaten = { menuName: topMenu.menuName, count: topMenu.count };
       } else {
         mostEaten = { menuName: allMeals[0].menuName, count: 1 };
       }
 
-      // 2. 안 먹은 지 가장 오래된 음식 집계 (최소 2개 이상의 서로 다른 메뉴가 있어야 비교 가능)
+      // 메뉴별 마지막 먹은 날짜 집계
       const menuLastEaten: Record<string, Date> = {};
       allMeals.forEach((m) => {
         const name = m.menuName.trim();
@@ -371,23 +393,23 @@ export async function getMealStats(period: '7days' | '30days') {
         }
       });
 
+      const now = new Date();
       const menuNames = Object.keys(menuLastEaten);
+
+      // 그리운 맛 TOP 5 (마지막으로 먹은 날이 오래된 순)
       if (menuNames.length > 1) {
-        let oldestDate = new Date();
-        let oldestMenu = '';
+        longestUnEatenList = menuNames
+          .map((name) => {
+            const diffTime = Math.abs(now.getTime() - menuLastEaten[name].getTime());
+            const daysAgo = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return { menuName: name, daysAgo };
+          })
+          .sort((a, b) => b.daysAgo - a.daysAgo)
+          .slice(0, 5);
 
-        menuNames.forEach((name) => {
-          const lastDate = menuLastEaten[name];
-          if (lastDate < oldestDate) {
-            oldestDate = lastDate;
-            oldestMenu = name;
-          }
-        });
-
-        if (oldestMenu) {
-          const diffTime = Math.abs(new Date().getTime() - oldestDate.getTime());
-          const daysAgo = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          longestUnEaten = { menuName: oldestMenu, daysAgo };
+        const [oldest] = longestUnEatenList;
+        if (oldest && oldest.daysAgo > 0) {
+          longestUnEaten = { menuName: oldest.menuName, daysAgo: oldest.daysAgo };
         }
       }
     }
@@ -424,6 +446,8 @@ export async function getMealStats(period: '7days' | '30days') {
       },
       mostEaten,
       longestUnEaten,
+      mostEatenList,
+      longestUnEatenList,
     };
   } catch (error) {
     console.error('[getMealStats Error]:', error);
@@ -435,6 +459,8 @@ export async function getMealStats(period: '7days' | '30days') {
       character: { type: '소식 웰빙 돼지', description: '통계 집계 중 알 수 없는 에러가 발생했습니다.' },
       mostEaten: { menuName: '없음', count: 0 },
       longestUnEaten: { menuName: '없음', daysAgo: 0 },
+      mostEatenList: [],
+      longestUnEatenList: [],
     };
   }
 }

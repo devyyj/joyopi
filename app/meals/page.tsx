@@ -7,8 +7,9 @@ import { getMeals, getMealStats } from '@/app/actions/meals';
 import PiggyAnalytics from './components/piggy-analytics';
 import MealTimeline from './components/meal-timeline';
 import MealFormModal from './components/meal-form-modal';
+import DateRangeSelector from './components/date-range-selector';
 import { signInWithGoogle } from '@/app/actions/auth';
-import { Meal, MealStats } from './types';
+import { Meal, MealStats, DateRange } from './types';
 import { User } from '@supabase/supabase-js';
 
 export default function MealsPage() {
@@ -18,16 +19,27 @@ export default function MealsPage() {
 
   // 데이터 상태
   const [mealsList, setMealsList] = useState<Meal[]>([]);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
   const [stats, setStats] = useState<MealStats | null>(null);
 
   // 제어 상태
-  // lazy state initialization을 적용하여 useEffect에서의 동기식 set-state-in-effect 린트 오류 원천 방지
-  const [selectedDate, setSelectedDate] = useState<string>(() => {
-    const d = new Date();
-    const offset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - offset).toISOString().split('T')[0];
+  const [range, setRange] = useState<DateRange>(() => {
+    const today = new Date();
+    const offset = today.getTimezoneOffset() * 60000;
+    const to = new Date(today.getTime() - offset).toISOString().split('T')[0];
+    
+    // 기본값은 최근 7일
+    const fromDate = new Date(today.getTime() - offset);
+    fromDate.setDate(fromDate.getDate() - 6);
+    const from = fromDate.toISOString().split('T')[0];
+    
+    return {
+      period: '7days',
+      from,
+      to,
+    };
   });
-  const [period, setPeriod] = useState<'7days' | '30days'>('7days');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 1. 로그인 상태 감지
@@ -48,23 +60,41 @@ export default function MealsPage() {
     };
   }, []);
 
-  // 2. 데이터 로딩 함수 (날짜, 통계 기간 변경 시 호출)
+  // 2. 데이터 로딩 함수 (날짜 범위 변경 시 호출)
   const loadData = useCallback(() => {
     if (!user) return;
     
     startTransition(async () => {
-      const fetchedMeals = await getMeals(selectedDate || undefined);
-      const fetchedStats = await getMealStats(period);
-      setMealsList(fetchedMeals as Meal[]);
-      setStats(fetchedStats as MealStats);
+      const result = await getMeals({
+        from: range.from,
+        to: range.to,
+        limit: 10,
+      });
+
+      const fetchedStats = await getMealStats(range.from, range.to);
+
+      setMealsList(result.meals as Meal[]);
+      setNextCursor(result.nextCursor);
+      setHasMore(result.hasMore);
+
+      // stats에 날짜 범위 추가 탑재하여 렌더링 호환성 확보
+      const startFmt = range.from.replace(/-/g, '.');
+      const endFmt = range.to.replace(/-/g, '.');
+      setStats({
+        ...fetchedStats,
+        weeklyDateRange: {
+          start: `${startFmt}.`,
+          end: `${endFmt}.`,
+        }
+      } as MealStats);
     });
-  }, [user, selectedDate, period]);
+  }, [user, range]);
 
   useEffect(() => {
-    if (user && selectedDate) {
+    if (user && range.from && range.to) {
       loadData();
     }
-  }, [user, selectedDate, period, loadData]);
+  }, [user, range, loadData]);
 
   // 구글 로그인 핸들러
   const handleGoogleLogin = async () => {
@@ -129,10 +159,13 @@ export default function MealsPage() {
         </Button>
       </div>
 
+      {/* 단일 날짜 범위 컨트롤러 */}
+      <DateRangeSelector range={range} onChange={setRange} />
+
       {/* 1. 통계 대시보드 영역 */}
       {stats && (
         <section className="space-y-3">
-          <PiggyAnalytics stats={stats} period={period} onPeriodChange={setPeriod} />
+          <PiggyAnalytics stats={stats} />
         </section>
       )}
 
@@ -143,18 +176,18 @@ export default function MealsPage() {
             <span>📅 타임라인 먹방 일지</span>
           </h3>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">날짜 선택:</span>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-2.5 py-1 text-xs bg-card border border-border rounded-md text-foreground focus:outline-none focus:border-primary transition-colors cursor-pointer"
-            />
-          </div>
+          <span className="text-xs font-semibold text-muted-foreground" suppressHydrationWarning>
+            선택 기간: {range.from.replace(/-/g, '.')} ~ {range.to.replace(/-/g, '.')}
+          </span>
         </div>
 
-        <MealTimeline initialMeals={mealsList} onRefresh={loadData} />
+        <MealTimeline
+          initialMeals={mealsList}
+          initialNextCursor={nextCursor}
+          initialHasMore={hasMore}
+          range={range}
+          onRefresh={loadData}
+        />
       </section>
 
       {/* 등록 모달 */}

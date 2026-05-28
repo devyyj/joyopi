@@ -17,6 +17,7 @@
   - 기본 브랜치는 **`develop`** 브랜치입니다.
   - 모든 개발(기능 추가, 버그 수정 등)은 반드시 `develop` 브랜치에서 먼저 수행합니다.
   - `master` 브랜치로의 병합은 `develop`에서 개발 및 검증이 완료된 후에만 수행합니다.
+  - **커밋 전 빌드 확인 (MANDATORY)**: `develop` 및 `master` 브랜치에 커밋하기 전, 반드시 `npm run build`가 포함된 **`npm run verify`를 실행하여 빌드 성공을 확인**합니다. 빌드가 실패하면 커밋을 진행하지 않습니다.
 - **범위 준수**: 현재 요청과 직접 관련 없는 코드는 수정하지 않는 **최소 수정 원칙**을 고수합니다.
 - **맥락 우선**: 프로젝트 스택(Next.js 15, TS, Tailwind, Supabase, Drizzle)에 최적화된 코드를 작성합니다.
 - **논리-텍스트 정합성**: 비즈니스 로직(DB 스키마, 서버 액션 등) 변경 시, 해당 기능을 설명하는 모든 UI 텍스트(안내문, 모달 메시지, 플레이스홀더 등)를 반드시 전수 조사하여 일치시킵니다.
@@ -74,9 +75,11 @@
 - [ ] **상태 동기화**: `revalidatePath` 사용 시 클라이언트 컴포넌트가 최신 프롭을 상태에 동기화하는지 확인합니다. (렌더링 도중 상태 갱신 패턴 권장)
 - [ ] **롤백 방지**: 서버 응답 후 클라이언트 상태가 서버 데이터와 일치하도록 보장하여 `useOptimistic`의 롤백 현상을 방지합니다.
 
-### 5.4. 빌드 및 배포 안전성
+### 5.4. 빌드 및 배포 안전성 (CRITICAL)
 - [ ] **Git 추적 확인**: 새로운 파일을 생성한 경우, `git status`를 통해 모든 필수 파일이 스테이징되었는지 확인합니다.
-- [ ] **로컬 검증 실행**: 커밋 전 반드시 `npm run verify`를 실행하여 린트, 테스트, 빌드, 파일 누락 여부를 전수 점검합니다.
+- [ ] **로컬 검증 실행**: `develop`/`master` 브랜치 커밋 전 반드시 `npm run verify`를 실행합니다. (`verify`는 lint → test → git 추적 → **프로덕션 빌드** 순으로 전수 점검합니다.)
+- [ ] **빌드 성공 필수**: `npm run build`가 실패하면 커밋을 중단하고 에러를 먼저 해결합니다. Vercel 등 CI/CD는 `package.json` 기준으로 의존성을 설치하므로, 로컬에서 빌드가 성공해야 배포가 보장됩니다.
+- [ ] **패키지 등록 확인**: 새 패키지를 사용한 경우, `package.json`의 `dependencies`(런타임용) 또는 `devDependencies`(빌드 도구용)에 정확히 등록되어 있는지 확인합니다. `node_modules`에만 존재하고 `package.json`에 없으면 배포 시 누락됩니다.
 
 ## 6. 학습된 프로젝트 지침 (Learned Lessons)
 
@@ -92,4 +95,9 @@
 
 ### 6.4. 메모리 및 설정 스코프 (CRITICAL)
 - **절대 Global Scope로 메모리를 저장하지 않습니다.** 모든 설정과 학습 데이터는 오직 Project Scope로만 관리하며, 글로벌 설정이 발견될 경우 즉시 프로젝트 지침으로 이전합니다.
+
+### 6.5. 패키지 누락으로 인한 Vercel 빌드 실패 (CRITICAL)
+- **원인**: 로컬 `node_modules`에는 설치되어 있지만 `package.json`에 등록되지 않은 패키지는 Vercel·CI 빌드 시 `Module not found` 에러를 유발합니다.
+- **재발 방지**: 신규 패키지 사용 시 반드시 `npm install <패키지명>`으로 설치해 `package.json`에 자동 등록되도록 합니다. 수동으로 `package.json`을 편집하는 경우 `npm install`로 `package-lock.json`도 함께 갱신합니다.
+- **사례 (2026-05-28)**: `@radix-ui/react-dialog`, `framer-motion`, `lucide-react`, `clsx`, `tailwind-merge`가 로컬에서는 동작했으나 `package.json` 미등록으로 Vercel 배포 실패.
 

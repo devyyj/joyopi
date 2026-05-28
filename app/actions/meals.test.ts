@@ -238,7 +238,6 @@ describe('Meals Server Actions (TDD)', () => {
       expect(stats).toBeDefined();
       expect(stats.nightSnackRatio).toBe(33); // 3개 중 1개가 22시 이후 (33%)
       expect(stats.satisfactionDistribution).toEqual({ 1: 0, 2: 0, 3: 0, 4: 1, 5: 2 });
-      expect(stats.character.type).toBe('미식가 황제 돼지');
       expect(stats.mostEaten.menuName).toBe('제육볶음'); // 2회 섭취로 최애
       // 교촌치킨: 마지막 섭취 5/10(23:30) → 17일 전, 제육볶음: 마지막 섭취 5/22(19:00) → 5일 전
       // 따라서 더 오래된 것은 교촌치킨

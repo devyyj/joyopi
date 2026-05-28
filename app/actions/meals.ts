@@ -297,7 +297,6 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
         count: 0,
         mealTypeDistribution: {},
         satisfactionDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        character: { type: '소식 웰빙 돼지', description: '기록된 식사 정보가 없습니다.' },
         mostEaten: { menuName: '없음', count: 0 },
         longestUnEaten: { menuName: '없음', daysAgo: 0 },
         mostEatenList: [],
@@ -328,7 +327,6 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
         count: 0,
         mealTypeDistribution: {},
         satisfactionDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        character: { type: '소식 웰빙 돼지', description: '식사 일기가 텅 비어 있습니다. 오늘 먹은 맛있는 식사부터 기록해 보세요!' },
         mostEaten: { menuName: '없음', count: 0 },
         longestUnEaten: { menuName: '없음', daysAgo: 0 },
         mostEatenList: [],
@@ -336,15 +334,12 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
       };
     }
 
-    let satisfactionSum = 0;
     let nightSnackCount = 0;
 
     const mealTypeCounts: Record<string, number> = {};
     const satisfactionCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
     list.forEach((meal) => {
-      satisfactionSum += meal.satisfaction;
-
       // 식사 타입 분포
       mealTypeCounts[meal.mealType] = (mealTypeCounts[meal.mealType] || 0) + 1;
 
@@ -360,7 +355,6 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
       }
     });
 
-    const avgSatisfaction = satisfactionSum / count;
     const nightSnackRatio = Math.round((nightSnackCount / count) * 100);
 
     // 최애/그리운 맛 집계는 선택 기간 내 데이터 기준
@@ -423,36 +417,11 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
       }
     }
 
-    // 캐릭터 진단 로직 (가격 및 포만감 제거에 따라 만족도, 선호 반복 빈도, 식사 시간대 기준으로 전면 개편)
-    let charType = '평범한 미식가 돼지';
-    let charDesc = '건강하고 무난하게 먹방 연구소를 즐기고 있는 표준형 요피 연구원 돼지입니다.';
-
-    const snackCount = mealTypeCounts['snack'] || 0;
-    const snackRatio = snackCount / count;
-
-    if (nightSnackRatio >= 40) {
-      charType = '야식 파이터 돼지';
-      charDesc = '밤이 되면 진정한 파워를 발휘하는 올빼미 돼지! 밤 10시 이후에 먹은 꿀맛 야식의 마력에 푹 빠져 있으시군요.';
-    } else if (avgSatisfaction >= 4.3) {
-      charType = '미식가 황제 돼지';
-      charDesc = '매 끼니마다 맛의 천국을 경험하며 황홀한 즐거움을 누리는 초미식가 돼지! 당신에게 밥이란 단순한 영양 섭취가 아니라 예술이자 축제입니다.';
-    } else if (snackRatio >= 0.3 || (avgSatisfaction >= 3.0 && avgSatisfaction <= 4.0 && nightSnackRatio < 15)) {
-      charType = '소식 웰빙 돼지';
-      charDesc = '만족도 폭발보다는 단정하고 고른 식사 밸런스를 중시하는 웰빙 요가 돼지! 정갈하게 즐기는 라이트 식단의 귀재입니다.';
-    } else if (mostEaten.count >= 3) {
-      charType = '가성비 요정 돼지'; // 기획서 캐릭터 일관성 유지를 위해 칭호 유지하되 '단골집 매니아'로 설명
-      charDesc = '좋아하는 특정 최애 단골 메뉴를 3번 이상 집요하게 조지는 진정한 한우물 돼지! 질리지 않는 명작 음식을 귀신같이 골라냅니다.';
-    }
-
     return {
       nightSnackRatio,
       count,
       mealTypeDistribution: mealTypeCounts,
       satisfactionDistribution: satisfactionCounts,
-      character: {
-        type: charType,
-        description: charDesc,
-      },
       mostEaten,
       longestUnEaten,
       mostEatenList,
@@ -465,7 +434,6 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
       count: 0,
       mealTypeDistribution: {},
       satisfactionDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-      character: { type: '소식 웰빙 돼지', description: '통계 집계 중 알 수 없는 에러가 발생했습니다.' },
       mostEaten: { menuName: '없음', count: 0 },
       longestUnEaten: { menuName: '없음', daysAgo: 0 },
       mostEatenList: [],

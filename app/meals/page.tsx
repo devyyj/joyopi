@@ -122,8 +122,8 @@ export default function MealsPage() {
             나만의 맛있는 기록, <span className="text-primary font-extrabold text-shadow-sm">돼지 일기</span>
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-            오늘 먹은 음식, 기분, 지불한 식비를 기록하고 맞춤형 식생활 분석 보고서를 받아보세요. 
-            소식가부터 미식가, 가성비 파이터까지 당신의 먹방 본능 유형을 귀여운 카드로 도출해 드립니다.
+            오늘 먹은 음식과 만족도를 기록하고 나만의 먹방 패턴을 분석해 보세요.
+            최애 메뉴 TOP5와 그리운 맛, 야식 패턴까지 위트 있는 식생활 인사이트를 맛보세요.
           </p>
         </div>
 
@@ -151,7 +151,7 @@ export default function MealsPage() {
         <SectionHeader
           label="YOPI LAB Micro Service"
           title="🐖 돼지 일기 (Piggy Diary)"
-          description="그날 먹은 기분과 지출한 식비를 바탕으로 도출되는 위트 있는 분석 리포트"
+          description="만족도·감정 태그·먹방 패턴을 바탕으로 도출되는 위트 있는 식생활 분석 리포트"
         />
         <Button variant="primary" className="shrink-0 flex items-center gap-1.5" size="sm" onClick={() => setIsModalOpen(true)}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

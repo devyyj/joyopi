@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Card } from '@/app/components/ui/core';
+import { Card } from '@/app/components/ui';
 
 export interface LogEntry {
   id: string;

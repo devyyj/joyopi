@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Card } from '@/app/components/ui/core';
+import { Card } from '@/app/components/ui';
 import Link from 'next/link';
 
 export default function EchoLandingPage() {

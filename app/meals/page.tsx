@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition, useCallback } from 'react';
-import { Button, Card, SectionHeader } from '@/app/components/ui/core';
+import { Button, Card, SectionHeader } from '@/app/components/ui';
 import { createClient } from '@/utils/supabase/client';
 import { getMeals, getMealStats } from '@/app/actions/meals';
 import PiggyAnalytics from './components/piggy-analytics';
@@ -22,6 +22,7 @@ export default function MealsPage() {
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [stats, setStats] = useState<MealStats | null>(null);
+  const [mealType, setMealType] = useState<string>('all');
 
   // 제어 상태
   const [range, setRange] = useState<DateRange>(() => {
@@ -60,7 +61,7 @@ export default function MealsPage() {
     };
   }, []);
 
-  // 2. 데이터 로딩 함수 (날짜 범위 변경 시 호출)
+  // 2. 데이터 로딩 함수 (날짜 범위 또는 식사 구분 변경 시 호출)
   const loadData = useCallback(() => {
     if (!user) return;
     
@@ -68,10 +69,11 @@ export default function MealsPage() {
       const result = await getMeals({
         from: range.from,
         to: range.to,
+        mealType: mealType,
         limit: 10,
       });
 
-      const fetchedStats = await getMealStats(range.from, range.to);
+      const fetchedStats = await getMealStats(range.from, range.to, mealType);
 
       setMealsList(result.meals as Meal[]);
       setNextCursor(result.nextCursor);
@@ -88,13 +90,13 @@ export default function MealsPage() {
         }
       } as MealStats);
     });
-  }, [user, range]);
+  }, [user, range, mealType]);
 
   useEffect(() => {
     if (user && range.from && range.to) {
       loadData();
     }
-  }, [user, range, loadData]);
+  }, [user, range, mealType, loadData]);
 
   // 구글 로그인 핸들러
   const handleGoogleLogin = async () => {
@@ -159,8 +161,13 @@ export default function MealsPage() {
         </Button>
       </div>
 
-      {/* 단일 날짜 범위 컨트롤러 */}
-      <DateRangeSelector range={range} onChange={setRange} />
+      {/* 통합 날짜 범위 및 식사 구분 컨트롤러 패널 */}
+      <DateRangeSelector
+        range={range}
+        onChange={setRange}
+        mealType={mealType}
+        onMealTypeChange={setMealType}
+      />
 
       {/* 1. 통계 대시보드 영역 */}
       {stats && (
@@ -186,6 +193,7 @@ export default function MealsPage() {
           initialNextCursor={nextCursor}
           initialHasMore={hasMore}
           range={range}
+          mealType={mealType}
           onRefresh={loadData}
         />
       </section>

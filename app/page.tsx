@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { posts, profiles } from '@/db/schema';
 import { desc, eq, gt } from 'drizzle-orm';
 import Link from 'next/link';
-import { Button, Card } from '@/app/components/ui/core';
+import { Button, Card } from '@/app/components/ui';
 import DashboardList from '@/app/components/dashboard-list';
 import { createClient } from '@/utils/supabase/server';
 import { getMeals, getMealStats } from '@/app/actions/meals';

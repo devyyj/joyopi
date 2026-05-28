@@ -1,7 +1,7 @@
 'use client';
 
 import { createPost, updatePost, ActionResult } from '@/app/actions/board';
-import { Button, Card } from '@/app/components/ui/core';
+import { Button, Card } from '@/app/components/ui';
 import SafeImage from './safe-image';
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';

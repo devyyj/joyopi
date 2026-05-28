@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Card, UserNickname, UserAvatar } from '@/app/components/ui/core';
+import { Card, UserNickname, UserAvatar } from '@/app/components/ui';
 import LikeButton from './like-button';
 import CommentSection from './comment-section';
 import SafeImage from './safe-image';

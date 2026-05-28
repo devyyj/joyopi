@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Card } from '@/app/components/ui/core';
-import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Card } from '@/app/components/ui';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { MealStats } from '../types';
 
 interface PiggyAnalyticsProps {
@@ -19,9 +19,8 @@ export default function PiggyAnalytics({ stats }: PiggyAnalyticsProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // 식사 종류별 게이지 최대값 도출
+  // 식사 종류별 데이터 도출
   const dist = stats.mealTypeDistribution || {};
-  const maxCount = Math.max(...(Object.values(dist) as number[]), 1);
 
   const getMealTypeName = (type: string) => {
     const mapping: Record<string, string> = {
@@ -126,37 +125,81 @@ export default function PiggyAnalytics({ stats }: PiggyAnalyticsProps) {
           </div>
         </Card>
 
-        {/* 2. 식사 종류별 빈도 CSS 바 차트 */}
+        {/* 2. 식사 종류별 빈도 Recharts 바 차트 */}
         <Card className="lg:col-span-1 p-5 flex flex-col justify-between">
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               🍴 끼니별 먹방 빈도
             </h4>
-            <div className="space-y-3 pt-2">
-              {Object.keys(dist).length > 0 ? (
-                Object.keys(dist).map((key) => {
-                  const val = dist[key];
-                  const percentage = Math.round((val / maxCount) * 100);
+            <div className="relative aspect-[4/3] bg-secondary/10 border border-border/30 rounded-lg overflow-hidden mt-3 flex items-center justify-center min-h-[180px]">
+              {(() => {
+                if (!mounted) {
                   return (
-                    <div key={key} className="space-y-1">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span>{getMealTypeName(key)}</span>
-                        <span className="text-muted-foreground">{val}회</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border/30">
-                        <div
-                          className="h-full bg-gradient-to-r from-orange-400 to-primary rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
+                    <div className="text-[10px] font-bold text-muted-foreground animate-pulse">
+                      차트 엔진 로드 중...
                     </div>
                   );
-                })
-              ) : (
-                <div className="text-center py-10 text-xs text-muted-foreground font-medium">
-                  분석할 데이터가 없습니다.
-                </div>
-              )}
+                }
+
+                const mealTypeData = Object.keys(dist).map((key) => ({
+                  name: getMealTypeName(key),
+                  count: dist[key],
+                })).sort((a, b) => b.count - a.count);
+
+                if (mealTypeData.length === 0) {
+                  return (
+                    <div className="text-center text-xs text-muted-foreground font-semibold flex flex-col items-center gap-1.5">
+                      <span className="text-xl">🍴</span>
+                      <span>끼니 기록이 아직 없습니다.</span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={mealTypeData}
+                      layout="vertical"
+                      margin={{ top: 15, right: 25, left: 10, bottom: 5 }}
+                    >
+                      <XAxis type="number" hide />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        axisLine={false}
+                        tickLine={false}
+                        width={65}
+                        tick={{ fill: 'var(--muted)', fontSize: 10, fontWeight: 700 }}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-popover border border-border px-2.5 py-1.5 rounded shadow-md text-[10px] font-bold text-popover-foreground">
+                                {payload[0].name} : <span className="text-primary">{payload[0].value}회</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar
+                        dataKey="count"
+                        fill="var(--color-primary)"
+                        radius={[0, 4, 4, 0]}
+                        barSize={12}
+                      >
+                        {mealTypeData.map((entry, index) => {
+                          // 끼니별 부드러운 파스텔 컬러 톤 그라데이션 매칭
+                          const colors = ['#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#3b82f6'];
+                          return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                );
+              })()}
             </div>
           </div>
 
@@ -205,91 +248,60 @@ export default function PiggyAnalytics({ stats }: PiggyAnalyticsProps) {
               }
 
               return (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius="52%"
-                      outerRadius="78%"
-                      paddingAngle={2.5}
-                      dataKey="value"
-                      stroke="#1e1e24"
-                      strokeWidth={1.5}
-                    >
-                      {chartData.map((entry) => {
-                        const isCurrentActive = activeRating === entry.rating;
-                        return (
-                          <Cell
-                            key={`cell-${entry.rating}`}
-                            fill={entry.color}
-                            onMouseEnter={() => setActiveRating(entry.rating)}
-                            onMouseLeave={() => setActiveRating(null)}
-                            className={`transition-all duration-200 cursor-pointer outline-none ${
-                              isCurrentActive 
-                                ? 'opacity-100 filter drop-shadow-[0_0_6px_rgba(255,255,255,0.15)]' 
-                                : activeRating !== null 
-                                  ? 'opacity-40' 
-                                  : 'opacity-90 hover:opacity-100'
-                            }`}
-                          />
-                        );
-                      })}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="relative w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="80%"
+                        outerRadius="100%"
+                        cornerRadius="50%"
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {chartData.map((entry) => {
+                          const isCurrentActive = activeRating === entry.rating;
+                          return (
+                            <Cell
+                              key={`cell-${entry.rating}`}
+                              fill={entry.color}
+                              onMouseEnter={() => setActiveRating(entry.rating)}
+                              onMouseLeave={() => setActiveRating(null)}
+                              className={`transition-all duration-200 cursor-pointer outline-none ${
+                                isCurrentActive 
+                                  ? 'opacity-100 filter drop-shadow-[0_0_6px_rgba(255,255,255,0.15)] scale-[1.03] origin-center' 
+                                  : activeRating !== null 
+                                    ? 'opacity-40' 
+                                    : 'opacity-90 hover:opacity-100'
+                              }`}
+                            />
+                          );
+                        })}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  {/* 도넛 차트 정중앙 텍스트 정보 표현부 (하단 영역 대체) */}
+                  {currentDisplaySegment && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-4 text-center">
+                      <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-0.5">
+                        {currentDisplaySegment.label}
+                      </span>
+                      <span className={`text-sm font-extrabold ${currentDisplaySegment.fontColor}`}>
+                        {currentDisplaySegment.percentage}%
+                      </span>
+                      <span className="text-[9px] text-muted-foreground font-semibold mt-0.5">
+                        {currentDisplaySegment.value}회 기록
+                      </span>
+                    </div>
+                  )}
+                </div>
               );
             })()}
           </div>
-
-          {/* 차트 세그먼트와 실시간 호버 연동형 글래스모피즘 피드백 보드 */}
-          {totalSatisfaction > 0 && currentDisplaySegment && (
-            <div 
-              className="bg-secondary/20 border border-border/40 p-3 rounded-lg flex flex-col justify-between gap-1 min-h-[75px] transition-all duration-200 mt-4"
-              data-testid="satisfaction-detail-feedback"
-            >
-              <div className="flex justify-between items-center">
-                <span className={`text-[10px] font-extrabold flex items-center gap-1 ${currentDisplaySegment.fontColor}`}>
-                  {currentDisplaySegment.name}
-                </span>
-                <span className="text-[9px] text-muted-foreground font-semibold">
-                  {currentDisplaySegment.value}회 기록 ({currentDisplaySegment.percentage}%)
-                </span>
-              </div>
-              <p className="text-[10px] text-foreground/80 leading-relaxed font-medium">
-                {currentDisplaySegment.desc}
-              </p>
-            </div>
-          )}
-
-          {/* 5색 글래스모피즘 스코어 칩 범례 */}
-          {totalSatisfaction > 0 && (
-            <div className="grid grid-cols-5 gap-1 pt-3 border-t border-border/30 text-[9px] font-bold text-center mt-4">
-              {satisfactionData.map((item) => {
-                const count = satisfactionDist[item.rating as 1 | 2 | 3 | 4 | 5] || 0;
-                const ratio = totalSatisfaction > 0 ? Math.round((count / totalSatisfaction) * 100) : 0;
-                const isCurrentActive = activeRating === item.rating;
-
-                return (
-                  <div
-                    key={item.rating}
-                    onMouseEnter={() => count > 0 && setActiveRating(item.rating)}
-                    onMouseLeave={() => setActiveRating(null)}
-                    className={`p-1.5 rounded-md border flex flex-col justify-between items-center transition-all duration-200 cursor-pointer ${
-                      count > 0 ? item.badge : 'bg-secondary/5 text-muted-foreground/40 border-border/20 cursor-not-allowed opacity-30'
-                    } ${
-                      isCurrentActive ? 'scale-105 shadow-md border-white/20' : ''
-                    }`}
-                  >
-                    <span className="text-[7.5px] tracking-tight">{item.label}</span>
-                    <span className="text-[10px] font-extrabold mt-0.5">{count}회</span>
-                    <span className="text-[7px] opacity-60 font-semibold mt-0.5">{ratio}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </Card>
       </div>
     </div>

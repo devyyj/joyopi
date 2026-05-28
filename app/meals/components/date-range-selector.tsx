@@ -6,6 +6,8 @@ import { DateRange, MealPeriod } from '../types';
 interface DateRangeSelectorProps {
   range: DateRange;
   onChange: (range: DateRange) => void;
+  mealType: string;
+  onMealTypeChange: (mealType: string) => void;
 }
 
 // YYYY-MM-DD 형식 날짜 포맷 헬퍼
@@ -43,7 +45,12 @@ const PERIOD_OPTIONS: { value: MealPeriod; label: string; days?: number }[] = [
   { value: 'custom', label: '직접 설정' },
 ];
 
-export default function DateRangeSelector({ range, onChange }: DateRangeSelectorProps) {
+export default function DateRangeSelector({
+  range,
+  onChange,
+  mealType,
+  onMealTypeChange,
+}: DateRangeSelectorProps) {
   const [showCustom, setShowCustom] = useState(range.period === 'custom');
   const [customFrom, setCustomFrom] = useState(range.from);
   const [customTo, setCustomTo] = useState(range.to);
@@ -74,12 +81,12 @@ export default function DateRangeSelector({ range, onChange }: DateRangeSelector
 
   return (
     <div
-      className="bg-card border border-border rounded-lg p-4 space-y-3"
+      className="bg-card border border-border rounded-lg p-4 space-y-4 shadow-sm"
       data-testid="date-range-selector"
     >
-      {/* 탭 버튼 영역 */}
+      {/* 1. 분석 기간 영역 */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+        <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5 shrink-0">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
@@ -89,7 +96,7 @@ export default function DateRangeSelector({ range, onChange }: DateRangeSelector
           분석 기간
         </span>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -138,8 +145,44 @@ export default function DateRangeSelector({ range, onChange }: DateRangeSelector
         </div>
       )}
 
+      {/* 구분선 */}
+      <div className="border-t border-border/40" />
+
+      {/* 2. 식사 구분 영역 */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5 shrink-0">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+          식사 구분
+        </span>
+
+        <div className="flex items-center gap-1 flex-wrap">
+          {[
+            { value: 'all', label: '전체 🍴' },
+            { value: 'breakfast', label: '아침 🌅' },
+            { value: 'lunch', label: '점심 ☀️' },
+            { value: 'dinner', label: '저녁 🌙' },
+            { value: 'snack', label: '간식 🧁' },
+            { value: 'night_snack', label: '야식 🍗' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => onMealTypeChange(opt.value)}
+              className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                mealType === opt.value
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground border border-transparent hover:border-border'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 현재 범위 요약 */}
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-1 border-t border-border/30">
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium pt-2 border-t border-border/30">
         <span>
           📅 {formatDisplay(range.from)} ~ {formatDisplay(range.to)}
         </span>

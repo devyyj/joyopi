@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Button, Modal } from '@/app/components/ui/core';
+import { Button, Modal } from '@/app/components/ui';
 import { createMeal, updateMeal } from '@/app/actions/meals';
 import { Meal, MealImage } from '../types';
 

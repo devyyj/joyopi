@@ -1,7 +1,7 @@
 'use client';
 
 import { updateProfile, deleteAccount } from '@/app/actions/profile';
-import { Button } from '@/app/components/ui/core';
+import { Button } from '@/app/components/ui';
 import NextImage from 'next/image';
 import { useActionState, useTransition, useState } from 'react';
 import { useDialog } from '@/app/components/ui/dialog-provider';

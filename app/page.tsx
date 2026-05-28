@@ -2,9 +2,10 @@ import { db } from '@/db';
 import { posts, profiles } from '@/db/schema';
 import { desc, eq, gt } from 'drizzle-orm';
 import Link from 'next/link';
-import { Button } from '@/app/components/ui/core';
+import { Button, Card } from '@/app/components/ui/core';
 import DashboardList from '@/app/components/dashboard-list';
 import { createClient } from '@/utils/supabase/server';
+import { getMeals, getMealStats } from '@/app/actions/meals';
 
 interface PostWithCounts {
   id: number;
@@ -25,6 +26,37 @@ export default async function Home() {
   const profile = user ? await db.query.profiles.findFirst({
     where: eq(profiles.id, user.id)
   }) : null;
+
+  // 돼지 일기 퀵 정보 획득 (오늘 날짜 및 최근 7일 캐릭터)
+  let todayMealsCount = 0;
+  let piggyCharacter = null;
+
+  if (user) {
+    try {
+      const d = new Date();
+      // KST(UTC+9) 날짜 구하기
+      const offset = d.getTimezoneOffset() * 60000;
+      const todayStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
+      
+      const mealsTodayResult = await getMeals({
+        from: todayStr,
+        to: todayStr,
+        limit: 50,
+      });
+      todayMealsCount = mealsTodayResult.meals.length;
+
+      const fromDate = new Date(d.getTime() - offset);
+      fromDate.setDate(fromDate.getDate() - 6);
+      const fromStr = fromDate.toISOString().split('T')[0];
+
+      const stats = await getMealStats(fromStr, todayStr);
+      if (stats && stats.count > 0) {
+        piggyCharacter = stats.character;
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard meals data:', err);
+    }
+  }
 
   // '최근' 기준: 최근 30일
   const recentThreshold = new Date();
@@ -71,7 +103,58 @@ export default async function Home() {
     .slice(0, 5);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
+    <div className="max-w-7xl mx-auto px-4 py-6 md:py-10 space-y-12">
+      {/* 🐖 돼지 일기 퀵 인사이트 카드 배너 */}
+      <Card className="p-6 bg-gradient-to-r from-orange-950/20 via-background to-secondary/15 border border-primary/20 rounded-xl relative overflow-hidden group">
+        {/* 아우라 효과 */}
+        <div className="absolute right-6 bottom-[-20px] text-8xl opacity-15 pointer-events-none select-none group-hover:scale-110 transition-transform duration-500">
+          🐖
+        </div>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold">
+              <span>NEW</span> 웰니스 마이크로 서비스
+            </div>
+            <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
+              오늘 먹은 끼니와 기분을 분석하는 <span className="text-primary font-extrabold">돼지 일기</span>
+            </h3>
+            
+            {user ? (
+              <div className="text-xs text-muted-foreground font-semibold space-y-1">
+                <p>
+                  오늘의 식사 기록: <span className="text-foreground font-bold">{todayMealsCount}회</span>
+                </p>
+                {piggyCharacter ? (
+                  <p>
+                    최근 7일 나의 먹방 성향: <span className="text-primary font-bold">✨ {piggyCharacter.type}</span>
+                  </p>
+                ) : (
+                  <p className="text-[11px] italic">
+                    ※ 7일 이내에 식사 일지를 작성하면 맛있는 성향 캐릭터 분석 카드가 나타납니다!
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground font-medium max-w-xl">
+                내가 매일 먹은 식사와 기분, 만족도를 간편히 기록해 귀여운 성향 캐릭터를 만나보세요. 
+                로그인 후 지금 즉시 시작할 수 있습니다.
+              </p>
+            )}
+          </div>
+
+          <Link href="/meals" className="shrink-0 w-full md:w-auto">
+            <Button variant="primary" size="md" className="w-full md:w-auto font-bold flex items-center justify-center gap-1.5">
+              {user ? '나의 식사 일기장 가기' : '돼지 일기 시작하기'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
+      {/* 3단 대시보드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
         <DashboardList 
           title="최근 소식" 
@@ -112,7 +195,7 @@ export default async function Home() {
         />
       </div>
 
-      <div className="mt-12 flex justify-center">
+      <div className="flex justify-center">
         <Link href="/board">
           <Button variant="outline" className="px-8 py-2 rounded-full text-xs font-bold gap-2">
             전체 피드 둘러보기
@@ -123,7 +206,7 @@ export default async function Home() {
         </Link>
       </div>
 
-      <div className="mt-20 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-muted-foreground">
+      <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-muted-foreground">
         <p className="text-[10px]">
           &copy; {new Date().getFullYear()} <strong>YOPI LAB</strong>. Built with Next.js 15.
         </p>
@@ -131,3 +214,4 @@ export default async function Home() {
     </div>
   );
 }
+

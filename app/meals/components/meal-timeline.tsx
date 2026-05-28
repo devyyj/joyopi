@@ -1,6 +1,6 @@
 import React, { useState, useOptimistic, startTransition } from 'react';
 import SafeImage from '@/app/board/components/safe-image';
-import { ConfirmModal } from '@/app/components/ui/core';
+import { ConfirmModal } from '@/app/components/ui';
 import { deleteMeal, updateMeal, getMeals } from '@/app/actions/meals';
 import MealFormModal from './meal-form-modal';
 import { Meal, DateRange } from '../types';
@@ -10,10 +10,11 @@ interface MealTimelineProps {
   initialNextCursor: number | null;
   initialHasMore: boolean;
   range: DateRange;
+  mealType?: string;
   onRefresh: () => void;
 }
 
-export default function MealTimeline({ initialMeals, initialNextCursor, initialHasMore, range, onRefresh }: MealTimelineProps) {
+export default function MealTimeline({ initialMeals, initialNextCursor, initialHasMore, range, mealType, onRefresh }: MealTimelineProps) {
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deletingMealId, setDeletingMealId] = useState<number | null>(null);
@@ -81,6 +82,7 @@ export default function MealTimeline({ initialMeals, initialNextCursor, initialH
       const result = await getMeals({
         from: range.from,
         to: range.to,
+        mealType: mealType,
         cursor: nextCursor,
         limit: 10,
       });
@@ -182,19 +184,17 @@ export default function MealTimeline({ initialMeals, initialNextCursor, initialH
             <div className="absolute -left-[32px] top-6 w-3.5 h-3.5 rounded-full border-2 border-background bg-primary shadow-sm" />
 
             <div className="flex flex-col md:flex-row gap-4 items-start">
-              {/* 이미지 썸네일 */}
-              <div className="w-20 h-20 shrink-0 relative rounded-md overflow-hidden bg-secondary border border-border">
-                {hasImages ? (
+              {/* 이미지 썸네일 (사진이 존재할 때만 렌더링) */}
+              {hasImages && (
+                <div className="w-20 h-20 shrink-0 relative rounded-md overflow-hidden bg-secondary border border-border">
                   <SafeImage
                     src={mainImage}
                     alt={meal.menuName}
                     className="w-full h-full object-cover"
                     fallback={<DonutFallback />}
                   />
-                ) : (
-                  <DonutFallback />
-                )}
-              </div>
+                </div>
+              )}
 
               {/* 디테일 내용 */}
               <div className="flex-1 space-y-2.5 w-full">

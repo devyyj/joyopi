@@ -1,7 +1,7 @@
 'use client';
 
 import { deletePost } from '@/app/actions/board';
-import { Button } from '@/app/components/ui/core';
+import { Button } from '@/app/components/ui';
 import { useTransition } from 'react';
 import { useDialog } from '@/app/components/ui/dialog-provider';
 

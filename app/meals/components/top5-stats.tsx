@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card } from '@/app/components/ui/core';
+import { Card } from '@/app/components/ui';
 
 interface Top5StatsProps {
   mostEatenList: Array<{ menuName: string; count: number }>;

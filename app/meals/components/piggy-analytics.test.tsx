@@ -70,8 +70,8 @@ describe('PiggyAnalytics - Flat Pie Chart TDD', () => {
     render(<PiggyAnalytics stats={mockStats} />);
     
     // Recharts 모킹 컨테이너가 렌더링되었는지 비동기적으로 대기 및 검사
-    const responsiveContainer = await screen.findByTestId('responsive-container');
-    expect(responsiveContainer).toBeInTheDocument();
+    const responsiveContainers = await screen.findAllByTestId('responsive-container');
+    expect(responsiveContainers.length).toBeGreaterThan(0);
 
     // piggy-analytics.tsx 파일 내부에 recharts와 PieChart 임포트 구문이 다시 존재해야 함
     const fileContent = fs.readFileSync(
@@ -82,16 +82,13 @@ describe('PiggyAnalytics - Flat Pie Chart TDD', () => {
     expect(fileContent).toContain('PieChart');
   });
 
-  it('3. [Red Test] 5색 플랫 파스텔 배색 및 하단 피드백 돔 연동 검증', async () => {
+  it('3. [Red Test] 5색 플랫 파스텔 배색 및 중앙 도넛 피드백 표현 연동 검증', async () => {
     render(<PiggyAnalytics stats={mockStats} />);
 
-    // 하단 글래스모피즘 피드백 보드가 정상 렌더링되었는지 비동기적으로 대기 및 확인
-    const feedbackArea = await screen.findByTestId('satisfaction-detail-feedback');
-    expect(feedbackArea).toBeInTheDocument();
+    // 도넛 중앙에 디폴트 뷰로서 가장 높은 횟수(5점)의 라벨("5점 👑")이 정상적으로 렌더링되는지 확인
+    const labelElement = await screen.findByText('5점 👑');
+    expect(labelElement).toBeInTheDocument();
 
-    // 디폴트 뷰로서 가장 높은 횟수(5점)의 피드백("최고의 맛")이 노출되는지 확인
-    expect(feedbackArea.textContent).toContain('최고의 맛');
-    
     // 수평 막대 차트 컴포넌트는 완전히 제거되어 더 이상 DOM 상에 없어야 함
     const spectrumBar = screen.queryByTestId('satisfaction-spectrum-bar');
     expect(spectrumBar).toBeNull();

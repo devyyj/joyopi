@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Button } from '@/app/components/ui/core';
+import { Button } from '@/app/components/ui';
 import Link from 'next/link';
 import { formatTime } from '@/app/echo/utils/echo-logic';
 import { EchoLog } from '../components/echo-log';

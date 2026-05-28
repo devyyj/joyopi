@@ -1,5 +1,5 @@
 import PostForm from '../components/post-form';
-import { SectionHeader } from '@/app/components/ui/core';
+import { SectionHeader } from '@/app/components/ui';
 
 export default function WritePage() {
   return (

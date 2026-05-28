@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { createComment, deleteComment, updateComment, toggleCommentLike, CommentWithDetails } from '@/app/actions/board';
-import { Button, Card, UserNickname, UserAvatar } from '@/app/components/ui/core';
+import { Button, Card, UserNickname, UserAvatar } from '@/app/components/ui';
 import { useDialog } from '@/app/components/ui/dialog-provider';
 
 interface CommentSectionProps {

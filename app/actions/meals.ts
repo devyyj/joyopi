@@ -112,6 +112,7 @@ export async function createMeal(formData: FormData) {
 export async function getMeals(params: {
   from: string;    // YYYY-MM-DD
   to: string;      // YYYY-MM-DD
+  mealType?: string; // 식사 구분 필터 (breakfast, lunch, dinner, snack, night_snack)
   cursor?: number; // 마지막으로 받은 meal.id (없으면 첫 페이지)
   limit?: number;  // 기본값 10
 }) {
@@ -121,28 +122,29 @@ export async function getMeals(params: {
 
     if (!user) return { meals: [], nextCursor: null, hasMore: false };
 
-    const { from, to, cursor, limit = 10 } = params;
+    const { from, to, mealType, cursor, limit = 10 } = params;
 
     // KST 기준 날짜 범위 (from 시작 00:00 ~ to 종료 23:59:59)
     const startOfFrom = new Date(`${from}T00:00:00+09:00`);
     const endOfTo = new Date(`${to}T23:59:59+09:00`);
 
-    // 커서 기반 필터 조건 구성
-    const whereCondition = cursor
-      ? and(
-          eq(meals.userId, user.id),
-          gte(meals.eatenAt, startOfFrom),
-          lte(meals.eatenAt, endOfTo),
-          lte(meals.id, cursor - 1)  // id < cursor (DESC 정렬)
-        )
-      : and(
-          eq(meals.userId, user.id),
-          gte(meals.eatenAt, startOfFrom),
-          lte(meals.eatenAt, endOfTo)
-        );
+    // 필터 조건 배열 구성
+    const conditions = [
+      eq(meals.userId, user.id),
+      gte(meals.eatenAt, startOfFrom),
+      lte(meals.eatenAt, endOfTo)
+    ];
+
+    if (mealType && mealType !== 'all') {
+      conditions.push(eq(meals.mealType, mealType));
+    }
+
+    if (cursor) {
+      conditions.push(lte(meals.id, cursor - 1)); // id < cursor (DESC 정렬)
+    }
 
     const list = await db.query.meals.findMany({
-      where: whereCondition,
+      where: and(...conditions),
       with: { images: true },
       orderBy: [desc(meals.eatenAt), desc(meals.id)],
       limit: limit + 1, // 1개 더 가져와서 hasMore 판단
@@ -280,7 +282,7 @@ export async function deleteMeal(mealId: number) {
 }
 
 // 5. 식생활 통계 집계
-export async function getMealStats(from: string, to: string) {
+export async function getMealStats(from: string, to: string, mealType?: string) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -303,13 +305,20 @@ export async function getMealStats(from: string, to: string) {
       };
     }
 
+    // 필터 조건 구성
+    const conditions = [
+      eq(meals.userId, user.id),
+      gte(meals.eatenAt, startDate),
+      lte(meals.eatenAt, endDate)
+    ];
+
+    if (mealType && mealType !== 'all') {
+      conditions.push(eq(meals.mealType, mealType));
+    }
+
     // 선택 기간 내 식사 리스트 조회
     const list = await db.query.meals.findMany({
-      where: and(
-        eq(meals.userId, user.id),
-        gte(meals.eatenAt, startDate),
-        lte(meals.eatenAt, endDate)
-      )
+      where: and(...conditions)
     });
 
     const count = list.length;

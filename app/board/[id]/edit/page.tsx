@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import PostForm from '../../components/post-form';
-import { SectionHeader } from '@/app/components/ui/core';
+import { SectionHeader } from '@/app/components/ui';
 
 export default async function EditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

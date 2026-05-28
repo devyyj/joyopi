@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
-import { Button } from '@/app/components/ui/core';
+import { Button } from '@/app/components/ui';
 import { getPaginatedPosts } from '@/app/actions/board';
 import PostList from './components/post-list';
 

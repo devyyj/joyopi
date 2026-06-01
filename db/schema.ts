@@ -153,6 +153,8 @@ export const mealImagesRelations = relations(mealImages, ({ one }) => ({
     fields: [mealImages.mealId],
     references: [meals.id],
   }),
-}));
-
-
+}));export const shingekiResults = pgTable('shingeki_results', {
+  id: serial('id').primaryKey(),
+  characterName: text('character_name').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

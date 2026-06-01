@@ -54,6 +54,10 @@ body {
   line-height: 1.5;
 }
 
+body[data-hide-header="true"] header {
+  display: none !important;
+}
+
 ::selection {
   background-color: rgba(9, 105, 218, 0.3);
 }

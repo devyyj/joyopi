@@ -5,6 +5,7 @@ import { signInWithGoogle } from '@/app/actions/auth';
 import { Button } from './ui/core';
 import UserProfileButton from './user-profile-button';
 import LogoutButton from './logout-button';
+import NavigationMenu from './navigation-menu';
 
 const MainHeader = async () => {
   const supabase = await createClient();
@@ -29,17 +30,9 @@ const MainHeader = async () => {
               YOPI LAB
             </span>
           </Link>
-          <nav className="flex items-center gap-4 ml-2">
-            <Link href="/board" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
-              게시판
-            </Link>
-            <Link href="/echo" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
-              에코
-            </Link>
-            <Link href="/meals" className="text-xs sm:text-sm font-medium text-muted hover:text-foreground">
-              돼지 일기
-            </Link>
-          </nav>
+          <div className="ml-2">
+            <NavigationMenu />
+          </div>
         </div>
 
         <nav className="flex items-center gap-4">

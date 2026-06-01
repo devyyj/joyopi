@@ -4,8 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button, Modal } from '@/app/components/ui';
-import { createMeal, updateMeal } from '@/app/actions/meals';
+import { createMeal, updateMeal, getUniqueMenuNames } from '@/app/actions/meals';
 import { Meal, MealImage } from '../types';
+import { createClient } from '@/utils/supabase/client';
 
 interface MealFormModalProps {
   isOpen: boolean;
@@ -14,7 +15,11 @@ interface MealFormModalProps {
   onSuccess: () => void;
 }
 
-const TEMPLATE_TAGS = ['#혼밥', '#스트레스', '#행복', '#가족', '#야식', '#배달음식', '#치팅데이', '#소소한행복'];
+const TEMPLATE_TAGS = [
+  '#혼밥', '#스트레스', '#행복', '#가족', '#야식', 
+  '#배달음식', '#치팅데이', '#소소한행복', '#친구와함께', '#데이트',
+  '#가성비', '#럭셔리', '#집밥', '#건강식', '#해장', '#폭식'
+];
 
 export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: MealFormModalProps) {
   const [menuName, setMenuName] = useState('');
@@ -30,6 +35,31 @@ export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: Meal
   const [deleteImageUrls, setDeleteImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [recentTags, setRecentTags] = useState<string[]>([]);
+  const [uniqueMenuNamesList, setUniqueMenuNamesList] = useState<string[]>([]);
+
+  // 로컬스토리지에서 최근 사용한 커스텀 태그를 불러옴 & DB에서 실제 기록된 메뉴명 리스트 로드
+  useEffect(() => {
+    if (isOpen) {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('piggy-recent-tags');
+        if (saved) {
+          try {
+            setRecentTags(JSON.parse(saved));
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+      
+      // DB에 저장된 실제 사용자 메뉴 목록 로드
+      getUniqueMenuNames().then(res => {
+        if (res.success && res.data) {
+          setUniqueMenuNamesList(res.data);
+        }
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -182,6 +212,39 @@ export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: Meal
     setCustomTag('');
   };
 
+  // 클라이언트에서 직접 Supabase Storage에 이미지 업로드
+  const uploadImagesToStorage = async (files: File[]): Promise<string[]> => {
+    if (files.length === 0) return [];
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('로그인이 필요합니다.');
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of files) {
+      const extension = file.name.split('.').pop() || 'webp';
+      const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${extension}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('meal-images')
+        .upload(fileName, file, { contentType: file.type });
+
+      if (uploadError || !uploadData) {
+        console.error('Storage Upload Error:', uploadError);
+        throw new Error('이미지 업로드에 실패했습니다.');
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('meal-images')
+        .getPublicUrl(fileName);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    return uploadedUrls;
+  };
+
   // 제출
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,38 +256,56 @@ export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: Meal
     setIsLoading(true);
     setErrorMsg('');
 
-    const formData = new FormData();
-    formData.append('menuName', menuName.trim());
-    formData.append('mealType', mealType);
-    formData.append('satisfaction', satisfaction.toString());
-    formData.append('memo', memo.trim());
-    formData.append('tags', JSON.stringify(tags));
-    formData.append('eatenAt', new Date(eatenAt).toISOString());
+    try {
+      // 1. 이미지를 클라이언트에서 직접 Supabase Storage에 업로드
+      const uploadedUrls = await uploadImagesToStorage(images);
 
-    // 이미지 추가
-    images.forEach((img) => {
-      formData.append('images', img);
-    });
+      // 2. URL만 Server Action에 전달
+      const formData = new FormData();
+      formData.append('menuName', menuName.trim());
+      formData.append('mealType', mealType);
+      formData.append('satisfaction', satisfaction.toString());
+      formData.append('memo', memo.trim());
+      formData.append('tags', JSON.stringify(tags));
+      formData.append('eatenAt', new Date(eatenAt).toISOString());
+      formData.append('imageUrls', JSON.stringify(uploadedUrls));
 
-    // 수정 모드 이미지 삭제 처리
-    if (meal && deleteImageUrls.length > 0) {
-      formData.append('deleteImageUrls', JSON.stringify(deleteImageUrls));
-    }
+      // 수정 모드 이미지 삭제 처리
+      if (meal && deleteImageUrls.length > 0) {
+        formData.append('deleteImageUrls', JSON.stringify(deleteImageUrls));
+      }
 
-    let response;
-    if (meal) {
-      response = await updateMeal(meal.id, formData);
-    } else {
-      response = await createMeal(formData);
-    }
+      let response;
+      if (meal) {
+        response = await updateMeal(meal.id, formData);
+      } else {
+        response = await createMeal(formData);
+      }
 
-    setIsLoading(false);
+      if (response.success) {
+        // 성공 시 사용자가 입력한 커스텀 태그들을 로컬스토리지에 최근 지정 태그로 업데이트 저장 (최대 5개 관리)
+        const customTags = tags.filter(t => !TEMPLATE_TAGS.includes(t));
+        if (customTags.length > 0) {
+          const saved = localStorage.getItem('piggy-recent-tags');
+          let currentRecents: string[] = saved ? JSON.parse(saved) : [];
+          // 중복 방지하며 앞에 추가
+          customTags.forEach(ct => {
+            currentRecents = [ct, ...currentRecents.filter(x => x !== ct)];
+          });
+          // 최대 5개 유지
+          localStorage.setItem('piggy-recent-tags', JSON.stringify(currentRecents.slice(0, 5)));
+        }
 
-    if (response.success) {
-      onSuccess();
-      onClose();
-    } else {
-      setErrorMsg(response.message || '요청 처리에 실패했습니다.');
+        onSuccess();
+        onClose();
+      } else {
+        setErrorMsg(response.message || '요청 처리에 실패했습니다.');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '업로드 중 오류가 발생했습니다.';
+      setErrorMsg(msg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -281,22 +362,62 @@ export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: Meal
             onChange={(e) => setMenuName(e.target.value.slice(0, 50))}
             placeholder="예: 바삭바삭 수제 돈까스"
             className="w-full px-3 py-2 bg-secondary/50 border border-border rounded-md text-foreground focus:outline-none focus:border-primary transition-colors"
+            list="recommended-menus"
             required
           />
+          <datalist id="recommended-menus">
+            {(() => {
+              // 사용자가 타이핑 중인 경우, 과거 고유 메뉴명 전체를 실시간 퍼지 필터링하여 노출 (최대 10개)
+              const query = menuName.trim().toLowerCase();
+              
+              if (uniqueMenuNamesList.length > 0) {
+                const filtered = query
+                  ? uniqueMenuNamesList.filter(name => name.toLowerCase().includes(query))
+                  : uniqueMenuNamesList; // 아무것도 입력하지 않았을 땐 전체 중 앞 10개 추천
+                  
+                if (filtered.length > 0) {
+                  return filtered.slice(0, 10).map((name) => (
+                    <option key={name} value={name} />
+                  ));
+                }
+              }
+              
+              // 매칭되는 유저 기록이 없거나 초기 데이터인 경우 백업 템플릿 노출
+              const backupList = [
+                '수제 돈까스', '김치찌개', '된장찌개', '제육볶음', 
+                '양념치킨', '짜장면', '삼겹살 구이', '떡볶이', 
+                '초밥', '소고기 샤브샤브', '라면', '샐러드'
+              ];
+              const filteredBackup = query 
+                ? backupList.filter(b => b.includes(query))
+                : backupList;
+              
+              return filteredBackup.slice(0, 8).map(b => (
+                <option key={b} value={b} />
+              ));
+            })()}
+          </datalist>
         </div>
 
         {/* 만족도 */}
         <div className="space-y-2">
-          <label className="font-bold text-foreground">식사 만족도: {satisfaction}단계</label>
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={satisfaction}
-            onChange={(e) => setSatisfaction(parseInt(e.target.value))}
-            className="w-full accent-primary h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
-          />
-          <p className="text-[11px] text-muted-foreground text-center font-medium mt-1">
+          <label className="font-bold text-foreground">식사 만족도</label>
+          <div className="flex items-center gap-1.5 justify-center py-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                type="button"
+                key={star}
+                onClick={() => setSatisfaction(star)}
+                className="text-3xl transition-transform hover:scale-125 focus:outline-none cursor-pointer p-0.5"
+                title={`${star}점`}
+              >
+                <span className={star <= satisfaction ? 'opacity-100' : 'opacity-20'}>
+                  ⭐
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground text-center font-bold mt-1 bg-secondary/30 rounded py-1 px-3 border border-border/20">
             {satisfactionEmojis[satisfaction - 1]}
           </p>
         </div>
@@ -324,6 +445,35 @@ export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: Meal
               );
             })}
           </div>
+
+          {/* 최근 사용한 커스텀 태그 영역 */}
+          {recentTags.length > 0 && (
+            <div className="space-y-1 pt-1 border-t border-border/20">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                ⏱️ 최근 지정 태그 (클릭 시 선택)
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {recentTags.map((rt) => {
+                  const selected = tags.includes(rt);
+                  return (
+                    <button
+                      type="button"
+                      key={rt}
+                      onClick={() => toggleTag(rt)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all border cursor-pointer ${
+                        selected
+                          ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400 shadow-sm scale-95 font-bold'
+                          : 'bg-secondary/20 border-border/50 text-muted-foreground hover:bg-secondary/40'
+                      }`}
+                    >
+                      {rt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 커스텀 태그 추가 폼 */}
           <div className="flex gap-2">
             <input
@@ -348,11 +498,11 @@ export default function MealFormModal({ isOpen, onClose, meal, onSuccess }: Meal
             </button>
           </div>
           {/* 현재 선택된 커스텀 태그 노출 */}
-          {tags.filter((t) => !TEMPLATE_TAGS.includes(t)).length > 0 && (
+          {tags.filter((t) => !TEMPLATE_TAGS.includes(t) && !recentTags.includes(t)).length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               <span className="text-[11px] text-muted-foreground mr-1 flex items-center font-bold">커스텀:</span>
               {tags
-                .filter((t) => !TEMPLATE_TAGS.includes(t))
+                .filter((t) => !TEMPLATE_TAGS.includes(t) && !recentTags.includes(t))
                 .map((t) => (
                   <span
                     key={t}

@@ -170,7 +170,39 @@ export default function MealsPage() {
       />
 
       {/* 1. 통계 대시보드 영역 */}
-      {stats && (
+      {!stats ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="h-[270px] rounded-lg bg-secondary/10 border border-border/30 animate-pulse flex flex-col justify-between p-5">
+            <div className="space-y-3">
+              <div className="h-4 bg-secondary/30 rounded w-1/3" />
+              <div className="space-y-2 pt-2">
+                <div className="h-7 bg-secondary/30 rounded w-full" />
+                <div className="h-7 bg-secondary/30 rounded w-full" />
+                <div className="h-7 bg-secondary/30 rounded w-full" />
+              </div>
+            </div>
+            <div className="h-4 bg-secondary/30 rounded w-1/2" />
+          </div>
+          <div className="h-[270px] rounded-lg bg-secondary/10 border border-border/30 animate-pulse flex flex-col justify-between p-5">
+            <div className="space-y-3">
+              <div className="h-4 bg-secondary/30 rounded w-1/3" />
+              <div className="h-32 bg-secondary/20 rounded-lg flex items-center justify-center">
+                <div className="h-3 w-3 rounded-full bg-secondary/40 animate-ping" />
+              </div>
+            </div>
+            <div className="h-4 bg-secondary/30 rounded w-1/2" />
+          </div>
+          <div className="h-[270px] rounded-lg bg-secondary/10 border border-border/30 animate-pulse flex flex-col justify-between p-5">
+            <div className="space-y-3">
+              <div className="h-4 bg-secondary/30 rounded w-1/3" />
+              <div className="h-32 bg-secondary/20 rounded-full w-32 mx-auto flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-card" />
+              </div>
+            </div>
+            <div className="h-4 bg-secondary/30 rounded w-1/2" />
+          </div>
+        </div>
+      ) : (
         <section className="space-y-3">
           <PiggyAnalytics stats={stats} />
         </section>

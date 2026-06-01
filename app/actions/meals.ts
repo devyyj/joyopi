@@ -53,11 +53,11 @@ export async function createMeal(formData: FormData) {
     const tags = tagsRaw ? JSON.parse(tagsRaw) as string[] : [];
     const eatenAt = new Date(eatenAtStr);
 
-    // 사진 파일 수집
-    const imageFiles = formData.getAll('images') as File[];
-    const validImages = imageFiles.filter((file) => file.size > 0);
+    // 이미지 URL 수집 (클라이언트에서 이미 업로드된 URL 목록)
+    const imageUrlsRaw = formData.get('imageUrls') as string | null;
+    const imageUrls: string[] = imageUrlsRaw ? JSON.parse(imageUrlsRaw) : [];
 
-    // DB 트랜잭션 시작 (이미지 업로드 실패 시 DB도 롤백)
+    // DB 트랜잭션 시작
     const result = await db.transaction(async (tx) => {
       // 1. Meals 테이블 삽입
       const [newMeal] = await tx.insert(meals).values({
@@ -70,28 +70,12 @@ export async function createMeal(formData: FormData) {
         eatenAt,
       }).returning({ id: meals.id });
 
-      // 2. 이미지 업로드 및 저장
-      if (validImages.length > 0) {
-        for (const file of validImages) {
-          const extension = file.name.split('.').pop() || 'webp';
-          const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${extension}`;
-
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('meal-images')
-            .upload(fileName, file, { contentType: file.type });
-
-          if (uploadError || !uploadData) {
-            console.error('Storage Upload Error:', uploadError);
-            throw new Error('이미지 업로드에 실패했습니다. (Storage Error)');
-          }
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('meal-images')
-            .getPublicUrl(fileName);
-
+      // 2. 이미지 URL DB 저장
+      if (imageUrls.length > 0) {
+        for (const url of imageUrls) {
           await tx.insert(mealImages).values({
             mealId: newMeal.id,
-            url: publicUrl,
+            url,
           });
         }
       }
@@ -197,25 +181,14 @@ export async function updateMeal(mealId: number, formData: FormData) {
       return { success: false, message: '수정 권한이 없거나 식사 기록을 찾을 수 없습니다.' };
     }
 
-    // 신규 추가 사진 처리
-    const imageFiles = formData.getAll('images') as File[];
-    const validImages = imageFiles.filter((file) => file.size > 0);
-    if (validImages.length > 0) {
-      for (const file of validImages) {
-        const extension = file.name.split('.').pop() || 'webp';
-        const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${extension}`;
-
-        await supabase.storage
-          .from('meal-images')
-          .upload(fileName, file, { contentType: file.type });
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('meal-images')
-          .getPublicUrl(fileName);
-
+    // 신규 추가 사진 처리 (클라이언트에서 이미 업로드된 URL 목록)
+    const imageUrlsRaw = formData.get('imageUrls') as string | null;
+    const imageUrls: string[] = imageUrlsRaw ? JSON.parse(imageUrlsRaw) : [];
+    if (imageUrls.length > 0) {
+      for (const url of imageUrls) {
         await db.insert(mealImages).values({
           mealId,
-          url: publicUrl,
+          url,
         });
       }
     }
@@ -441,3 +414,31 @@ export async function getMealStats(from: string, to: string, mealType?: string) 
     };
   }
 }
+
+// 6. 사용자가 여태껏 입력한 중복 없는 고유 메뉴 목록 전체 조회 (자동완성용)
+export async function getUniqueMenuNames() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, data: [] };
+
+    // 해당 유저가 먹은 모든 고유 메뉴명을 중복 제거하여 한 번에 조회 (성능 최적화)
+    const uniqueMeals = await db
+      .select({ menuName: meals.menuName })
+      .from(meals)
+      .where(eq(meals.userId, user.id))
+      .groupBy(meals.menuName);
+
+    // 공백 트리밍 및 유효한 목록 추출
+    const uniqueNames = uniqueMeals
+      .map(m => m.menuName.trim())
+      .filter(name => name.length > 0);
+
+    return { success: true, data: uniqueNames };
+  } catch (e) {
+    console.error('[getUniqueMenuNames Error]:', e);
+    return { success: false, data: [] };
+  }
+}
+

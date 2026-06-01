@@ -140,28 +140,25 @@ describe('Meals Server Actions (TDD)', () => {
     });
 
     it('예외 3: 이미지 저장 과정에서 Storage 에러 발생 시 트랜잭션이 롤백되고 실패를 반환해야 함', async () => {
+      // 팁: 이제 이미지 업로드는 클라이언트 단에서 일어나지만, 
+      // 서버에서 유효하지 않은 JSON 형식이 전달되었거나 기타 비즈니스 예외 발생 시 에러 반환 동작 검증
       (createClient as Mock).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({ data: { user: mockUser } }),
         },
-        storage: {
-          from: vi.fn(() => ({
-            upload: vi.fn().mockResolvedValue({ data: null, error: new Error('스토리지 에러 발생!') }),
-          })),
-        },
       });
 
-      const mockFile = new File(['dummy-image-data-content-more-than-zero'], 'meal.webp', { type: 'image/webp' });
       const formData = new FormData();
       formData.append('menuName', '삼겹살');
       formData.append('mealType', 'dinner');
       formData.append('satisfaction', '5');
       formData.append('eatenAt', '2026-05-27T19:00:00.000Z');
-      formData.append('images', mockFile);
+      // 유효하지 않은 imageUrls JSON 구조를 보내 오류를 유발
+      formData.append('imageUrls', 'invalid-json-data');
 
       const result = await createMeal(formData);
       expect(result.success).toBe(false);
-      expect(result.message).toContain('이미지 업로드에 실패');
+      expect(result.message).toContain('not valid JSON');
     });
   });
 

@@ -138,9 +138,63 @@ export default function MealTimeline({ initialMeals, initialNextCursor, initialH
 
   const formatDate = (dateStr: string | Date) => {
     const d = new Date(dateStr);
-    const hours = d.getHours().toString().padStart(2, '0');
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    
+    // 미래 시간 예외 처리
+    if (diffMs < 0) {
+      const year = d.getFullYear();
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const date = d.getDate().toString().padStart(2, '0');
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      return `${year}.${month}.${date} ${hours}:${minutes}`;
+    }
+
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // 시간 및 분 표현 세팅
+    const ampm = d.getHours() >= 12 ? '오후' : '오전';
+    const displayHour = d.getHours() % 12 === 0 ? 12 : d.getHours() % 12;
+    const timeStr = `${ampm} ${displayHour}:${d.getMinutes().toString().padStart(2, '0')}`;
+
+    // 1분 미만: 방금 전
+    if (diffMins < 1) {
+      return '방금 전';
+    }
+    // 1시간 미만: n분 전
+    if (diffMins < 60) {
+      return `${diffMins}분 전`;
+    }
+    
+    // 오늘 기록인지 확인 (날짜 단위 비교)
+    const isToday = d.getFullYear() === now.getFullYear() && 
+                    d.getMonth() === now.getMonth() && 
+                    d.getDate() === now.getDate();
+    if (isToday) {
+      return `오늘 ${timeStr}`;
+    }
+
+    // 어제 기록인지 확인 (날짜 단위 비교)
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const isYesterday = d.getFullYear() === yesterday.getFullYear() && 
+                        d.getMonth() === yesterday.getMonth() && 
+                        d.getDate() === yesterday.getDate();
+    if (isYesterday) {
+      return `어제 ${timeStr}`;
+    }
+
+    // 최근 7일 이내: n일 전
+    if (diffDays >= 2 && diffDays <= 7) {
+      return `${diffDays}일 전`;
+    }
+
+    // 그 외 먼 과거: 절대 시간 표시
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const date = d.getDate().toString().padStart(2, '0');
+    return `${year}.${month}.${date} ${timeStr}`;
   };
 
   // 도넛 모양 폴백 일러스트 컴포넌트

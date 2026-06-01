@@ -287,13 +287,13 @@ export default function PiggyAnalytics({ stats }: PiggyAnalyticsProps) {
                   {/* 도넛 차트 정중앙 텍스트 정보 표현부 (하단 영역 대체) */}
                   {currentDisplaySegment && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-4 text-center">
-                      <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-0.5">
+                      <span className="text-[13px] font-bold text-muted-foreground tracking-wider mb-0.5">
                         {currentDisplaySegment.label}
                       </span>
-                      <span className={`text-sm font-extrabold ${currentDisplaySegment.fontColor}`}>
+                      <span className={`text-3xl font-black tracking-tighter ${currentDisplaySegment.fontColor}`}>
                         {currentDisplaySegment.percentage}%
                       </span>
-                      <span className="text-[9px] text-muted-foreground font-semibold mt-0.5">
+                      <span className="text-[11px] text-muted-foreground font-bold mt-1">
                         {currentDisplaySegment.value}회 기록
                       </span>
                     </div>

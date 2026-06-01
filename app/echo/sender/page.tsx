@@ -54,6 +54,7 @@ export default function SenderPage() {
     speakerCount,
     senderCount,
     logs,
+    status,
     addLog,
     sendBroadcast
   } = useEchoSocket({
@@ -63,21 +64,31 @@ export default function SenderPage() {
   });
 
   const connectedUsers = speakerCount + senderCount;
+  const isReady = status === 'CONNECTED';
+
+  // 소켓이 다시 연결되었을 때 스피커에게 시간 동기화(ECHO_QUERY) 요청 전송
+  useEffect(() => {
+    if (isReady) {
+      sendBroadcast('ECHO_QUERY', { requesterId: presenceId });
+    }
+  }, [isReady, presenceId, sendBroadcast]);
 
   const handleSendEcho = useCallback(() => {
+    if (!isReady) return;
     // 1. 낙관적 업데이트: 로컬 타이머를 즉시 연장
     setRemainingTime((prev) => prev + 60);
 
     // 2. 스피커에게 신호 전송
     sendBroadcast('ECHO_REQUEST', { senderId: presenceId });
     addLog('사용자가 메아리를 보냈습니다. (+1분)', 'request', presenceId);
-  }, [presenceId, addLog, sendBroadcast]);
+  }, [presenceId, addLog, sendBroadcast, isReady]);
 
   const handleStopEcho = useCallback(() => {
+    if (!isReady) return;
     sendBroadcast('ECHO_STOP', { triggeredBy: presenceId });
     setRemainingTime(0);
     addLog('사용자가 모든 메아리를 중지시켰습니다.', 'stop', presenceId);
-  }, [presenceId, addLog, sendBroadcast]);
+  }, [presenceId, addLog, sendBroadcast, isReady]);
 
   const handleManualExit = useCallback(() => {
     addLog('사용자가 퇴장했습니다. (이유: 사용자 요청)', 'leave');
@@ -96,10 +107,16 @@ export default function SenderPage() {
         </div>
 
         <div className="relative py-12">
-          <div className={`text-7xl font-mono font-bold tracking-tighter ${isPlaying ? 'text-primary animate-pulse' : 'text-muted'}`}>
-            {formatTime(remainingTime)}
-          </div>
-          {isPlaying && (
+          {!isReady ? (
+            <div className="text-4xl font-bold tracking-wider text-muted animate-pulse">
+              준비중...
+            </div>
+          ) : (
+            <div className={`text-7xl font-mono font-bold tracking-tighter ${isPlaying ? 'text-primary animate-pulse' : 'text-muted'}`}>
+              {formatTime(remainingTime)}
+            </div>
+          )}
+          {isReady && isPlaying && (
             <div className="absolute inset-0 flex items-center justify-center -z-10">
               <div className="w-48 h-48 bg-primary/10 rounded-full animate-ping" />
             </div>
@@ -111,9 +128,9 @@ export default function SenderPage() {
             size="lg" 
             className="h-20 text-xl font-bold" 
             onClick={handleSendEcho}
-            disabled={speakerCount === 0}
+            disabled={!isReady || speakerCount === 0}
           >
-            {speakerCount > 0 ? '메아리 보내기 (+1분)' : '스피커가 없습니다'}
+            {!isReady ? '준비중...' : speakerCount > 0 ? '메아리 보내기 (+1분)' : '스피커가 없습니다'}
           </Button>
           
           <Button 
@@ -121,7 +138,7 @@ export default function SenderPage() {
             size="lg" 
             className="h-14 text-destructive border-destructive/20 hover:bg-destructive/10"
             onClick={handleStopEcho}
-            disabled={remainingTime === 0}
+            disabled={!isReady || remainingTime === 0}
           >
             즉시 중지
           </Button>

@@ -297,10 +297,10 @@ function ShingekiTestContent() {
 
               <div className="p-5 rounded-2xl bg-neutral-900/60 backdrop-blur-md border border-neutral-800 shadow-2xl mb-8 text-left space-y-3">
                 <p className="text-xs text-neutral-300 leading-relaxed font-medium">
-                  벽 내부의 평화가 깨지고 초대형 거인의 위협이 인류를 옥죄어 옵니다. 당신은 혹독하고 잔혹한 운명의 세계관 속에 던져졌습니다.
+                  혹시 내가 진격의 거인 세계관 속에 떨어진다면? 평화가 깨진 세상에서 당신은 어떤 선택을 하게 될까요?
                 </p>
                 <p className="text-xs text-neutral-300 leading-relaxed font-medium">
-                  매 순간 극단적인 생존 위기 속에서 당신이 내리는 피의 결정은 어떤 인물의 영혼과 공명할까요? 당신의 숨겨진 투지와 본능을 도출합니다.
+                  당신의 사소한 선택들이 모여, 20명의 캐릭터 중 당신과 가장 닮은 영혼을 찾아냅니다. 지금 바로 당신의 심장을 바쳐보세요!
                 </p>
               </div>
 
@@ -309,7 +309,7 @@ function ShingekiTestContent() {
                 disabled={isStarting}
                 className="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-[#8B0000] to-[#b30000] hover:from-[#a60000] hover:to-[#e60000] text-white font-bold tracking-wider hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_25px_rgba(139,0,0,0.4)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 group text-sm cursor-pointer border border-[#ff3e3e]/20"
               >
-                <span>{isStarting ? '전장으로 출격 중...' : '인류의 날개를 펼쳐 입단하기'}</span>
+                <span>{isStarting ? '거인 분석 중...' : '나와 닮은 캐릭터 확인하기'}</span>
                 <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
               </button>
 

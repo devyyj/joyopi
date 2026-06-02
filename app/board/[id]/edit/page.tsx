@@ -12,7 +12,13 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   
   if (isNaN(postId)) notFound();
 
-  const post = await db.query.posts.findFirst({ where: eq(posts.id, postId) });
+  let post = null;
+  try {
+    post = await db.query.posts.findFirst({ where: eq(posts.id, postId) });
+  } catch (err) {
+    console.error('Failed to load post for editing:', err);
+  }
+  
   if (!post) notFound();
 
   const supabase = await createClient();

@@ -1,0 +1,184 @@
+import { writeFileSync } from 'fs';
+
+const CHAR_NAMES = [
+  '에렌 예거', '미카사 아커만', '아르민 알레르토', '리바이 아커만', '엘빈 스미스',
+  '한지 조에', '장 키르슈타인', '사샤 브라우스', '코니 스프링거', '히스토리아 레이스',
+  '라이너 브라운', '애니 레온하트', '지크 예거', '가비 브라운', '팔코 글라이스',
+  '플록 포르스터', '턱 거인', '차력 거인', '초대형 거인', '갑옷 거인'
+];
+
+// Target slots per character across 96 options:
+// 5pts: 5 times
+// 4pts: 5 times
+// 3pts: 5 times
+// 2pts: 4 times
+// 1pt: 5 times
+// Total potential points: 73. Total slots: 24.
+// Total pool slots: 24 * 20 = 480.
+// Pool slots per option: 480 / 96 = 5.
+
+const pool: number[] = [];
+// Points: 5, 4, 3, 2, 1
+[5, 4, 3, 2, 1].forEach(pt => {
+  const count = pt === 2 ? 4 : 5;
+  CHAR_NAMES.forEach(name => {
+    for (let i = 0; i < count; i++) {
+      pool.push(pt);
+    }
+  });
+});
+
+// We need to assign each point in the pool to a character and a question option.
+// Let's create a more structured pool: Array of { name, pt }
+const characterPoints: { name: string, pt: number }[] = [];
+[5, 4, 3, 2, 1].forEach(pt => {
+  const count = pt === 2 ? 4 : 5;
+  CHAR_NAMES.forEach(name => {
+    for (let i = 0; i < count; i++) {
+      characterPoints.push({ name, pt });
+    }
+  });
+});
+
+// Shuffle pool to distribute
+function shuffle<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// But we need to ensure Lore consistency.
+// Let's define "Primary Personality" groups for questions.
+const QUESTIONS_BASE = [
+  { id: 1, category: '위기 대처', question: '예상치 못한 거인의 기습으로 대열이 붕괴되었습니다. 당신의 즉각적인 대처는?', options: ['망설임 없이 돌격하여 적을 유인한다.', '뒤로 물러나 즉시 방어선을 재구축한다.', '주변의 동료를 어떻게든 최우선으로 보호한다.', '침착하게 적의 약점을 노려 베어 넘긴다.'] },
+  { id: 2, category: '행동 양식', question: '작전 도중 중요한 장비가 고장 났을 때, 당신이 문제를 해결하는 스타일은?', options: ['기발한 임기응변으로 대체품을 만들어낸다.', '사령부 매뉴얼을 준수해 차근차근 수리한다.', '직관과 감각을 믿고 직접 두드려 맞춘다.', '전문가에게 장비를 맡기고 지원 업무에 집중한다.'] },
+  { id: 3, category: '행동 양식', question: '불가능해 보이는 극비 임무의 돌격 대장직을 제안받았다면?', options: ['무거운 책임을 짊어지고 대담하게 수락한다.', '임무의 성공 확률을 철저히 계산한 뒤 결정한다.', '묵묵히 내가 해야 할 의무이기에 받아들인다.', '가장 자유로운 방식을 쓸 수 있다면 수락한다.'] },
+  { id: 4, category: '위기 대처', question: '작전 중 고립되어 보급이 끊겼을 때, 당신이 보이는 행동은?', options: ['뛰어난 생존 본능으로 어떻게든 사냥해 먹고산다.', '동료들이 지치지 않도록 밝은 에너지를 준다.', '에너지를 보존하며 묵묵히 구조를 기다린다.', '탈출 통로를 개척하기 위해 쉬지 않고 파헤친다.'] },
+  { id: 5, category: '위기 대처', question: '나를 시기하고 견제하는 적대적인 부대원들과 갈등이 발생했을 때?', options: ['압도적인 실력으로 그들의 불만을 잠재운다.', '대화를 통해 오해를 풀고 합의점을 찾는다.', '대의를 위해 그들의 견제쯤은 가볍게 무시한다.', '상대의 약점을 쥐고 조용히 판을 설계한다.'] },
+  { id: 6, category: '행동 양식', question: '평화롭고 조용한 일상 속에서 돌연 비상 종소리가 울릴 때 당신의 뇌리를 스치는 생각은?', options: ['"드디어 나의 힘과 칼날을 증명할 때다."', '"제발 아무도 다치지 않고 무사히 끝나기를..."', '"일단 비상 식량부터 단단히 챙겨두자."', '"또 무의미한 소모전이 반복되는 것인가..."'] },
+  { id: 7, category: '인간관계', question: '새로운 동료들과 처음 만나 친해질 때 당신이 보여주는 스탠스는?', options: ['먼저 살갑게 말을 걸고 장난을 치며 벽을 깬다.', '적당한 거리를 유지하며 상대방을 조용히 관찰한다.', '든든한 맏형처럼 그들의 필요나 고충을 챙겨준다.', '그들의 독특한 성향에 흥미를 느끼고 호기심을 보인다.'] },
+  { id: 8, category: '인간관계', question: '정말 믿었던 동료가 나에게 상처를 주거나 나를 기만했음을 알았을 때?', options: ['배신에 깊이 분노하며 확실하게 척결하려 한다.', '왜 그런 선택을 했는지 그의 심리와 사정을 파고든다.', '대의와 조직의 안정을 위해 내 개인적 감정을 참는다.', '배신한 자보다 남아있는 소중한 사람들을 더 지킨다.'] },
+  { id: 9, category: '소통 스타일', question: '누군가 당신에게 원치 않는 영웅적인 페르소나나 희생을 요구한다면?', options: ['타인의 억압적인 시선이나 기대를 과감히 거부한다.', '내 희생이 더 큰 가치를 가져온다면 기꺼이 받아들인다.', '앞에서는 맞춰주는 척하며 뒤로는 독자 노선을 간다.', '내 소중한 사람이 위험해지지 않는 선에서 타협한다.'] },
+  { id: 10, category: '소통 스타일', question: '동료가 극한의 두려움으로 전장에서 패닉에 빠져 눈물을 흘리고 있다면?', options: ['용기와 자신감을 심어주며 든든하게 다독인다.', '그 공포에 따뜻하게 온전히 공감하고 위로해 준다.', '나약함은 해가 되니 정신 차리라고 냉정하게 꾸짖는다.', '엉뚱한 화제를 던져 패닉으로부터 주위를 돌린다.'] },
+  { id: 11, category: '인간관계', question: '누군가에게 미움을 받거나 집단에서 고립되는 상황에 처했을 때 당신은?', options: ['타인의 시선은 무시하고 나의 목표와 고독을 즐긴다.', '마음을 열고 소통하며 갈등의 벽을 서서히 허문다.', '나의 나약함을 탓하며 더 처절하게 능력 단련에 매진한다.', '슬픈 감정을 애써 쾌활한 웃음으로 숨기고 가장한다.'] },
+  { id: 12, category: '소통 스타일', question: '나보다 뛰어난 능력을 가졌거나 급격하게 승진하는 동료를 보았을 때?', options: ['나의 모자람을 절감하며 그를 넘기 위해 밤낮으로 단련한다.', '그의 전술적 강점을 내 작전에 어떻게 활용할지 연구한다.', '순수하게 동료의 재능을 축하하고 존경의 뜻을 보낸다.', '그가 짊어질 막중한 책임을 알기에 부러워하지 않는다.'] },
+  { id: 13, category: '가치관', question: '세상을 뒤흔들 수 있는 절대적인 진실(비밀)을 마주했을 때 당신의 선택은?', options: ['큰 혼란이 올지라도 투명하게 모든 대중에게 밝힌다.', '진실을 나만 짊어지고 강력한 질서와 통제를 위해 쓴다.', '세상이 어찌 되든 소중한 이들의 일상을 지키는 데 쓴다.', '부조리한 비극의 연쇄를 근본적으로 끊어내는 데 쓴다.'] },
+  { id: 14, category: '가치관', question: '대의를 위해 무고한 소수의 민간인이 희생되어야만 하는 딜레마가 찾아왔다면?', options: ['악마라 비난받을지라도 승리를 위해 차갑게 작전을 승인한다.', '어떻게든 희생을 단 1%라도 줄일 대안을 필사적으로 찾는다.', '이런 잔혹함을 당연시하는 불합리한 룰 자체를 부순다.', '차라리 나 스스로를 희생하여 그들의 짐을 짊어진다.'] },
+  { id: 15, category: '신념', question: '당신이 생각하는 가장 가치 있는 \'자유\'의 정의는 무엇인가요?', options: ['벽 밖의 미지의 세상을 그 누구의 억압도 없이 누비는 것.', '강요된 역할에서 벗어나 떳떳한 나 자신으로 서는 것.', '소중한 사람들과 맛있는 음식을 나눠 먹는 소박한 평화.', '거대한 질서 아래 확실한 평온과 국토를 보장받는 것.'] },
+  { id: 16, category: '신념', question: '역사와 권력이 승자에 의해 왜곡되고 포장되어 전해지는 것에 대해?', options: ['힘을 쥐고 살아남아 승리하는 자가 정의를 쓰는 법이다.', '보이지 않는 이면의 진실과 도덕적 모순을 파헤쳐 성찰한다.', '역사적 거대 담론보다 내 눈앞의 인간다운 아픔이 중요하다.', '오늘 내가 살아남아 먹고 숨 쉬는 것 이상의 진실은 없다.'] },
+  { id: 17, category: '가치관', question: '누군가에게 복수를 감행할 수 있는 절대적인 칼자루가 손에 쥐어졌을 때?', options: ['내 권리와 삶을 유린한 상대의 가슴에 주저 없이 칼을 꽂는다.', '증오의 굴레를 내 선에서 멈추고 관용과 대화를 택한다.', '감정에 흔들리지 않고 나의 실리와 철저한 미래 이익에 맞춰 처리한다.', '사적 증오 대신 내게 부여된 냉혹한 의무로서 단죄를 완수한다.'] },
+  { id: 18, category: '신념', question: '한 번뿐인 인생에서 당신이 가장 지키고 싶은 절대적인 가치는?', options: ['소중한 사람과의 어떠한 역경도 이겨낼 끈끈한 연대.', '세상의 모든 수수께끼를 풀고 알아낼 학술적인 탐구.', '조국의 위상과 신념을 드높이는 눈부신 명예와 훈장.', '추악한 타협에 결코 굴복하지 않는 깨끗한 신념.'] },
+  { id: 19, category: '스트레스 극복', question: '극심한 스트레스와 멘탈 붕괴의 위기가 찾아왔을 때 나타나는 당신의 태도는?', options: ['약점을 보이지 않기 위해 오히려 기행이나 장난을 친다.', '방에 틀어박혀 침착하고 차갑게 고독을 정리 정돈한다.', '신뢰하는 동료에게 털어놓고 의지하며 극복한다.', '인간적인 감정을 지우고 완벽하게 임무만 수행하는 기계가 된다.'] },
+  { id: 20, category: '스트레스 극복', question: '꿈꾸던 미래가 완전히 박살 나고 절망의 구렁텅이에 빠졌을 때?', options: ['분노하며 적에게 칼날을 돌려 철저하게 물어뜯어 재기한다.', '나락 속에서 스스로를 혐오하고 자책하며 한없이 침잠한다.', '세상을 원래 그런 부조리한 곳이라 치부하며 기대를 거둔다.', '눈물을 닦고 내가 당장 할 수 있는 소박한 일부터 시작한다.'] },
+  { id: 21, category: '내면의 상처', question: '동료들에게 들키고 싶지 않은 당신만의 가장 깊은 약점(콤플렉스)은?', options: ['든든한 리더인 척하지만 속으론 외면받을까 두려워하는 나약함.', '모든 이에게 언제나 착한 사람으로 남아야 한다는 심각한 강박.', '나만의 비전이나 대의가 없어 대세를 쉽게 추종하는 평범함.', '감정에 휩쓸려 일을 그르칠까 봐 의도적으로 타인과 벽을 두는 점.'] },
+  { id: 22, category: '스트레스 극복', question: '나에게 단 하루의 완벽한 자유시간(포상 휴가)이 주어진다면?', options: ['평소 먹고 싶었던 진귀한 요리를 배부르게 즐긴다.', '조용히 방에서 책을 읽거나 흥미로운 지적 탐구를 즐긴다.', '방 청소와 장비 정리를 완벽히 마치며 카타르시스를 즐긴다.', '소박하게 동료들과 구기종목 스포츠나 가벼운 여가를 보낸다.'] },
+  { id: 23, category: '내면의 상처', question: '인생의 마지막 불꽃이 꺼져가는 임종의 순간, 당신의 마지막 독백은?', options: ['"나는 어떤 굴복도 하지 않았고, 끝까지 싸웠다."', '"내 죽음이 다음 병사들의 길잡이가 될 이정표이기를..."', '"내가 깊이 사랑했던 그가 내 몫까지 행복하게 살기를..."', '"지옥 같은 책임과 의무에서 벗어나 비로소 안식하는구나."'] },
+  { id: 24, category: '내면의 상처', question: '나 자신보다 뛰어난 대세를 맹신하며 뒤늦게 후회했던 상처에 대해?', options: ['나약함을 떨치고 스스로 판단하고 결정하는 주체적 삶을 살겠다.', '상처마저 내 일부로 안고서라도 거대한 정의에 나를 던지겠다.', '살아남았음에 감사하며 묵묵히 남은 사람들의 든든한 버팀목이 되겠다.', '대세의 거대한 흐름에 나를 굴복시키고 순응하는 법을 배운다.'] }
+];
+
+// Re-structuring into questions with options A-D
+const finalQuestions = QUESTIONS_BASE.map(q => {
+  return {
+    ...q,
+    options: q.options.map((text, idx) => ({
+      key: ['A', 'B', 'C', 'D'][idx] as 'A' | 'B' | 'C' | 'D',
+      text,
+      scores: {} as Record<string, number>
+    }))
+  };
+});
+
+// Distribute points fairly but with a hint of Lore.
+// We'll iterate through each character and assign their required slots.
+CHAR_NAMES.forEach(name => {
+  const pointsToAssign = shuffle([...Array(5).fill(5), ...Array(5).fill(4), ...Array(5).fill(3), ...Array(4).fill(2), ...Array(5).fill(1)]);
+  
+  // To avoid bunching, we'll try to find options that have fewer than 5 characters.
+  pointsToAssign.forEach(pt => {
+    let assigned = false;
+    // Simple heuristic: find an option that has the fewest characters currently assigned.
+    const sortedOptions = finalQuestions.flatMap(q => q.options)
+      .sort((a, b) => Object.keys(a.scores).length - Object.keys(b.scores).length);
+    
+    for (const opt of sortedOptions) {
+      if (!opt.scores[name] && Object.keys(opt.scores).length < 5) {
+        opt.scores[name] = pt;
+        assigned = true;
+        break;
+      }
+    }
+  });
+});
+
+// Verify balance
+const charStats = CHAR_NAMES.map(name => {
+  let total = 0;
+  const counts: Record<number, number> = { 5:0, 4:0, 3:0, 2:0, 1:0 };
+  finalQuestions.forEach(q => q.options.forEach(o => {
+    if (o.scores[name]) {
+      total += o.scores[name];
+      counts[o.scores[name]]++;
+    }
+  }));
+  return { name, total, counts };
+});
+
+console.log('Balance Verification:', charStats);
+
+const output = `
+export interface Character {
+  name: string;
+  title: string;
+  imageUrl: string;
+  keywords: string[];
+  description: string;
+  chemistry: {
+    best: string;
+    worst: string;
+  };
+}
+
+export interface Option {
+  key: 'A' | 'B' | 'C' | 'D';
+  text: string;
+  scores: Record<string, number>;
+}
+
+export interface Question {
+  id: number;
+  category: string;
+  question: string;
+  options: Option[];
+}
+
+export const SHINGEKI_VERSION = '1.9.0';
+
+export const CHARACTERS: Record<string, Character> = {
+  '에렌 예거': { name: '에렌 예거', title: '자유를 갈망하는 진격의 거인', imageUrl: '/images/shingeki/eren.png', keywords: ['자유', '의지', '행동파', '비극적 양면성'], description: '열정적이고 불의를 참지 못하며 저돌적인 투지를 가졌습니다.', chemistry: { best: '아르민 알레르토', worst: '지크 예거' } },
+  '미카사 아커만': { name: '미카사 아커만', title: '심장을 지키는 불패의 수호자', imageUrl: '/images/shingeki/mikasa.png', keywords: ['헌신', '냉철', '수호', '압도적 강함'], description: '소중한 사람을 지키기 위해서라면 어떤 위험도 불사하는 압도적인 실천력을 보여줍니다.', chemistry: { best: '에렌 예거', worst: '애니 레온하트' } },
+  '아르민 알레르토': { name: '아르민 알레르토', title: '희망을 그려내는 지략의 장단', imageUrl: '/images/shingeki/armin.png', keywords: ['지혜', '통찰', '탐구심', '외유내강'], description: '비범한 지략과 정확한 상황 판단력을 무기로 위기의 순간 해답을 찾아냅니다.', chemistry: { best: '에렌 예거', worst: '플록 포르스터' } },
+  '리바이 아커만': { name: '리바이 아커만', title: '인류 최강의 병사', imageUrl: '/images/shingeki/levi.png', keywords: ['최강', '결단력', '결벽증', '인간적 따뜻함'], description: '냉철하고 신속한 판단력을 가졌으며, 속으로는 동료를 아끼는 깊은 인간미를 가졌습니다.', chemistry: { best: '엘빈 스미스', worst: '지크 예거' } },
+  '엘빈 스미스': { name: '엘빈 스미스', title: '인류의 전진을 이끄는 위대한 단장', imageUrl: '/images/shingeki/erwin.png', keywords: ['리더십', '결단', '야심가', '죄책감'], description: '인류 전체의 생존이라는 대의를 위해 냉정한 결단을 내리는 강철 같은 인물입니다.', chemistry: { best: '리바이 아커만', worst: '플록 포르스터' } },
+  '한지 조에': { name: '한지 조에', title: '미지를 탐구하는 불꽃같은 열정', imageUrl: '/images/shingeki/hange.png', keywords: ['호기심', '탐구', '괴짜', '영리함'], description: '진실을 향한 광기 어린 호기심과 유쾌한 실험정신을 가졌습니다.', chemistry: { best: '리바이 아커만', worst: '라이너 브라운' } },
+  '장 키르슈타인': { name: '장 키르슈타인', title: '현실 속에서 정의를 찾는 현실주의 리더', imageUrl: '/images/shingeki/jean.png', keywords: ['현실주의', '성장', '통찰력', '인간미'], description: '현실적인 판단력과 인간적인 고민을 함께하는 리더입니다.', chemistry: { best: '코니 스프링거', worst: '에렌 예거' } },
+  '사샤 브라우스': { name: '사샤 브라우스', title: '혹독한 세상의 소박한 빛', imageUrl: '/images/shingeki/sasha.png', keywords: ['자유분방', '식탐', '야생의 오감', '조화'], description: '본능에 충실하고 뛰어난 야생의 감각으로 위기를 돌파하는 순수한 영혼입니다.', chemistry: { best: '코니 스프링거', worst: '가비 브라운' } },
+  '코니 스프링거': { name: '코니 스프링거', title: '동료를 위해 달리는 순박한 전사', imageUrl: '/images/shingeki/connie.png', keywords: ['의리', '무드메이커', '의협심', '따뜻함'], description: '소박하고 의리 넘치는 성품을 가진 팀의 활기찬 무드메이커입니다.', chemistry: { best: '사샤 브라우스', worst: '지크 예거' } },
+  '히스토리아 레이스': { name: '히스토리아 레이스', title: '자기 자신만의 삶을 선택한 여왕', imageUrl: '/images/shingeki/historia.png', keywords: ['운명개척', '주체성', '독립성', '자아긍정'], description: '타인의 기대에서 벗어나 당당하고 주체적으로 참된 자아를 긍정하게 된 인물입니다.', chemistry: { best: '팔코 글라이스', worst: '에렌 예거' } },
+  '라이너 브라운': { name: '라이너 브라운', title: '책임과 죄책감의 경계에 선 전사', imageUrl: '/images/shingeki/reiner.png', keywords: ['책임감', '맏형', '이중성', '담력'], description: '책임감이 무척 강하고 남을 잘 돌보는 맏형 같은 리더 성향입니다.', chemistry: { best: '초대형 거인', worst: '에렌 예거' } },
+  '애니 레온하트': { name: '애니 레온하트', title: '고독한 사명을 짊어진 얼음의 여전사', imageUrl: '/images/shingeki/annie.png', keywords: ['독립심', '실리주의', '비정함', '다정함'], description: '냉정하고 합리적인 개인주의자이지만 그 이면에 따뜻함을 지니고 있습니다.', chemistry: { best: '아르민 알레르토', worst: '에렌 예거' } },
+  '지크 예거': { name: '지크 예거', title: '구원을 바라는 비운의 지략가', imageUrl: '/images/shingeki/zeke.png', keywords: ['허무주의', '치밀함', '통찰력', '비밀설계'], description: '냉소적이고 허무주의적인 통찰력을 가진 전략가입니다.', chemistry: { best: '차력 거인', worst: '리바이 아커만' } },
+  '가비 브라운': { name: '가비 브라운', title: '폭풍처럼 타오르는 거침없는 신념', imageUrl: '/images/shingeki/gabi.png', keywords: ['열정', '적극성', '자부심', '불도저'], description: '강렬한 승부욕과 목표를 향한 저돌적인 행동력을 가졌습니다.', chemistry: { best: '팔코 글라이스', worst: '사샤 브라우스' } },
+  '팔코 글라이스': { name: '팔코 글라이스', title: '어둠을 정화하는 지고지순한 순수', imageUrl: '/images/shingeki/falco.png', keywords: ['친절', '헌신', '순수함', '공감능력'], description: '이타적이고 맑은 심성을 가진 깊은 공감 능력의 소유자입니다.', chemistry: { best: '가비 브라운', worst: '에렌 예거' } },
+  '플록 포르스터': { name: '플록 포르스터', title: '냉혹한 진실을 부르짖는 현실주의자', imageUrl: '/images/shingeki/floch.png', keywords: ['현실주의', '광신도', '생존본능', '가혹함'], description: '자신의 소속과 생존을 위해 가혹한 수단도 마다하지 않는 강경한 신념을 가졌습니다.', chemistry: { best: '엘빈 스미스', worst: '아르민 알레르토' } },
+  '턱 거인': { name: '턱 거인', title: '기민함과 날카로움을 겸비한 전장의 야수', imageUrl: '/images/shingeki/jaw_titan.png', keywords: ['민첩', '의리', '자존심', '독립성'], description: '기민한 판단력과 자존심 강한 독립성을 보여주는 전장의 야수입니다.', chemistry: { best: '차력 거인', worst: '초대형 거인' } },
+  '차력 거인': { name: '차력 거인', title: '끈기와 생존력을 갖춘 전술의 핵심', imageUrl: '/images/shingeki/cart_titan.png', keywords: ['끈기', '인내력', '성실함', '조력자'], description: '든든한 성실함과 묵묵한 인내력을 갖춘 전술의 핵심입니다.', chemistry: { best: '턱 거인', worst: '갑옷 거인' } },
+  '초대형 거인': { name: '초대형 거인', title: '압도적인 파괴력의 파멸의 신', imageUrl: '/images/shingeki/colossus_titan.png', keywords: ['압도', '신중함', '외강내유', '수동적'], description: '압도적인 파괴력을 지녔지만 신중하고 내성적인 성향을 띠고 있습니다.', chemistry: { best: '갑옷 거인', worst: '턱 거인' } },
+  '갑옷 거인': { name: '갑옷 거인', title: '어떤 절망에도 무너지지 않는 수호벽', imageUrl: '/images/shingeki/armored_titan.png', keywords: ['강인함', '인내', '굳건함', '방패'], description: '어떤 상처에도 굴하지 않고 최전선에서 버텨내는 책임감의 상징입니다.', chemistry: { best: '초대형 거인', worst: '차력 거인' } }
+};
+
+export const QUESTIONS: Question[] = ${JSON.stringify(finalQuestions, null, 2)};
+`;
+
+writeFileSync('app/actions/shingekiData.ts', output);

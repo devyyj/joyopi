@@ -18,27 +18,32 @@ export async function GET(request: Request) {
     const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error && user) {
-      // 프로필 존재 여부 확인 및 생성
-      const { db } = await import('@/db')
-      const { profiles } = await import('@/db/schema')
-      const { eq } = await import('drizzle-orm')
-      const { generateRandomNickname } = await import('@/utils/nickname')
+      try {
+        // 프로필 존재 여부 확인 및 생성
+        const { db } = await import('@/db')
+        const { profiles } = await import('@/db/schema')
+        const { eq } = await import('drizzle-orm')
+        const { generateRandomNickname } = await import('@/utils/nickname')
 
-      const existingProfile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id)
-      })
-
-      if (!existingProfile) {
-        await db.insert(profiles).values({
-          id: user.id,
-          email: user.email!,
-          nickname: generateRandomNickname(),
+        const existingProfile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, user.id)
         })
-      } else if (existingProfile.email !== user.email) {
-        // 이메일이 변경된 경우 업데이트 (보안 및 데이터 정합성)
-        await db.update(profiles)
-          .set({ email: user.email! })
-          .where(eq(profiles.id, user.id))
+
+        if (!existingProfile) {
+          await db.insert(profiles).values({
+            id: user.id,
+            email: user.email!,
+            nickname: generateRandomNickname(),
+          })
+        } else if (existingProfile.email !== user.email) {
+          // 이메일이 변경된 경우 업데이트 (보안 및 데이터 정합성)
+          await db.update(profiles)
+            .set({ email: user.email! })
+            .where(eq(profiles.id, user.id))
+        }
+      } catch (dbError) {
+        console.error('Database error in auth callback:', dbError)
+        // DB 에러가 발생해도 인증 자체는 완료되었으므로 리다이렉트 진행 가능
       }
 
       return NextResponse.redirect(`${origin}${next}`)

@@ -66,9 +66,8 @@ function simulateCalculateResult(answers: { questionId: number; answer: string }
     if (c3Candidates.length === 1) {
       winner = c3Candidates[0];
     } else {
-      // Use random to match the updated calculateResult logic
-      const randomIndex = Math.floor(Math.random() * c3Candidates.length);
-      winner = c3Candidates[randomIndex];
+      // 2순위: priorityList 기반 우선순위 적용
+      winner = c3Candidates.sort((a, b) => priorityList.indexOf(a) - priorityList.indexOf(b))[0];
     }
   }
 

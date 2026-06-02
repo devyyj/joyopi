@@ -114,10 +114,11 @@ export async function calculateResult(answers: AnswerInput[]): Promise<{ charact
     let c3Candidates: string[] = [];
     
     candidates.forEach(cand => {
-      if (c3Scores[cand] > maxC3) {
-        maxC3 = c3Scores[cand];
+      const scoreC3 = c3Scores[cand] || 0;
+      if (scoreC3 > maxC3) {
+        maxC3 = scoreC3;
         c3Candidates = [cand];
-      } else if (c3Scores[cand] === maxC3) {
+      } else if (scoreC3 === maxC3) {
         c3Candidates.push(cand);
       }
     });
@@ -125,8 +126,9 @@ export async function calculateResult(answers: AnswerInput[]): Promise<{ charact
     if (c3Candidates.length === 1) {
       winner = c3Candidates[0];
     } else {
-      const randomIndex = Math.floor(Math.random() * c3Candidates.length);
-      winner = c3Candidates[randomIndex];
+      // 2순위: priorityList 기반 우선순위 적용
+      console.log('[DEBUG] Tie persists after C3 check. Using priorityList...');
+      winner = c3Candidates.sort((a, b) => priorityList.indexOf(a) - priorityList.indexOf(b))[0];
     }
   }
 

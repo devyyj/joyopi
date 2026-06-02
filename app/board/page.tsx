@@ -16,9 +16,16 @@ export default async function BoardPage() {
   // 초기 10개의 게시글과 사용자 프로필을 병렬로 조회
   const [initialPosts, currentUserProfile] = await Promise.all([
     getPaginatedPosts(0, 10),
-    user ? db.query.profiles.findFirst({
-      where: eq(profiles.id, user.id)
-    }) : Promise.resolve(null)
+    user ? (async () => {
+      try {
+        return await db.query.profiles.findFirst({
+          where: eq(profiles.id, user.id)
+        });
+      } catch (err) {
+        console.error('Failed to load user profile in board:', err);
+        return null;
+      }
+    })() : Promise.resolve(null)
   ]);
 
   return (

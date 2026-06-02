@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MainHeader from "./components/main-header";
+import HeaderWrapper from "./components/header-wrapper";
 import { DialogProvider } from "./components/ui/dialog-provider";
 
 const geistSans = Geist({
@@ -44,7 +45,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <DialogProvider>
-          <MainHeader />
+          <HeaderWrapper>
+            <MainHeader />
+          </HeaderWrapper>
           <main className="flex-1">
             {children}
           </main>

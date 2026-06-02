@@ -21,10 +21,15 @@ async function getAuthUser() {
 }
 
 async function getUserProfile(userId: string) {
-  const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.id, userId)
-  });
-  return profile;
+  try {
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, userId)
+    });
+    return profile;
+  } catch (error) {
+    console.error('[getUserProfile] Error:', error);
+    return null;
+  }
 }
 
 // --- 게시글 (Posts) ---
@@ -407,7 +412,7 @@ export async function getPaginatedPosts(offset: number = 0, limit: number = 10):
     });
   } catch (error) {
     console.error('[getPaginatedPosts] Error:', error);
-    throw error; // 에러를 숨기지 않고 상위로 던짐
+    return []; // 에러 시 빈 배열 반환
   }
 }
 
@@ -460,6 +465,6 @@ export async function getPostDetail(postId: number): Promise<PostWithDetails | n
     };
   } catch (error) {
     console.error('[getPostDetail] Error:', error);
-    throw error;
+    return null; // 에러 시 null 반환
   }
 }

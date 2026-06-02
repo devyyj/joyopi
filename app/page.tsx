@@ -23,9 +23,14 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
 
   // 현재 사용자 프로필 (닉네임용)
-  const profile = user ? await db.query.profiles.findFirst({
-    where: eq(profiles.id, user.id)
-  }) : null;
+  let profile = null;
+  try {
+    profile = user ? await db.query.profiles.findFirst({
+      where: eq(profiles.id, user.id)
+    }) : null;
+  } catch (err) {
+    console.error('Failed to load user profile:', err);
+  }
 
   // 돼지 일기 퀵 정보 획득 (최근 7일 요약 통계)
   let piggyStats: {
@@ -66,24 +71,34 @@ export default async function Home() {
   recentThreshold.setDate(recentThreshold.getDate() - 30);
 
   // 1. 최신 소식 (Recent Posts) - 좋아요/댓글 포함
-  const recentPostsRaw = await db.query.posts.findMany({
-    orderBy: [desc(posts.createdAt)],
-    limit: 5,
-    with: {
-      likes: true,
-      comments: true,
-    }
-  }) as unknown as PostWithCounts[];
+  let recentPostsRaw: PostWithCounts[] = [];
+  try {
+    recentPostsRaw = await db.query.posts.findMany({
+      orderBy: [desc(posts.createdAt)],
+      limit: 5,
+      with: {
+        likes: true,
+        comments: true,
+      }
+    }) as unknown as PostWithCounts[];
+  } catch (err) {
+    console.error('Failed to load recent posts:', err);
+  }
 
   // 2. 인기 게시글 (Top Liked - 최근 30일 게시글 중)
-  const topLikedPostsRaw = await db.query.posts.findMany({
-    where: gt(posts.createdAt, recentThreshold),
-    with: {
-      likes: true,
-      comments: true,
-    },
-    limit: 10, // 충분히 가져온 후 메모리에서 정렬 (인기 게시글 계산용)
-  }) as unknown as PostWithCounts[];
+  let topLikedPostsRaw: PostWithCounts[] = [];
+  try {
+    topLikedPostsRaw = await db.query.posts.findMany({
+      where: gt(posts.createdAt, recentThreshold),
+      with: {
+        likes: true,
+        comments: true,
+      },
+      limit: 10, // 충분히 가져온 후 메모리에서 정렬 (인기 게시글 계산용)
+    }) as unknown as PostWithCounts[];
+  } catch (err) {
+    console.error('Failed to load top liked posts:', err);
+  }
 
   // 데이터 가공 헬퍼
   const formatItems = (items: PostWithCounts[]) => items.map(post => ({

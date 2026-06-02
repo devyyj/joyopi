@@ -4,6 +4,7 @@
 
 ## 0. 지침 준수 선언 (MANDATORY)
 - 최종 보고 시 체크리스트 준수 여부를 명시합니다. 지침 위반 시 작업은 실패로 간주됩니다.
+- **완료 보고 전 빌드 검증 필수 (CRITICAL)**: 코드를 수정하고 사용자에게 "완료"를 보고하기 전, 반드시 `npm run build`(또는 `npm run verify`)를 실행하여 **빌드 성공을 직접 확인**해야 합니다. `eslint` 통과만으로는 완료 보고가 불가합니다. 빌드 검증 없이 완료 보고를 하는 행위는 **허위 보고**로 간주되며, 가장 심각한 지침 위반입니다.
 
 ## 1. 기본 원칙 (Core Principles)
 - **언어**: 모든 상호작용 및 주석, 문서는 **한국어**로 수행합니다.
@@ -76,10 +77,12 @@
 - [ ] **롤백 방지**: 서버 응답 후 클라이언트 상태가 서버 데이터와 일치하도록 보장하여 `useOptimistic`의 롤백 현상을 방지합니다.
 
 ### 5.4. 빌드 및 배포 안전성 (CRITICAL)
+- [ ] **완료 보고 전 빌드 검증 (MANDATORY)**: 코드 수정 후 사용자에게 완료를 보고하기 **직전** 반드시 `npm run build`를 실행하여 성공을 확인합니다. lint 통과는 빌드 성공과 다릅니다.
 - [ ] **Git 추적 확인**: 새로운 파일을 생성한 경우, `git status`를 통해 모든 필수 파일이 스테이징되었는지 확인합니다.
 - [ ] **로컬 검증 실행**: `develop`/`master` 브랜치 커밋 전 반드시 `npm run verify`를 실행합니다. (`verify`는 lint → test → git 추적 → **프로덕션 빌드** 순으로 전수 점검합니다.)
 - [ ] **빌드 성공 필수**: `npm run build`가 실패하면 커밋을 중단하고 에러를 먼저 해결합니다. Vercel 등 CI/CD는 `package.json` 기준으로 의존성을 설치하므로, 로컬에서 빌드가 성공해야 배포가 보장됩니다.
 - [ ] **패키지 등록 확인**: 새 패키지를 사용한 경우, `package.json`의 `dependencies`(런타임용) 또는 `devDependencies`(빌드 도구용)에 정확히 등록되어 있는지 확인합니다. `node_modules`에만 존재하고 `package.json`에 없으면 배포 시 누락됩니다.
+- [ ] **next/dynamic ssr:false 제약**: `dynamic(() => import(...), { ssr: false })`는 반드시 **`'use client'`가 선언된 Client Component** 안에서만 사용해야 합니다. Server Component에서 사용하면 Next.js 빌드 에러가 발생합니다.
 
 ## 6. 학습된 프로젝트 지침 (Learned Lessons)
 
@@ -101,3 +104,12 @@
 - **재발 방지**: 신규 패키지 사용 시 반드시 `npm install <패키지명>`으로 설치해 `package.json`에 자동 등록되도록 합니다. 수동으로 `package.json`을 편집하는 경우 `npm install`로 `package-lock.json`도 함께 갱신합니다.
 - **사례 (2026-05-28)**: `@radix-ui/react-dialog`, `framer-motion`, `lucide-react`, `clsx`, `tailwind-merge`가 로컬에서는 동작했으나 `package.json` 미등록으로 Vercel 배포 실패.
 
+### 6.6. 브라우저 전용 API 판별로 인한 하이드레이션 불일치 방지 (Hydration Mismatch) (CRITICAL)
+- **원인**: `typeof window !== 'undefined'` 조건식이나 `window.webkitSpeechRecognition` 등 브라우저 전용 API의 가용 여부를 `useState` 초기화 시점이나 렌더링 중 동기적으로 감지하면, 서버(SSR) 렌더링 결과(항상 false)와 클라이언트 첫 렌더링 결과(true)가 일치하지 않아 `Hydration failed` 오류가 발생합니다.
+- **재발 방지**: 브라우저 전용 API 지원 여부 상태(`isSupported`)는 초기 상태를 무조건 `false`로 시작하여 서버/클라이언트 첫 프레임을 일치시키고, 마운트 직후인 `useEffect` 내에서만 조건 검사를 수행하여 `setIsSupported(true)`를 동적으로 설정하도록 구조화해야 합니다.
+- **사례 (2026-06-02)**: `useSpeechToText` 훅에서 `useState` 생성 시점에 `webkitSpeechRecognition`의 가용 여부를 동기 체크하여 렌더링 분기하는 바람에 밈챗 페이지(`/memechat`)에서 하이드레이션 오류 발생.
+
+### 6.7. 빌드 검증 없는 완료 보고로 인한 허위 성공 보고 (CRITICAL)
+- **원인**: 코드 수정 후 `eslint`만 실행하고 "완료"를 보고하면, lint는 통과하지만 Next.js 컴파일러 수준의 에러(예: `ssr: false` in Server Component)는 탐지되지 않습니다. 사용자는 정상 완료로 인식하지만 실제 애플리케이션은 빌드 불가 상태입니다.
+- **재발 방지**: 코드 수정 완료 보고 직전 **반드시 `npm run build`를 실행**하고 성공 결과를 확인한 후에만 완료를 보고합니다. 빌드를 실행하지 않고 완료 보고를 하는 행위는 지침 위반입니다.
+- **사례 (2026-06-02)**: `page.tsx`에서 `'use client'`를 제거하여 Server Component로 만든 뒤 `dynamic(ssr: false)`가 남아 빌드 에러 발생. eslint는 통과했으나 Next.js 빌드는 실패. 빌드 검증 없이 완료 보고하여 허위 성공 보고 발생.

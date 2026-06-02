@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, MessageSquare, Radio, Notebook, Heart, Sparkles } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Radio, Notebook, Heart, Sparkles, Smile } from 'lucide-react';
 
 interface ToolItem {
   name: string;
@@ -39,6 +39,14 @@ const TOOLS: ToolItem[] = [
     icon: Notebook,
     color: 'text-[#10b981]',
     hoverColor: 'hover:bg-emerald-50/60 hover:border-emerald-200/40'
+  },
+  {
+    name: '밈챗',
+    href: '/memechat',
+    description: '동작 인식과 실시간 음성 자막 밈 대화',
+    icon: Smile,
+    color: 'text-[#a855f7]',
+    hoverColor: 'hover:bg-purple-50/60 hover:border-purple-200/40'
   },
   {
     name: '심장을 바쳐라!',

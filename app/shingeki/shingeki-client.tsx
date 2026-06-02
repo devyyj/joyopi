@@ -10,6 +10,15 @@ import { Question, Character, Option, CHARACTERS, SHINGEKI_VERSION } from '../ac
 
 type Step = 'home' | 'testing' | 'analyzing' | 'result';
 
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+};
+
 function ShingekiTestContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -88,19 +97,12 @@ function ShingekiTestContent() {
     
     if (character) {
       shownCharNameRef.current = charParam;
-      setResult({ character, scores: {} });
-      setStep('result');
+      setTimeout(() => {
+        setResult({ character, scores: {} });
+        setStep('result');
+      }, 0);
     }
   }, [searchParams, step]);
-
-  const shuffleArray = <T,>(array: T[]): T[] => {
-    const newArr = [...array];
-    for (let i = newArr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
-    }
-    return newArr;
-  };
 
   const handleStart = async () => {
     console.log('[DEBUG] --- handleStart Started ---');

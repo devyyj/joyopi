@@ -83,7 +83,7 @@ const c2Pool = QUESTIONS.filter(q => q.id >= 7 && q.id <= 12);
 const c3Pool = QUESTIONS.filter(q => q.id >= 13 && q.id <= 18);
 const c4Pool = QUESTIONS.filter(q => q.id >= 19 && q.id <= 24);
 
-const getRandomSlice = (arr: any[], count: number) => {
+const getRandomSlice = <T,>(arr: T[], count: number) => {
   return [...arr].sort(() => Math.random() - 0.5).slice(0, count);
 };
 

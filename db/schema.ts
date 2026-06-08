@@ -7,6 +7,7 @@ export const profiles = pgTable('profiles', {
   nickname: text('nickname').notNull().unique(),
   bio: text('bio'),
   avatarUrl: text('avatar_url'),
+  role: text('role').default('user').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -158,3 +159,13 @@ export const mealImagesRelations = relations(mealImages, ({ one }) => ({
   characterName: text('character_name').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const nameRanks = pgTable('name_ranks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  role: text('role').notNull(), // 'dad' | 'mom'
+  rank: integer('rank').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+

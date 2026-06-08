@@ -63,7 +63,7 @@ const globalForDb = globalThis as unknown as {
 // 프록시 소켓 생성 함수 설정
 const socket = getProxiedSocket(targetHost, targetPort);
 
-const options: any = {
+const options: Record<string, unknown> = {
   prepare: false,
   ssl: targetPort === 443 ? 'require' : false
 };

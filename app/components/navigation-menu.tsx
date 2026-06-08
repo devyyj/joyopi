@@ -4,6 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutGrid, MessageSquare, Radio, Notebook, Heart, Sparkles } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
+
+const ALLOWED_EMAILS = ['devyyj@gmail.com', 'noticeably34@gmail.com'];
 
 interface ToolItem {
   name: string;
@@ -12,6 +15,7 @@ interface ToolItem {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   hoverColor: string;
+  hoverTextColor: string;
   accent?: boolean;
 }
 
@@ -22,7 +26,8 @@ const TOOLS: ToolItem[] = [
     description: '연구원들의 자유로운 소통과 공유 공간',
     icon: MessageSquare,
     color: 'text-[#4f46e5]',
-    hoverColor: 'hover:bg-indigo-50/60 hover:border-indigo-200/40'
+    hoverColor: 'hover:bg-indigo-50/60 hover:border-indigo-200/40',
+    hoverTextColor: 'group-hover:text-[#4f46e5]'
   },
   {
     name: '메아리 에코',
@@ -30,7 +35,8 @@ const TOOLS: ToolItem[] = [
     description: '음성 및 상태 메시지 실시간 동기화',
     icon: Radio,
     color: 'text-[#06b6d4]',
-    hoverColor: 'hover:bg-cyan-50/60 hover:border-cyan-200/40'
+    hoverColor: 'hover:bg-cyan-50/60 hover:border-cyan-200/40',
+    hoverTextColor: 'group-hover:text-[#06b6d4]'
   },
   {
     name: '돼지 일기',
@@ -38,7 +44,8 @@ const TOOLS: ToolItem[] = [
     description: '식단 일지 및 칼로리 통계 분석기',
     icon: Notebook,
     color: 'text-[#10b981]',
-    hoverColor: 'hover:bg-emerald-50/60 hover:border-emerald-200/40'
+    hoverColor: 'hover:bg-emerald-50/60 hover:border-emerald-200/40',
+    hoverTextColor: 'group-hover:text-[#10b981]'
   },
   {
     name: '심장을 바쳐라!',
@@ -47,13 +54,40 @@ const TOOLS: ToolItem[] = [
     icon: Heart,
     color: 'text-[#8B0000]',
     hoverColor: 'hover:bg-red-50/80 hover:border-red-200/50',
+    hoverTextColor: 'group-hover:text-[#8B0000]',
+    accent: true
+  },
+  {
+    name: '이름 랭킹 (Name Rank)',
+    href: '/name-rank',
+    description: '아기 이름 선호도 랭킹 및 매칭 조율실',
+    icon: Sparkles,
+    color: 'text-[#db2777]',
+    hoverColor: 'hover:bg-pink-50/60 hover:border-pink-200/40',
+    hoverTextColor: 'group-hover:text-[#db2777]',
     accent: true
   }
 ];
 
 export default function NavigationMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEchoAuthorized, setIsEchoAuthorized] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function checkEchoAuth() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && ALLOWED_EMAILS.includes(user.email || '')) {
+          setIsEchoAuthorized(true);
+        }
+      } catch (e) {
+        console.error('Failed to check echo authorization in navigation menu:', e);
+      }
+    }
+    checkEchoAuth();
+  }, [supabase]);
 
   // 메뉴 바깥 영역 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -102,7 +136,7 @@ export default function NavigationMenu() {
             </div>
 
             <div className="grid grid-cols-1 gap-1">
-              {TOOLS.map((tool) => (
+              {TOOLS.filter(tool => (tool.href !== '/echo' && tool.href !== '/name-rank') || isEchoAuthorized).map((tool) => (
                 <Link
                   key={tool.href}
                   href={tool.href}
@@ -113,7 +147,7 @@ export default function NavigationMenu() {
                     <tool.icon className={`w-4.5 h-4.5 ${tool.color}`} />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className={`text-xs font-bold ${tool.accent ? 'text-[#ff4d4d]' : 'text-neutral-800 group-hover:text-[#4f46e5]'} transition-colors`}>
+                    <span className={`text-xs font-bold text-neutral-800 ${tool.hoverTextColor} transition-colors`}>
                       {tool.name}
                     </span>
                     <span className="text-[10px] text-neutral-500 leading-normal mt-0.5 font-medium">

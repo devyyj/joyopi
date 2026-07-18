@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/app/components/ui';
 import Link from 'next/link';
-import { formatTime } from '@/app/echo/utils/echo-logic';
+import { formatTime, parseSeconds } from '@/app/echo/utils/echo-logic';
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
 
@@ -61,9 +61,20 @@ export default function SpeakerPage() {
   // 소켓 브로드캐스트 핸들러
   const handleBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
     switch (event) {
-      case 'ECHO_REQUEST':
-        setRemainingTime((prev) => prev + 60);
+      case 'ECHO_REQUEST': {
+        // 자기 자신이 보낸 ECHO_REQUEST는 handleSendEcho에서 이미 1번 반영했으므로 중복 가산 방지
+        if (payload && payload.senderId === presenceId) {
+          break;
+        }
+
+        // 항상 delta(seconds) 기반으로 시간 추가 (sender/speaker 시간 불일치 방지)
+        const addedSeconds = parseSeconds(payload, 60);
+        const newTime = remainingTimeRef.current + addedSeconds;
+        remainingTimeRef.current = newTime;
+        setRemainingTime(newTime);
+        sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: newTime });
         break;
+      }
       case 'ECHO_SYNC':
         if (typeof payload.remainingTime === 'number' && payload.remainingTime > remainingTimeRef.current) {
           setRemainingTime(payload.remainingTime);
@@ -80,7 +91,7 @@ export default function SpeakerPage() {
         }
         break;
     }
-  }, []);
+  }, [presenceId]);
 
   const {
     speakerCount,
@@ -119,6 +130,7 @@ export default function SpeakerPage() {
   }, []);
 
   // 오디오 재생 및 타이머 동기화 로직
+  // sendBroadcast는 sendBroadcastRef.current 사용 - stale closure 방지
   useEffect(() => {
     if (isPlaying) {
       audioRef.current?.play().catch((err) => {
@@ -134,8 +146,8 @@ export default function SpeakerPage() {
       timerRef.current = setInterval(() => {
         setRemainingTime((prev) => {
           const next = Math.max(0, prev - 1);
-          // 1초마다 동기화 신호 전송
-          sendBroadcast('ECHO_SYNC', { remainingTime: next });
+          // sendBroadcastRef를 사용해 항상 최신 함수 참조 (stale closure 방지)
+          sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: next });
           return next;
         });
       }, 1000);
@@ -144,9 +156,10 @@ export default function SpeakerPage() {
       timerRef.current = null;
       addLog('메아리 재생이 완료되었습니다.', 'info');
       // 정지 시 즉시 동기화
-      sendBroadcast('ECHO_SYNC', { remainingTime: 0 });
+      sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: 0 });
     }
-  }, [isPlaying, addLog, sendBroadcast]);
+  // sendBroadcast는 의존성에서 제외 - sendBroadcastRef.current로 항상 최신 참조
+  }, [isPlaying, addLog]);
 
   // 유휴 상태 하트비트 (연결 유지 강화)
   useEffect(() => {
@@ -159,10 +172,23 @@ export default function SpeakerPage() {
     return () => clearInterval(heartbeatInterval);
   }, [isPlaying, sendBroadcast]);
 
-  const handleSendEcho = useCallback(() => {
-    setRemainingTime((prev) => prev + 60);
-    sendBroadcast('ECHO_REQUEST', { senderId: presenceId });
-    addLog('스피커가 직접 메아리를 보냈습니다. (+1분)', 'request', presenceId);
+  const handleSendEcho = useCallback((seconds: unknown = 60) => {
+    const validSeconds = typeof seconds === 'number' && !isNaN(seconds) && seconds > 0
+      ? seconds
+      : typeof seconds === 'string'
+        ? parseInt(seconds, 10) || 60
+        : 60;
+
+    // remainingTimeRef로 현재 시간 읽기 (항상 최신값)
+    const targetTime = remainingTimeRef.current + validSeconds;
+    setRemainingTime(targetTime);
+    remainingTimeRef.current = targetTime;
+    // ECHO_SYNC를 먼저 브로드캐스트해 샌더가 즉시 정확한 시간을 표시하도록
+    sendBroadcast('ECHO_SYNC', { remainingTime: targetTime });
+    // ECHO_REQUEST에 delta(seconds) 전송 - 다른 스피커도 자기 시간 + seconds로 계산
+    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds });
+    const minutes = Math.floor(validSeconds / 60);
+    addLog(`스피커가 직접 메아리를 보냈습니다. (+${minutes}분)`, 'request', presenceId);
   }, [presenceId, addLog, sendBroadcast]);
 
   const handleStopEcho = useCallback(() => {
@@ -250,19 +276,27 @@ export default function SpeakerPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+        <div className="grid grid-cols-2 gap-4 w-full max-w-md">
           <Button 
             size="lg" 
-            className="h-16 text-lg font-bold" 
-            onClick={handleSendEcho}
+            className="h-16 text-base sm:text-lg font-bold" 
+            onClick={() => handleSendEcho(60)}
           >
-            메아리 보내기 (+1분)
+            메아리 (+1분)
+          </Button>
+
+          <Button 
+            size="lg" 
+            className="h-16 text-base sm:text-lg font-bold" 
+            onClick={() => handleSendEcho(600)}
+          >
+            메아리 (+10분)
           </Button>
           
           <Button 
             variant="outline" 
             size="lg" 
-            className="h-16 text-destructive border-destructive/20 hover:bg-destructive/10"
+            className="col-span-2 h-16 text-destructive border-destructive/20 hover:bg-destructive/10"
             onClick={handleStopEcho}
             disabled={remainingTime === 0}
           >

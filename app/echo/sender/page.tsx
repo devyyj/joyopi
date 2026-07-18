@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/app/components/ui';
 import Link from 'next/link';
-import { formatTime } from '@/app/echo/utils/echo-logic';
+import { formatTime, resolveSyncTime } from '@/app/echo/utils/echo-logic';
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
 
@@ -36,6 +36,8 @@ export default function SenderPage() {
     checkAuth();
   }, [supabase]);
   const [remainingTime, setRemainingTime] = useState(0);
+  const lastRequestTimeRef = useRef<number>(0);
+  const senderTimeRef = useRef<number>(0); // remainingTime을 ref로 추적 (stale closure 방지)
   
   const presenceId = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -48,6 +50,11 @@ export default function SenderPage() {
 
   const isPlaying = remainingTime > 0;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // senderTimeRef를 remainingTime과 항상 동기화
+  useEffect(() => {
+    senderTimeRef.current = remainingTime;
+  }, [remainingTime]);
 
   // 로컬 타이머 (동기화 신호 사이의 공백을 메움)
   useEffect(() => {
@@ -68,7 +75,8 @@ export default function SenderPage() {
     switch (event) {
       case 'ECHO_SYNC':
         if (typeof payload.remainingTime === 'number') {
-          setRemainingTime(payload.remainingTime);
+          const syncVal = payload.remainingTime;
+          setRemainingTime((prev) => resolveSyncTime(prev, syncVal, lastRequestTimeRef.current));
         }
         break;
       case 'ECHO_STOP':
@@ -100,14 +108,27 @@ export default function SenderPage() {
     }
   }, [isReady, presenceId, sendBroadcast]);
 
-  const handleSendEcho = useCallback(() => {
+  const handleSendEcho = useCallback((seconds: unknown = 60) => {
     if (!isReady) return;
-    // 1. 낙관적 업데이트: 로컬 타이머를 즉시 연장
-    setRemainingTime((prev) => prev + 60);
+    lastRequestTimeRef.current = Date.now();
 
-    // 2. 스피커에게 신호 전송
-    sendBroadcast('ECHO_REQUEST', { senderId: presenceId });
-    addLog('사용자가 메아리를 보냈습니다. (+1분)', 'request', presenceId);
+    const validSeconds = typeof seconds === 'number' && !isNaN(seconds) && seconds > 0
+      ? seconds
+      : typeof seconds === 'string'
+        ? parseInt(seconds, 10) || 60
+        : 60;
+
+    // senderTimeRef 기반으로 낙관적 업데이트 (stale closure 없이 정확한 현재값 사용)
+    const targetTime = senderTimeRef.current + validSeconds;
+
+    // 낙관적 업데이트: 절대값으로 직접 설정 (delta 누적 오차 방지)
+    setRemainingTime(targetTime);
+    senderTimeRef.current = targetTime;
+
+    // 오직 ECHO_REQUEST 1개만 전송 (ECHO_SYNC 중복 발송을 제거하여 11분/이중 가산 버그 예방)
+    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds });
+    const minutes = Math.floor(validSeconds / 60);
+    addLog(`사용자가 메아리를 보냈습니다. (+${minutes}분)`, 'request', presenceId);
   }, [presenceId, addLog, sendBroadcast, isReady]);
 
   const handleStopEcho = useCallback(() => {
@@ -162,20 +183,29 @@ export default function SenderPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 w-full max-w-md">
+        <div className="grid grid-cols-2 gap-4 w-full max-w-md">
           <Button 
             size="lg" 
-            className="h-20 text-xl font-bold" 
-            onClick={handleSendEcho}
+            className="h-20 text-base sm:text-lg font-bold" 
+            onClick={() => handleSendEcho(60)}
             disabled={!isReady || speakerCount === 0}
           >
-            {!isReady ? '준비중...' : speakerCount > 0 ? '메아리 보내기 (+1분)' : '스피커가 없습니다'}
+            {!isReady ? '준비중...' : speakerCount > 0 ? '+1분 보내기' : '스피커 없음'}
           </Button>
           
           <Button 
+            size="lg" 
+            className="h-20 text-base sm:text-lg font-bold" 
+            onClick={() => handleSendEcho(600)}
+            disabled={!isReady || speakerCount === 0}
+          >
+            {!isReady ? '준비중...' : speakerCount > 0 ? '+10분 보내기' : '스피커 없음'}
+          </Button>
+
+          <Button 
             variant="outline" 
             size="lg" 
-            className="h-14 text-destructive border-destructive/20 hover:bg-destructive/10"
+            className="col-span-2 h-14 text-destructive border-destructive/20 hover:bg-destructive/10"
             onClick={handleStopEcho}
             disabled={!isReady || remainingTime === 0}
           >

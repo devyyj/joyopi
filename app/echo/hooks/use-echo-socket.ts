@@ -92,8 +92,12 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
     onBroadcastRef.current = onBroadcast;
   }, [onBroadcast]);
 
+  const setupSequenceRef = useRef(0);
+
   const setupChannel = useCallback(async (reason: string) => {
     if (!isMountedRef.current || !presenceId) return;
+
+    const currentSequence = ++setupSequenceRef.current;
 
     // 기존 타이머 및 채널 정리
     if (reconnectTimeoutRef.current) {
@@ -108,6 +112,23 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
       await supabase.removeChannel(oldChannel);
     }
 
+    // 싱글톤 Supabase 클라이언트에 남아있는 동일 토픽 채널 제거하여 재구독 오류 방지
+    try {
+      const existingChannels = supabase.getChannels().filter(
+        ch => ch.topic === 'realtime:echo-room' || ch.topic === 'echo-room'
+      );
+      for (const ch of existingChannels) {
+        await supabase.removeChannel(ch);
+      }
+    } catch (e) {
+      console.warn('Failed to cleanup existing channels:', e);
+    }
+
+    // 비동기 작업 도중 새로운 setupChannel이 호출되었거나 unmount 되었으면 중단
+    if (currentSequence !== setupSequenceRef.current || !isMountedRef.current) {
+      return;
+    }
+
     // 세션 만료 방지: 소켓 생성 전 Supabase Auth 세션 상태 확인 및 자동 갱신
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -119,6 +140,10 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
       }
     } catch (authErr) {
       console.warn('Auth session refresh check failed:', authErr);
+    }
+
+    if (currentSequence !== setupSequenceRef.current || !isMountedRef.current) {
+      return;
     }
 
     const debugInfo = {
@@ -184,7 +209,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
     channelRef.current = channel;
 
     channel.subscribe(async (subStatus, err) => {
-      if (!isMountedRef.current || channelRef.current !== channel) return;
+      if (!isMountedRef.current || channelRef.current !== channel || currentSequence !== setupSequenceRef.current) return;
 
       const logPayload = { status: subStatus, error: err?.message, ...debugInfo };
 
@@ -293,7 +318,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [supabase, role]);
+  }, [supabase, role, presenceId]);
 
 
   const sendBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {

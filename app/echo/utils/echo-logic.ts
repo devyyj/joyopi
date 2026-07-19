@@ -1,3 +1,27 @@
+/**
+ * 메아리(Echo) 비즈니스 유틸리티 (v2.0 Refactored)
+ * 단일 진실 출처(Single Source of Truth): Unix ms timestamp 'endTime'
+ */
+
+/**
+ * 종료 절대 시각(endTime)으로부터 현재 남은 잔여 시간(초)을 계산합니다.
+ */
+export function calculateRemainingSeconds(endTime: number, nowMs: number = Date.now()): number {
+  if (!endTime || endTime <= 0) return 0;
+  return Math.max(0, Math.ceil((endTime - nowMs) / 1000));
+}
+
+/**
+ * 기존 종료 절대 시각(currentEndTime)에 신규 시간(addedSeconds)을 더해 새 종료 시각을 계산합니다.
+ */
+export function calculateNewEndTime(currentEndTime: number, addedSeconds: number, nowMs: number = Date.now()): number {
+  const base = Math.max(currentEndTime || 0, nowMs);
+  const validSeconds = typeof addedSeconds === 'number' && !isNaN(addedSeconds) && addedSeconds > 0
+    ? addedSeconds
+    : 60;
+  return base + validSeconds * 1000;
+}
+
 export function calculateNewTime(current: number, increment: number): number {
   return current + increment;
 }
@@ -8,6 +32,9 @@ export function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+/**
+ * 샌더 및 스피커 간 시간 동기화 판단 유틸리티
+ */
 export function resolveSyncTime(
   currentTime: number,
   syncTime: number,
@@ -15,24 +42,32 @@ export function resolveSyncTime(
   nowMs: number = Date.now(),
   gracePeriodMs: number = 10000
 ): number {
-  // 최근 연장 요청 후 유예 기간(10초) 동안은 스피커의 구(old) 시간으로 인한 롤백 방지
+  if (syncTime === 0) {
+    if (nowMs - lastRequestTimeMs < gracePeriodMs || currentTime > 60) {
+      return currentTime;
+    }
+    return 0;
+  }
   if (nowMs - lastRequestTimeMs < gracePeriodMs && syncTime < currentTime) {
     return currentTime;
   }
-  // syncTime이 더 크면 항상 최신 확장 시간을 채택
   if (syncTime > currentTime) {
     return syncTime;
   }
-  // 요청이 진행 중이었고 현재 남아있는 시간이 300초(5분) 이상인데 갑자기 120초 이하의 구 패킷이 도착한 경우 덮어쓰기 차단
-  if (currentTime > 300 && syncTime < 120 && (nowMs - lastRequestTimeMs < 30000)) {
+  if (currentTime > 60 && (currentTime - syncTime > 10)) {
     return currentTime;
   }
   return syncTime;
 }
 
+/**
+ * 소켓 페이로드에서 연장 시간(seconds)을 안전하게 추출합니다.
+ */
 export function parseSeconds(payload: unknown, defaultSeconds: number = 60): number {
-  if (!payload) {
-    return defaultSeconds;
+  if (!payload) return defaultSeconds;
+
+  if (typeof payload === 'number' && !isNaN(payload) && payload > 0) {
+    return payload;
   }
 
   if (typeof payload === 'string') {
@@ -56,7 +91,6 @@ export function parseSeconds(payload: unknown, defaultSeconds: number = 60): num
   let curr: Record<string, unknown> | null = payload as Record<string, unknown>;
   let val: unknown = undefined;
 
-  // 재귀적으로 obj.seconds 또는 obj.payload 속성을 탐색
   while (curr && typeof curr === 'object' && curr !== null) {
     if ('seconds' in curr && curr.seconds !== undefined) {
       val = curr.seconds;
@@ -89,19 +123,10 @@ export function parseSeconds(payload: unknown, defaultSeconds: number = 60): num
   return defaultSeconds;
 }
 
-/**
- * ECHO_REQUEST payload를 받아 speaker의 새 remainingTime을 계산합니다.
- * 항상 delta(seconds) 기반으로 계산하여 sender/speaker 간 시간 불일치 문제를 방지합니다.
- *
- * 이전에는 sender가 보내는 absoluteTime을 우선 사용했으나,
- * sender의 senderTimeRef가 speaker의 실제 remainingTime과 동기화되지 않으면
- * 10분 보내기가 1분만 추가되는 버그가 발생했습니다.
- */
 export function resolveEchoRequest(currentTime: number, payload: unknown): number {
   const addedSeconds = parseSeconds(payload, 60);
   return currentTime + addedSeconds;
 }
-
 
 export function mapEventTypeToLogType(eventType: string): 'info' | 'success' | 'warning' | 'error' {
   switch (eventType) {
@@ -118,4 +143,5 @@ export function mapEventTypeToLogType(eventType: string): 'info' | 'success' | '
       return 'info';
   }
 }
+
 

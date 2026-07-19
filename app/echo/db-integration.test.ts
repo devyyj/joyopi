@@ -94,4 +94,39 @@ describe('Echo 10분 연장 DB 연동 실데이터 통합 테스트 (Real DB Int
     const matchedLog = fetchResult.data?.find((l) => l.userId === testUserId && l.message.includes('11:00'));
     expect(matchedLog).toBeDefined();
   });
+
+  it('10분 보내기 실행 시 "메아리를 재생합니다. (남은 시간: 10:00)" 로그가 실제 Postgres DB에 Insert되고 Select로 600초 데이터가 정확하게 조회되는지 실데이터 검증한다', async () => {
+    const speakerPayload = { senderId: testUserId, seconds: 600, remainingTime: 600 };
+    const logParams = {
+      userId: testUserId,
+      role: 'speaker',
+      eventType: 'sync',
+      message: '메아리를 재생합니다. (남은 시간: 10:00)',
+      payload: speakerPayload,
+    };
+
+    // 1. 실제 DB 테이블(echo_logs)에 createEchoLog Server Action으로 Insert
+    const saveResult = await createEchoLog(logParams);
+    expect(saveResult.success).toBe(true);
+
+    // 2. Drizzle ORM으로 실제 DB 테이블에서 쿼리 실행 (Select)
+    const dbLogs = await db
+      .select()
+      .from(echoLogs)
+      .where(eq(echoLogs.userId, testUserId))
+      .orderBy(echoLogs.createdAt);
+
+    const logInDb = dbLogs.find(l => l.message === '메아리를 재생합니다. (남은 시간: 10:00)');
+
+    // 3. DB 영속성 및 데이터 검증
+    expect(logInDb).toBeDefined();
+    expect(logInDb?.message).toBe('메아리를 재생합니다. (남은 시간: 10:00)');
+    expect(logInDb?.message).not.toBe('메아리를 재생합니다. (남은 시간: 1:00)');
+    
+    // 4. DB에 JSON으로 저장된 payload 확인
+    expect(logInDb?.payload).not.toBeNull();
+    const parsedPayload = JSON.parse(logInDb!.payload!);
+    expect(parsedPayload.seconds).toBe(600);
+    expect(parsedPayload.remainingTime).toBe(600);
+  });
 });

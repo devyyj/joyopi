@@ -108,6 +108,19 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
       await supabase.removeChannel(oldChannel);
     }
 
+    // 세션 만료 방지: 소켓 생성 전 Supabase Auth 세션 상태 확인 및 자동 갱신
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && session.expires_at) {
+        const expiresAtMs = session.expires_at * 1000;
+        if (Date.now() >= expiresAtMs - 60000) {
+          await supabase.auth.refreshSession();
+        }
+      }
+    } catch (authErr) {
+      console.warn('Auth session refresh check failed:', authErr);
+    }
+
     const debugInfo = {
       reason,
       online: typeof navigator !== 'undefined' ? navigator.onLine : true,
@@ -218,12 +231,22 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
       if (subStatus === 'CHANNEL_ERROR') {
         setStatus('ERROR');
         setIsChannelJoined(false);
-        addLog(`채널 오류 발생: ${err?.message || '알 수 없는 오류'}`, 'error', undefined, logPayload);
-        reconnectTimeoutRef.current = setTimeout(() => {
+        const errMsg = err?.message || '';
+        addLog(`채널 오류 발생: ${errMsg || '알 수 없는 오류'}`, 'error', undefined, logPayload);
+
+        const isJwtExpired = errMsg.includes('InvalidJWTToken') || errMsg.includes('expired');
+        reconnectTimeoutRef.current = setTimeout(async () => {
           if (isMountedRef.current && (!channelRef.current || channelRef.current.state !== 'joined')) {
-            setupChannelRef.current('channel_error_retry');
+            if (isJwtExpired) {
+              try {
+                await supabase.auth.refreshSession();
+              } catch (e) {
+                console.error('Session refresh failed:', e);
+              }
+            }
+            setupChannelRef.current(isJwtExpired ? 'jwt_refresh_retry' : 'channel_error_retry');
           }
-        }, 5000);
+        }, isJwtExpired ? 1000 : 5000);
       }
     });
   }, [presenceId, role, supabase, addLog]);
@@ -235,6 +258,17 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
   useEffect(() => {
     isMountedRef.current = true;
     setupChannelRef.current('init');
+
+    // Supabase Realtime WebSocket의 60초 유휴 끊김 방지용 15초 Keep-Alive 핑
+    const keepAliveInterval = setInterval(() => {
+      if (channelRef.current && channelRef.current.state === 'joined') {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'ECHO_HEARTBEAT',
+          payload: { role, timestamp: new Date().toISOString() }
+        });
+      }
+    }, 15000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && (!channelRef.current || channelRef.current.state !== 'joined')) {
@@ -251,6 +285,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
 
     return () => {
       isMountedRef.current = false;
+      clearInterval(keepAliveInterval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('online', handleOnline);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
@@ -258,7 +293,8 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [supabase]);
+  }, [supabase, role]);
+
 
   const sendBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
     if (channelRef.current && channelRef.current.state === 'joined') {

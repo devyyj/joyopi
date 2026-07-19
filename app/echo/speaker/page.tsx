@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/app/components/ui';
 import Link from 'next/link';
-import { formatTime, parseSeconds } from '@/app/echo/utils/echo-logic';
+import { formatTime, parseSeconds, calculateRemainingSeconds, calculateNewEndTime } from '@/app/echo/utils/echo-logic';
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
 
@@ -51,47 +51,61 @@ export default function SpeakerPage() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const remainingTimeRef = useRef(remainingTime);
+  // 메아리 종료 절대시각 (Unix ms). Date.now() 기반이므로 카운트다운 누적 오차 없음
+  const endTimeRef = useRef<number>(0);
 
   useEffect(() => {
     remainingTimeRef.current = remainingTime;
   }, [remainingTime]);
 
   const sendBroadcastRef = useRef<((event: string, payload: Record<string, unknown>) => boolean) | null>(null);
+  const addLogRef = useRef<((message: string, eventType: string, userId?: string, payload?: unknown) => Promise<void>) | null>(null);
 
   // 소켓 브로드캐스트 핸들러
   const handleBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
     switch (event) {
       case 'ECHO_REQUEST': {
-        // 자기 자신이 보낸 ECHO_REQUEST는 handleSendEcho에서 이미 1번 반영했으므로 중복 가산 방지
+        // 자기 자신이 보낸 ECHO_REQUEST는 handleSendEcho에서 이미 반영했으므로 중복 가산 방지
         if (payload && payload.senderId === presenceId) {
           break;
         }
 
-        // 항상 delta(seconds) 기반으로 시간 추가 (sender/speaker 시간 불일치 방지)
         const addedSeconds = parseSeconds(payload, 60);
-        const newTime = remainingTimeRef.current + addedSeconds;
-        remainingTimeRef.current = newTime;
-        setRemainingTime(newTime);
-        sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: newTime });
+        // 기기 간 시계 오차(Clock Skew) 수용: 샌더 시계와 무관하게 스피커 현재 시각 기준 상대 연장(+600초) 적용
+        endTimeRef.current = calculateNewEndTime(endTimeRef.current, addedSeconds);
+
+        const newRemainingSeconds = calculateRemainingSeconds(endTimeRef.current);
+        remainingTimeRef.current = newRemainingSeconds;
+        setRemainingTime(newRemainingSeconds);
+        sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: newRemainingSeconds, endTime: endTimeRef.current });
+        
+        // 연장/재생 시 최신 남은 시간으로 메아리 재생 로그 새로 기록
+        addLogRef.current?.(`메아리를 재생합니다. (남은 시간: ${formatTime(newRemainingSeconds)})`, 'sync');
         break;
       }
       case 'ECHO_SYNC':
-        if (typeof payload.remainingTime === 'number' && payload.remainingTime > remainingTimeRef.current) {
-          setRemainingTime(payload.remainingTime);
+        // 다른 스피커에서 더 큰 endTime이 오면 동기화
+        if (typeof payload.endTime === 'number' && payload.endTime > endTimeRef.current) {
+          endTimeRef.current = payload.endTime;
+          const remaining = calculateRemainingSeconds(endTimeRef.current);
+          remainingTimeRef.current = remaining;
+          setRemainingTime(remaining);
         }
         break;
       case 'ECHO_STOP':
+        endTimeRef.current = 0;
         setRemainingTime(0);
         audioRef.current?.pause();
         if (audioRef.current) audioRef.current.currentTime = 0;
         break;
       case 'ECHO_QUERY':
         if (remainingTimeRef.current > 0) {
-          sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: remainingTimeRef.current });
+          sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: remainingTimeRef.current, endTime: endTimeRef.current });
         }
         break;
     }
   }, [presenceId]);
+
 
   const {
     speakerCount,
@@ -106,60 +120,139 @@ export default function SpeakerPage() {
   });
 
   useEffect(() => {
+    addLogRef.current = addLog;
+  }, [addLog]);
+
+  useEffect(() => {
     sendBroadcastRef.current = sendBroadcast as (event: string, payload: Record<string, unknown>) => boolean;
   }, [sendBroadcast]);
 
   const connectedUsers = speakerCount + senderCount;
 
-  // 사운드 초기화 및 클린업
+  const isPlayingRef = useRef(isPlaying);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('/footsteps.mp3');
-      audioRef.current.loop = true;
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const lastAudioTimeRef = useRef<number>(-1);
+  const audioStuckCountRef = useRef<number>(0);
+
+  // 오디오 안전 재생 헬퍼 (paused 이거나 currentTime이 멈춰있으면 즉시 재재생 및 Watchdog 감시)
+  const playAudio = useCallback(() => {
+    if (!audioRef.current || !isPlayingRef.current) return;
+    const audio = audioRef.current;
+
+    if (audio.paused) {
+      audio.play().catch((err) => {
+        console.warn('Audio play attempt warning:', err.message);
+      });
+      return;
     }
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+    // 2초 이상 currentTime이 증가하지 않고 멈춰있을 경우 자동 강제 복구 (Audio Watchdog)
+    if (audio.currentTime === lastAudioTimeRef.current && !audio.paused) {
+      audioStuckCountRef.current++;
+      if (audioStuckCountRef.current >= 2) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+        audioStuckCountRef.current = 0;
+      }
+    } else {
+      audioStuckCountRef.current = 0;
+      lastAudioTimeRef.current = audio.currentTime;
+    }
+  }, []);
+
+  // 사운드 초기화, 이벤트 바인딩 및 클린업
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const audio = new Audio('/footsteps.mp3');
+      audio.loop = true;
+
+      // 오디오 트랙 종료/정지 시 즉시 루프 재생 보장
+      const handleAudioStopped = () => {
+        if (isPlayingRef.current) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        }
+      };
+
+      audio.addEventListener('ended', handleAudioStopped);
+      audio.addEventListener('stalled', handleAudioStopped);
+      audio.addEventListener('error', handleAudioStopped);
+
+      audioRef.current = audio;
+
+      // 탭 포그라운드 전환 시 오디오 복구
+      const handleVisibility = () => {
+        if (document.visibilityState === 'visible' && isPlayingRef.current) {
+          if (audio.paused || audio.ended) {
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+          }
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibility);
+
+      return () => {
+        audio.removeEventListener('ended', handleAudioStopped);
+        audio.removeEventListener('stalled', handleAudioStopped);
+        audio.removeEventListener('error', handleAudioStopped);
+        document.removeEventListener('visibilitychange', handleVisibility);
+        audio.pause();
         audioRef.current = null;
-      }
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      };
+    }
   }, []);
 
   // 오디오 재생 및 타이머 동기화 로직
-  // sendBroadcast는 sendBroadcastRef.current 사용 - stale closure 방지
+  // endTimeRef 기반 절대시각 카운트다운: Date.now() 기준이므로 누적 오차 및 ref 불일치 완전 제거
   useEffect(() => {
     if (isPlaying) {
-      audioRef.current?.play().catch((err) => {
-        addLog(`오디오 재생 실패: ${err.message}`, 'error');
-      });
+      playAudio();
     } else {
       audioRef.current?.pause();
       if (audioRef.current) audioRef.current.currentTime = 0;
     }
 
     if (isPlaying && !timerRef.current) {
-      addLog(`메아리를 재생합니다. (남은 시간: ${formatTime(remainingTimeRef.current)})`, 'sync');
+      const currentRemaining = calculateRemainingSeconds(endTimeRef.current);
+      remainingTimeRef.current = currentRemaining;
+      addLog(`메아리를 재생합니다. (남은 시간: ${formatTime(currentRemaining)})`, 'sync');
       timerRef.current = setInterval(() => {
-        setRemainingTime((prev) => {
-          const next = Math.max(0, prev - 1);
-          // sendBroadcastRef를 사용해 항상 최신 함수 참조 (stale closure 방지)
-          sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: next });
-          return next;
-        });
+        const remaining = calculateRemainingSeconds(endTimeRef.current);
+
+        remainingTimeRef.current = remaining;
+        setRemainingTime(remaining);
+
+        if (remaining > 0) {
+          playAudio();
+        }
+
+        sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: remaining, endTime: endTimeRef.current });
+
+        if (remaining === 0 && timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          endTimeRef.current = 0;
+          audioRef.current?.pause();
+          if (audioRef.current) audioRef.current.currentTime = 0;
+          addLog('메아리 재생이 완료되었습니다.', 'info');
+        }
       }, 1000);
     } else if (!isPlaying && timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+      endTimeRef.current = 0;
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.currentTime = 0;
       addLog('메아리 재생이 완료되었습니다.', 'info');
-      // 정지 시 즉시 동기화
-      sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: 0 });
+      sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: 0, endTime: 0 });
     }
-  // sendBroadcast는 의존성에서 제외 - sendBroadcastRef.current로 항상 최신 참조
-  }, [isPlaying, addLog]);
+  }, [isPlaying, addLog, playAudio]);
 
   // 유휴 상태 하트비트 (연결 유지 강화)
   useEffect(() => {
@@ -173,25 +266,23 @@ export default function SpeakerPage() {
   }, [isPlaying, sendBroadcast]);
 
   const handleSendEcho = useCallback((seconds: unknown = 60) => {
-    const validSeconds = typeof seconds === 'number' && !isNaN(seconds) && seconds > 0
-      ? seconds
-      : typeof seconds === 'string'
-        ? parseInt(seconds, 10) || 60
-        : 60;
+    const validSeconds = parseSeconds(seconds, 60);
+    endTimeRef.current = calculateNewEndTime(endTimeRef.current, validSeconds);
 
-    // remainingTimeRef로 현재 시간 읽기 (항상 최신값)
-    const targetTime = remainingTimeRef.current + validSeconds;
+    const targetTime = calculateRemainingSeconds(endTimeRef.current);
     setRemainingTime(targetTime);
     remainingTimeRef.current = targetTime;
-    // ECHO_SYNC를 먼저 브로드캐스트해 샌더가 즉시 정확한 시간을 표시하도록
-    sendBroadcast('ECHO_SYNC', { remainingTime: targetTime });
-    // ECHO_REQUEST에 delta(seconds) 전송 - 다른 스피커도 자기 시간 + seconds로 계산
-    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds });
+
+    sendBroadcast('ECHO_SYNC', { remainingTime: targetTime, endTime: endTimeRef.current });
+    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds, endTime: endTimeRef.current });
     const minutes = Math.floor(validSeconds / 60);
     addLog(`스피커가 직접 메아리를 보냈습니다. (+${minutes}분)`, 'request', presenceId);
+    addLog(`메아리를 재생합니다. (남은 시간: ${formatTime(targetTime)})`, 'sync');
   }, [presenceId, addLog, sendBroadcast]);
 
+
   const handleStopEcho = useCallback(() => {
+    endTimeRef.current = 0;
     sendBroadcast('ECHO_STOP', { triggeredBy: presenceId });
     setRemainingTime(0);
     audioRef.current?.pause();

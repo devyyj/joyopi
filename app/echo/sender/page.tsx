@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/app/components/ui';
 import Link from 'next/link';
-import { formatTime, resolveSyncTime } from '@/app/echo/utils/echo-logic';
+import { formatTime, resolveSyncTime, parseSeconds, calculateRemainingSeconds, calculateNewEndTime } from '@/app/echo/utils/echo-logic';
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
 
@@ -38,6 +38,8 @@ export default function SenderPage() {
   const [remainingTime, setRemainingTime] = useState(0);
   const lastRequestTimeRef = useRef<number>(0);
   const senderTimeRef = useRef<number>(0); // remainingTime을 ref로 추적 (stale closure 방지)
+  // 메아리 종료 절대시각 (Unix ms). 스피커의 endTime과 동기화됨
+  const endTimeRef = useRef<number>(0);
   
   const presenceId = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -60,7 +62,13 @@ export default function SenderPage() {
   useEffect(() => {
     if (isPlaying && !timerRef.current) {
       timerRef.current = setInterval(() => {
-        setRemainingTime((prev) => Math.max(0, prev - 1));
+        if (endTimeRef.current > 0) {
+          const remaining = calculateRemainingSeconds(endTimeRef.current);
+          setRemainingTime(remaining);
+          senderTimeRef.current = remaining;
+        } else {
+          setRemainingTime((prev) => Math.max(0, prev - 1));
+        }
       }, 1000);
     } else if (!isPlaying && timerRef.current) {
       clearInterval(timerRef.current);
@@ -73,13 +81,31 @@ export default function SenderPage() {
 
   const handleBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
     switch (event) {
-      case 'ECHO_SYNC':
-        if (typeof payload.remainingTime === 'number') {
-          const syncVal = payload.remainingTime;
-          setRemainingTime((prev) => resolveSyncTime(prev, syncVal, lastRequestTimeRef.current));
+      case 'ECHO_SYNC': {
+        const syncEndTime = typeof payload.endTime === 'number' ? payload.endTime : 0;
+        const syncRemaining = typeof payload.remainingTime === 'number' ? payload.remainingTime : 0;
+
+        if (syncEndTime > 0) {
+          if (syncEndTime > endTimeRef.current || endTimeRef.current === 0) {
+            endTimeRef.current = syncEndTime;
+          }
+          const remaining = calculateRemainingSeconds(endTimeRef.current);
+          setRemainingTime(remaining);
+          senderTimeRef.current = remaining;
+        } else if (syncRemaining > 0) {
+          setRemainingTime((prev) => resolveSyncTime(prev, syncRemaining, lastRequestTimeRef.current));
+        } else if (syncEndTime === 0 && syncRemaining === 0) {
+          const localRemaining = calculateRemainingSeconds(endTimeRef.current);
+          if (localRemaining === 0) {
+            endTimeRef.current = 0;
+            setRemainingTime(0);
+            senderTimeRef.current = 0;
+          }
         }
         break;
+      }
       case 'ECHO_STOP':
+        endTimeRef.current = 0;
         setRemainingTime(0);
         break;
     }
@@ -112,29 +138,25 @@ export default function SenderPage() {
     if (!isReady) return;
     lastRequestTimeRef.current = Date.now();
 
-    const validSeconds = typeof seconds === 'number' && !isNaN(seconds) && seconds > 0
-      ? seconds
-      : typeof seconds === 'string'
-        ? parseInt(seconds, 10) || 60
-        : 60;
+    const validSeconds = parseSeconds(seconds, 60);
+    endTimeRef.current = calculateNewEndTime(endTimeRef.current, validSeconds);
 
-    // senderTimeRef 기반으로 낙관적 업데이트 (stale closure 없이 정확한 현재값 사용)
-    const targetTime = senderTimeRef.current + validSeconds;
+    const optimisticRemaining = calculateRemainingSeconds(endTimeRef.current);
+    setRemainingTime(optimisticRemaining);
+    senderTimeRef.current = optimisticRemaining;
 
-    // 낙관적 업데이트: 절대값으로 직접 설정 (delta 누적 오차 방지)
-    setRemainingTime(targetTime);
-    senderTimeRef.current = targetTime;
-
-    // 오직 ECHO_REQUEST 1개만 전송 (ECHO_SYNC 중복 발송을 제거하여 11분/이중 가산 버그 예방)
-    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds });
+    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds, endTime: endTimeRef.current });
     const minutes = Math.floor(validSeconds / 60);
     addLog(`사용자가 메아리를 보냈습니다. (+${minutes}분)`, 'request', presenceId);
   }, [presenceId, addLog, sendBroadcast, isReady]);
 
+
   const handleStopEcho = useCallback(() => {
     if (!isReady) return;
+    endTimeRef.current = 0;
     sendBroadcast('ECHO_STOP', { triggeredBy: presenceId });
     setRemainingTime(0);
+    senderTimeRef.current = 0;
     addLog('사용자가 모든 메아리를 중지시켰습니다.', 'stop', presenceId);
   }, [presenceId, addLog, sendBroadcast, isReady]);
 

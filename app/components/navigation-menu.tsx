@@ -3,10 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, MessageSquare, Radio, Notebook, Heart, Sparkles, Swords } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Radio, Sparkles, Swords } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-
-const ALLOWED_EMAILS = ['devyyj@gmail.com', 'noticeably34@gmail.com'];
+import { isEchoAllowedEmail } from '@/utils/echo-access';
 
 interface ToolItem {
   name: string;
@@ -32,30 +31,11 @@ const TOOLS: ToolItem[] = [
   {
     name: '메아리 에코',
     href: '/echo',
-    description: '음성 및 상태 메시지 실시간 동기화',
+    description: '발소리 재생 시간을 실시간으로 연장·동기화',
     icon: Radio,
     color: 'text-[#06b6d4]',
     hoverColor: 'hover:bg-cyan-50/60 hover:border-cyan-200/40',
     hoverTextColor: 'group-hover:text-[#06b6d4]'
-  },
-  {
-    name: '돼지 일기',
-    href: '/meals',
-    description: '식단 일지 및 칼로리 통계 분석기',
-    icon: Notebook,
-    color: 'text-[#10b981]',
-    hoverColor: 'hover:bg-emerald-50/60 hover:border-emerald-200/40',
-    hoverTextColor: 'group-hover:text-[#10b981]'
-  },
-  {
-    name: '심장을 바쳐라!',
-    href: '/shingeki',
-    description: '진격의 거인 성향 및 행동강령 테스트',
-    icon: Heart,
-    color: 'text-[#8B0000]',
-    hoverColor: 'hover:bg-red-50/80 hover:border-red-200/50',
-    hoverTextColor: 'group-hover:text-[#8B0000]',
-    accent: true
   },
   {
     name: '오버워치 카운터 맵',
@@ -65,16 +45,6 @@ const TOOLS: ToolItem[] = [
     color: 'text-[#d97706]',
     hoverColor: 'hover:bg-amber-50/60 hover:border-amber-200/40',
     hoverTextColor: 'group-hover:text-[#d97706]'
-  },
-  {
-    name: '이름 랭킹 (Name Rank)',
-    href: '/name-rank',
-    description: '아기 이름 선호도 랭킹 및 매칭 조율실',
-    icon: Sparkles,
-    color: 'text-[#db2777]',
-    hoverColor: 'hover:bg-pink-50/60 hover:border-pink-200/40',
-    hoverTextColor: 'group-hover:text-[#db2777]',
-    accent: true
   }
 ];
 
@@ -88,7 +58,7 @@ export default function NavigationMenu() {
     async function checkEchoAuth() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user && ALLOWED_EMAILS.includes(user.email || '')) {
+        if (isEchoAllowedEmail(user?.email)) {
           setIsEchoAuthorized(true);
         }
       } catch (e) {
@@ -145,7 +115,7 @@ export default function NavigationMenu() {
             </div>
 
             <div className="grid grid-cols-1 gap-1">
-              {TOOLS.filter(tool => (tool.href !== '/echo' && tool.href !== '/name-rank') || isEchoAuthorized).map((tool) => (
+              {TOOLS.filter(tool => tool.href !== '/echo' || isEchoAuthorized).map((tool) => (
                 <Link
                   key={tool.href}
                   href={tool.href}

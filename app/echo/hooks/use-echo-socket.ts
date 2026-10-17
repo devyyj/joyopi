@@ -35,6 +35,20 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
   const setupChannelRef = useRef<(reason: string) => Promise<void>>(() => Promise.resolve());
   const MAX_RETRIES = 5;
 
+  // 내 화면에만 남기는 로그 (DB 저장·브로드캐스트 없음)
+  const addLocalLog = useCallback((message: string, eventType: string, userId?: string) => {
+    setLogs((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        timestamp: new Date(),
+        message,
+        type: mapEventTypeToLogType(eventType),
+        userId: userId || presenceId,
+      } as LogEntry
+    ].slice(-100));
+  }, [presenceId]);
+
   // 로그 추가 함수 (DB 저장 + 브로드캐스트 + 로컬 상태)
   const addLog = useCallback(async (message: string, eventType: string, userId?: string, payload?: unknown) => {
     const logId = crypto.randomUUID();
@@ -180,7 +194,8 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         if (!isMountedRef.current || key === presenceId) return;
         const p = (leftPresences as unknown as EchoPresence[])[0];
         const roleName = p?.role === 'speaker' ? '스피커' : p?.role === 'sender' ? '샌더' : '알 수 없음';
-        addLog(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
+        // 퇴장을 본 모든 접속자가 저장·전파하면 같은 로그가 접속자 수만큼 중복되므로 로컬에만 남긴다
+        addLocalLog(`사용자가 퇴장했습니다. (역할: ${roleName}, 이유: 연결 종료)`, 'leave', key);
       })
       .on('broadcast', { event: '*' }, ({ event, payload }) => {
         if (!isMountedRef.current) return;
@@ -274,7 +289,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         }, isJwtExpired ? 1000 : 5000);
       }
     });
-  }, [presenceId, role, supabase, addLog]);
+  }, [presenceId, role, supabase, addLog, addLocalLog]);
 
   useEffect(() => {
     setupChannelRef.current = setupChannel;

@@ -7,34 +7,7 @@ import { formatTime, parseSeconds, calculateRemainingSeconds, calculateNewEndTim
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
 
-import { createClient } from '@/utils/supabase/client';
-import { redirect } from 'next/navigation';
-
-const ALLOWED_EMAILS = ['devyyj@gmail.com', 'noticeably34@gmail.com'];
-
 export default function SpeakerPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && ALLOWED_EMAILS.includes(user.email || '')) {
-          setIsAuthorized(true);
-        } else {
-          redirect('/');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        redirect('/');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    checkAuth();
-  }, [supabase]);
   const [remainingTime, setRemainingTime] = useState(0);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   
@@ -221,7 +194,6 @@ export default function SpeakerPage() {
     if (isPlaying && !timerRef.current) {
       const currentRemaining = calculateRemainingSeconds(endTimeRef.current);
       remainingTimeRef.current = currentRemaining;
-      addLog(`메아리를 재생합니다. (남은 시간: ${formatTime(currentRemaining)})`, 'sync');
       timerRef.current = setInterval(() => {
         const remaining = calculateRemainingSeconds(endTimeRef.current);
 
@@ -253,17 +225,6 @@ export default function SpeakerPage() {
       sendBroadcastRef.current?.('ECHO_SYNC', { remainingTime: 0, endTime: 0 });
     }
   }, [isPlaying, addLog, playAudio]);
-
-  // 유휴 상태 하트비트 (연결 유지 강화)
-  useEffect(() => {
-    if (isPlaying) return;
-
-    const heartbeatInterval = setInterval(() => {
-      sendBroadcast('ECHO_HEARTBEAT', { timestamp: new Date().toISOString() });
-    }, 30000);
-
-    return () => clearInterval(heartbeatInterval);
-  }, [isPlaying, sendBroadcast]);
 
   const handleSendEcho = useCallback((seconds: unknown = 60) => {
     const validSeconds = parseSeconds(seconds, 60);
@@ -308,18 +269,6 @@ export default function SpeakerPage() {
       }
     }
   }, [addLog]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
-        <p className="text-muted text-sm font-semibold">사용자 권한 확인 중...</p>
-      </div>
-    );
-  }
-
-  if (!isAuthorized) {
-    return null;
-  }
 
   if (!isAudioEnabled) {
     return (

@@ -137,4 +137,30 @@ describe('useEchoSocket Hook Concurrency & Cleanup Tests', () => {
 
     expect(result.current.status).toBe('CONNECTED');
   });
+
+  it('다른 사용자 퇴장은 내 화면에만 기록하고 DB 저장·브로드캐스트는 하지 않는다', async () => {
+    // 퇴장을 관찰한 모든 접속자가 저장·전파하면 같은 퇴장 로그가 접속자 수만큼 중복된다
+    const { createEchoLog } = await import('@/app/actions/echo');
+    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+    vi.mocked(createEchoLog).mockClear();
+
+    const channel = mockChannels[0];
+    channel.send = vi.fn().mockResolvedValue('ok');
+    const leaveCall = vi.mocked(channel.on).mock.calls.find(
+      ([type, filter]) => type === 'presence' && (filter as { event: string }).event === 'leave'
+    );
+    const onLeave = leaveCall![2] as unknown as (arg: { key: string; leftPresences: unknown[] }) => void;
+
+    act(() => {
+      onLeave({ key: 'other-user', leftPresences: [{ role: 'speaker' }] });
+    });
+
+    expect(result.current.logs.some(l => l.message.includes('퇴장') && l.userId === 'other-user')).toBe(true);
+    expect(createEchoLog).not.toHaveBeenCalled();
+    expect(channel.send).not.toHaveBeenCalled();
+  });
 });

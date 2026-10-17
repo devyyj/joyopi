@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/app/components/ui';
 import DashboardList from '@/app/components/dashboard-list';
 import { createClient } from '@/utils/supabase/server';
-import { getMealStats } from '@/app/actions/meals';
 
 interface PostWithCounts {
   id: number;
@@ -30,40 +29,6 @@ export default async function Home() {
     }) : null;
   } catch (err) {
     console.error('Failed to load user profile:', err);
-  }
-
-  // 돼지 일기 퀵 정보 획득 (최근 7일 요약 통계)
-  let piggyStats: {
-    count: number;
-    avgSatisfaction: number;
-    mostEaten: string;
-    nightSnackRatio: number;
-  } | null = null;
-
-  if (user) {
-    try {
-      const d = new Date();
-      const offset = d.getTimezoneOffset() * 60000;
-      const todayStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
-      const fromDate = new Date(d.getTime() - offset);
-      fromDate.setDate(fromDate.getDate() - 6);
-      const fromStr = fromDate.toISOString().split('T')[0];
-
-      const stats = await getMealStats(fromStr, todayStr);
-      if (stats && stats.count > 0) {
-        const distrib = stats.satisfactionDistribution as Record<number, number>;
-        const total = stats.count;
-        const sum = Object.entries(distrib).reduce((acc, [k, v]) => acc + Number(k) * v, 0);
-        piggyStats = {
-          count: stats.count,
-          avgSatisfaction: Math.round((sum / total) * 10) / 10,
-          mostEaten: stats.mostEaten.menuName,
-          nightSnackRatio: stats.nightSnackRatio,
-        };
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard meals data:', err);
-    }
   }
 
   // '최근' 기준: 최근 30일
@@ -122,49 +87,6 @@ export default async function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 md:py-10 space-y-12">
-      {/* 🐖 돼지 일기 퀵 인사이트 배너 */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-1">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl leading-none">🐖</span>
-          <div className="space-y-1.5">
-            <h3 className="text-sm font-bold text-foreground leading-snug">돼지 일기</h3>
-            {user && piggyStats ? (
-              <div className="flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-[11px] text-muted-foreground font-medium">
-                  📋 {piggyStats.count}회 기록
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-[11px] text-muted-foreground font-medium">
-                  ⭐ 만족도 {piggyStats.avgSatisfaction}
-                </span>
-                {piggyStats.mostEaten !== '없음' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-[11px] text-muted-foreground font-medium">
-                    🍽 {piggyStats.mostEaten}
-                  </span>
-                )}
-                {piggyStats.nightSnackRatio > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-[11px] text-muted-foreground font-medium">
-                    🌙 야식 {piggyStats.nightSnackRatio}%
-                  </span>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {user ? '최근 7일간 식사 기록이 없습니다.' : '매일 먹은 식사와 기분을 간편히 기록해 보세요.'}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <Link href="/meals" className="shrink-0">
-          <Button variant="primary" size="sm" className="font-semibold flex items-center gap-1.5">
-            {user ? '식사 일기장' : '시작하기'}
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </Button>
-        </Link>
-      </div>
-
       {/* 3단 대시보드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
         <DashboardList 

@@ -1,5 +1,12 @@
 import 'dotenv/config';
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
+
+// 요청 컨텍스트(쿠키)가 없는 테스트 환경이므로 인증만 허용된 계정으로 대체하고 DB는 실제로 사용한다
+vi.mock('@/utils/supabase/server', () => ({
+  createClient: async () => ({
+    auth: { getUser: async () => ({ data: { user: { id: 'test', email: 'devyyj@gmail.com' } } }) },
+  }),
+}));
 import { createEchoLog, getEchoLogs } from '@/app/actions/echo';
 import { parseSeconds } from '@/app/echo/utils/echo-logic';
 import { db } from '@/db';

@@ -7,34 +7,7 @@ import { formatTime, resolveSyncTime, parseSeconds, calculateRemainingSeconds, c
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
 
-import { createClient } from '@/utils/supabase/client';
-import { redirect } from 'next/navigation';
-
-const ALLOWED_EMAILS = ['devyyj@gmail.com', 'noticeably34@gmail.com'];
-
 export default function SenderPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && ALLOWED_EMAILS.includes(user.email || '')) {
-          setIsAuthorized(true);
-        } else {
-          redirect('/');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        redirect('/');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    checkAuth();
-  }, [supabase]);
   const [remainingTime, setRemainingTime] = useState(0);
   const lastRequestTimeRef = useRef<number>(0);
   const senderTimeRef = useRef<number>(0); // remainingTime을 ref로 추적 (stale closure 방지)
@@ -127,13 +100,6 @@ export default function SenderPage() {
   const connectedUsers = speakerCount + senderCount;
   const isReady = status === 'CONNECTED';
 
-  // 소켓이 다시 연결되었을 때 스피커에게 시간 동기화(ECHO_QUERY) 요청 전송
-  useEffect(() => {
-    if (isReady) {
-      sendBroadcast('ECHO_QUERY', { requesterId: presenceId });
-    }
-  }, [isReady, presenceId, sendBroadcast]);
-
   const handleSendEcho = useCallback((seconds: unknown = 60) => {
     if (!isReady) return;
     lastRequestTimeRef.current = Date.now();
@@ -163,18 +129,6 @@ export default function SenderPage() {
   const handleManualExit = useCallback(() => {
     addLog('사용자가 퇴장했습니다. (이유: 사용자 요청)', 'leave');
   }, [addLog]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
-        <p className="text-muted text-sm font-semibold">사용자 권한 확인 중...</p>
-      </div>
-    );
-  }
-
-  if (!isAuthorized) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] p-4">

@@ -49,16 +49,19 @@ export default function CounterGraph({ heroes, edges, selectedId, onSelect }: Co
     .map((edge) => {
       const kind = getEdgeKind(edge, selectedId);
       const highlighted = kind === 'out' || kind === 'in';
+      const hard = edge.level === 'hard';
       const geometry = edgeGeometry(layout[edge.counter], layout[edge.target], CENTER, {
         nodeRadius: NODE_RADIUS,
-        arrowSize: highlighted ? 8 + edge.strength * 2 : 7,
+        arrowSize: highlighted ? (hard ? 15 : 11) : 7,
       });
       return {
         key: `${edge.counter}>${edge.target}`,
         kind,
+        level: edge.level,
         highlighted,
         geometry,
-        width: highlighted ? [0, 1.6, 2.6, 4][edge.strength] : [0, 0.8, 1.2, 1.8][edge.strength],
+        // 하드 카운터는 굵은 선, 카운터는 얇은 선
+        width: highlighted ? (hard ? 4 : 2) : hard ? 1.8 : 1,
         opacity: kind === 'dim' ? 0.06 : highlighted ? 1 : 0.3,
       };
     })
@@ -72,7 +75,7 @@ export default function CounterGraph({ heroes, edges, selectedId, onSelect }: Co
           <circle cx={CENTER.x} cy={CENTER.y} r={RADIUS} fill="none" stroke="#1C2838" strokeWidth={1} strokeDasharray="4 6" />
           <circle cx={CENTER.x} cy={CENTER.y} r={RADIUS / 2.2} fill="none" stroke="#151F2C" strokeWidth={1} />
           {drawnEdges.map((e) => (
-            <g key={e.key} data-edge={e.kind} opacity={e.opacity}>
+            <g key={e.key} data-edge={e.kind} data-level={e.level} opacity={e.opacity}>
               <path d={e.geometry.d} fill="none" stroke={EDGE_COLOR[e.kind]} strokeWidth={e.width} strokeLinecap="round" />
               <path d={e.geometry.head} fill={EDGE_COLOR[e.kind]} />
             </g>

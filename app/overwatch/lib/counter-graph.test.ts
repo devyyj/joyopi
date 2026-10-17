@@ -3,7 +3,6 @@ import type { CounterRelation, Hero } from '@/app/actions/overwatchData';
 import {
   getCountersOf,
   getCounteredBy,
-  filterEdges,
   getEdgeKind,
   getNodeState,
   searchHero,
@@ -30,24 +29,24 @@ const HEROES: Record<string, Hero> = {
   zenyatta: hero('zenyatta', '젠야타', 'Zenyatta', 'support'),
 };
 
-const rel = (counter: string, target: string, strength: 1 | 2 | 3): CounterRelation => ({
+const rel = (counter: string, target: string, level: CounterRelation['level']): CounterRelation => ({
   counter,
   target,
-  strength,
+  level,
   reason: `${counter}→${target}`,
 });
 
 const COUNTERS: CounterRelation[] = [
-  rel('winston', 'genji', 2),
-  rel('winston', 'widowmaker', 3),
-  rel('genji', 'zenyatta', 3),
-  rel('genji', 'ana', 1),
-  rel('ana', 'reinhardt', 2),
-  rel('reinhardt', 'soldier-76', 1),
+  rel('winston', 'genji', 'counter'),
+  rel('winston', 'widowmaker', 'hard'),
+  rel('genji', 'ana', 'counter'),
+  rel('genji', 'zenyatta', 'hard'),
+  rel('ana', 'reinhardt', 'counter'),
+  rel('reinhardt', 'soldier-76', 'counter'),
 ];
 
 describe('getCountersOf / getCounteredBy', () => {
-  it('내가 잡는 영웅을 강도 내림차순으로 반환한다', () => {
+  it('내가 잡는 영웅을 하드 카운터 먼저, 같은 단계는 원래 순서대로 반환한다', () => {
     expect(getCountersOf('genji', COUNTERS).map((c) => c.target)).toEqual(['zenyatta', 'ana']);
     expect(getCountersOf('winston', COUNTERS).map((c) => c.target)).toEqual(['widowmaker', 'genji']);
   });
@@ -63,28 +62,6 @@ describe('getCountersOf / getCounteredBy', () => {
   });
 });
 
-describe('filterEdges', () => {
-  it('최소 강도 미만의 관계를 제외한다', () => {
-    const edges = filterEdges(COUNTERS, HEROES, { role: 'all', minStrength: 2 });
-    expect(edges).toHaveLength(4);
-    expect(edges.every((e) => e.strength >= 2)).toBe(true);
-  });
-
-  it('역할 필터는 한쪽 끝이라도 해당 역할인 관계를 남긴다', () => {
-    const edges = filterEdges(COUNTERS, HEROES, { role: 'support', minStrength: 1 });
-    expect(edges.map((e) => `${e.counter}>${e.target}`).sort()).toEqual(
-      ['ana>reinhardt', 'genji>ana', 'genji>zenyatta'].sort()
-    );
-  });
-
-  it('조건에 맞는 관계가 없으면 빈 배열을 반환한다', () => {
-    expect(filterEdges(COUNTERS, HEROES, { role: 'tank', minStrength: 3 }).map((e) => e.target)).toEqual([
-      'widowmaker',
-    ]);
-    expect(filterEdges([], HEROES, { role: 'all', minStrength: 1 })).toEqual([]);
-  });
-});
-
 describe('getEdgeKind / getNodeState', () => {
   it('선택이 없으면 모든 간선은 base, 노드는 normal', () => {
     expect(getEdgeKind(COUNTERS[0], null)).toBe('base');
@@ -92,9 +69,9 @@ describe('getEdgeKind / getNodeState', () => {
   });
 
   it('선택한 영웅 기준으로 나가는/들어오는 간선을 구분한다', () => {
-    expect(getEdgeKind(rel('genji', 'zenyatta', 3), 'genji')).toBe('out');
-    expect(getEdgeKind(rel('winston', 'genji', 2), 'genji')).toBe('in');
-    expect(getEdgeKind(rel('ana', 'reinhardt', 2), 'genji')).toBe('dim');
+    expect(getEdgeKind(rel('genji', 'zenyatta', 'hard'), 'genji')).toBe('out');
+    expect(getEdgeKind(rel('winston', 'genji', 'counter'), 'genji')).toBe('in');
+    expect(getEdgeKind(rel('ana', 'reinhardt', 'counter'), 'genji')).toBe('dim');
   });
 
   it('선택한 영웅 기준으로 노드 상태를 계산한다', () => {
@@ -104,8 +81,8 @@ describe('getEdgeKind / getNodeState', () => {
     expect(getNodeState('reinhardt', 'genji', COUNTERS)).toBe('dim');
   });
 
-  it('필터로 빠진 간선은 노드 상태에 반영되지 않는다', () => {
-    const edges = filterEdges(COUNTERS, HEROES, { role: 'all', minStrength: 2 });
+  it('넘겨준 간선에 없는 관계는 노드 상태에 반영되지 않는다', () => {
+    const edges = COUNTERS.filter((e) => e.target !== 'ana');
     expect(getNodeState('ana', 'genji', edges)).toBe('dim');
   });
 });

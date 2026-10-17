@@ -24,11 +24,11 @@ const HEROES: Record<string, Hero> = {
 };
 
 const COUNTERS: CounterRelation[] = [
-  { counter: 'winston', target: 'genji', strength: 2, reason: '테슬라 캐논으로 추적' },
-  { counter: 'winston', target: 'widowmaker', strength: 3, reason: '점프로 즉시 접근' },
-  { counter: 'genji', target: 'zenyatta', strength: 3, reason: '기동력 없는 후방 처치' },
-  { counter: 'genji', target: 'ana', strength: 1, reason: '수면총 반사' },
-  { counter: 'ana', target: 'reinhardt', strength: 2, reason: '수면총으로 돌진 차단' },
+  { counter: 'winston', target: 'genji', level: 'counter', reason: '테슬라 캐논으로 추적' },
+  { counter: 'winston', target: 'widowmaker', level: 'hard', reason: '점프로 즉시 접근' },
+  { counter: 'genji', target: 'ana', level: 'counter', reason: '수면총 반사' },
+  { counter: 'genji', target: 'zenyatta', level: 'hard', reason: '기동력 없는 후방 처치' },
+  { counter: 'ana', target: 'reinhardt', level: 'counter', reason: '수면총으로 돌진 차단' },
 ];
 
 const renderMap = () =>
@@ -36,7 +36,7 @@ const renderMap = () =>
 
 const graph = () => screen.getByRole('group', { name: '카운터 관계도' });
 const panel = () => screen.getByRole('complementary', { name: '선택한 영웅 상세' });
-const edgeCount = () => graph().querySelectorAll('[data-edge]').length;
+const edgeCount = (selector = '[data-edge]') => graph().querySelectorAll(selector).length;
 
 describe('CounterMapClient', () => {
   it('1. 모든 영웅 노드와 데이터 기준 버전을 표시한다', () => {
@@ -47,10 +47,12 @@ describe('CounterMapClient', () => {
     expect(screen.getByText(/테스트 버전/)).toBeInTheDocument();
   });
 
-  it('2. 선택 전에는 안내 문구를 보여주고, 유리 이상 관계만 그린다', () => {
+  it('2. 선택 전에는 안내 문구를 보여주고, 모든 관계를 하드 카운터/카운터로 구분해 그린다', () => {
     renderMap();
     expect(within(panel()).getByText('영웅을 선택하세요')).toBeInTheDocument();
-    expect(edgeCount()).toBe(4);
+    expect(edgeCount()).toBe(5);
+    expect(edgeCount('[data-level="hard"]')).toBe(2);
+    expect(edgeCount('[data-level="counter"]')).toBe(3);
   });
 
   it('3. 노드를 누르면 내가 잡는 영웅 / 나를 잡는 영웅과 사유를 보여준다', () => {
@@ -60,11 +62,15 @@ describe('CounterMapClient', () => {
     expect(within(panel()).getByRole('heading', { name: '겐지' })).toBeInTheDocument();
     const outList = within(panel()).getByRole('list', { name: '내가 잡는 영웅' });
     const inList = within(panel()).getByRole('list', { name: '나를 잡는 영웅' });
-    expect(within(outList).getByText('젠야타')).toBeInTheDocument();
     expect(within(outList).getByText('기동력 없는 후방 처치')).toBeInTheDocument();
-    // 약간 유리(1) 관계는 상세 패널에도 표시하지 않는다
-    expect(within(outList).queryByText('아나')).not.toBeInTheDocument();
     expect(within(inList).getByText('윈스턴')).toBeInTheDocument();
+
+    // 하드 카운터가 먼저 오고, 각 항목에 2단계 라벨이 붙는다
+    const items = within(outList).getAllByRole('listitem');
+    expect(within(items[0]).getByText('젠야타')).toBeInTheDocument();
+    expect(within(items[0]).getByText('하드 카운터')).toBeInTheDocument();
+    expect(within(items[1]).getByText('아나')).toBeInTheDocument();
+    expect(within(items[1]).getByText('카운터')).toBeInTheDocument();
   });
 
   it('4. 상세 패널의 영웅을 누르면 그 영웅으로 선택이 이동한다', () => {
@@ -81,11 +87,14 @@ describe('CounterMapClient', () => {
     expect(within(panel()).getByText('영웅을 선택하세요')).toBeInTheDocument();
   });
 
-  it('6. 역할·강도 필터 버튼은 없고, 모든 영웅이 흐려지지 않은 상태로 표시된다', () => {
+  it('6. 필터 버튼과 점(●○) 표시는 없고, 모든 영웅이 흐려지지 않은 상태로 표시된다', () => {
     renderMap();
     for (const label of ['돌격', '공격', '지원', '모든 강도', '유리 이상', '매우 유리만']) {
       expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument();
     }
+    fireEvent.click(within(graph()).getByRole('button', { name: '겐지 선택' }));
+    expect(within(panel()).queryByText(/[●○]/)).not.toBeInTheDocument();
+    fireEvent.click(within(panel()).getByRole('button', { name: '선택 해제' }));
     for (const button of within(graph()).getAllByRole('button')) {
       expect(button).toHaveStyle({ opacity: '1' });
     }

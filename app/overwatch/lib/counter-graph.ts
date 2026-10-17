@@ -1,6 +1,5 @@
 import { HERO_ROLES, type CounterRelation, type Hero, type HeroRole } from '@/app/actions/overwatchData';
 
-export type RoleFilter = HeroRole | 'all';
 export type EdgeKind = 'out' | 'in' | 'dim' | 'base';
 export type NodeState = 'selected' | 'out' | 'in' | 'dim' | 'normal';
 
@@ -15,26 +14,17 @@ interface Ring {
   radius: number;
 }
 
-const byStrengthDesc = (a: CounterRelation, b: CounterRelation) => b.strength - a.strength;
+// 하드 카운터를 먼저 둔다. 같은 단계 안에서는 데이터 순서(합의가 많은 순)를 유지한다.
+const hardFirst = (a: CounterRelation, b: CounterRelation) => Number(b.level === 'hard') - Number(a.level === 'hard');
 
-/** 이 영웅이 카운터하는 관계 (강도 내림차순) */
+/** 이 영웅이 카운터하는 관계 (하드 카운터 먼저) */
 export function getCountersOf(heroId: string, counters: CounterRelation[]): CounterRelation[] {
-  return counters.filter((c) => c.counter === heroId).sort(byStrengthDesc);
+  return counters.filter((c) => c.counter === heroId).sort(hardFirst);
 }
 
-/** 이 영웅을 카운터하는 관계 (강도 내림차순) */
+/** 이 영웅을 카운터하는 관계 (하드 카운터 먼저) */
 export function getCounteredBy(heroId: string, counters: CounterRelation[]): CounterRelation[] {
-  return counters.filter((c) => c.target === heroId).sort(byStrengthDesc);
-}
-
-/** 강도 필터와 역할 필터를 적용한다. 역할 필터는 한쪽 끝이라도 해당 역할이면 남긴다. */
-export function filterEdges(
-  counters: CounterRelation[],
-  heroes: Record<string, Hero>,
-  { role, minStrength }: { role: RoleFilter; minStrength: number }
-): CounterRelation[] {
-  const inRole = (id: string) => role === 'all' || heroes[id]?.role === role;
-  return counters.filter((c) => c.strength >= minStrength && (inRole(c.counter) || inRole(c.target)));
+  return counters.filter((c) => c.target === heroId).sort(hardFirst);
 }
 
 export function getEdgeKind(edge: CounterRelation, selectedId: string | null): EdgeKind {

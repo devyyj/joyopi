@@ -26,7 +26,3 @@ export const NODE_RING: Record<NodeState, string> = {
   normal: '#4A5869',
   dim: '#334052',
 };
-
-export const STRENGTH_LABELS = ['', '약간 유리', '유리', '매우 유리'] as const;
-
-export const strengthPips = (strength: number) => '●'.repeat(strength) + '○'.repeat(3 - strength);

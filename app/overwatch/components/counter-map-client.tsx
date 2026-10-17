@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import type { CounterRelation, Hero } from '@/app/actions/overwatchData';
 import { cn } from '@/utils/cn';
-import { filterEdges, searchHero } from '../lib/counter-graph';
+import { searchHero } from '../lib/counter-graph';
 import { displayFont } from '../fonts';
 import CounterGraph from './counter-graph';
 import GraphToolbar from './graph-toolbar';
@@ -25,17 +25,9 @@ function LegendLine({ color, label }: { color: string; label: string }) {
   );
 }
 
-// 항상 '유리' 이상 관계만 보여준다
-const MIN_STRENGTH = 2;
-
 export default function CounterMapClient({ heroes, counters, version }: CounterMapClientProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
-
-  const edges = useMemo(
-    () => filterEdges(counters, heroes, { role: 'all', minStrength: MIN_STRENGTH }),
-    [counters, heroes]
-  );
 
   const handleSearch = (query: string) => {
     if (!query.trim()) {
@@ -74,11 +66,16 @@ export default function CounterMapClient({ heroes, counters, version }: CounterM
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           <section className="flex min-w-0 flex-col gap-3 rounded-2xl border border-[#1F2B3B] bg-[#0F1722] p-3 sm:p-4 lg:flex-1">
-            <CounterGraph heroes={heroes} edges={edges} selectedId={selectedId} onSelect={setSelectedId} />
+            <CounterGraph heroes={heroes} edges={counters} selectedId={selectedId} onSelect={setSelectedId} />
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 border-t border-[#1F2B3B] px-1 pt-3 text-[13px] text-[#9AA7B8]">
               <LegendLine color={OUT_COLOR} label="내가 잡는 영웅" />
               <LegendLine color={IN_COLOR} label="나를 잡는 영웅" />
-              <span className="flex items-center gap-2">선 굵기 = 상성 강도</span>
+              <span className="flex items-center gap-2">
+                <span className="h-1 w-6 rounded-full bg-[#9AA7B8]" />
+                하드 카운터
+                <span className="ml-1.5 h-px w-6 bg-[#9AA7B8]" />
+                카운터
+              </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-full" style={{ background: ROLE_FILL.tank }} />
                 돌격
@@ -94,7 +91,7 @@ export default function CounterMapClient({ heroes, counters, version }: CounterM
           <div className="lg:w-[380px] lg:shrink-0">
             <HeroDetailPanel
               heroes={heroes}
-              counters={edges}
+              counters={counters}
               selectedId={selectedId}
               onSelect={setSelectedId}
               onClear={() => setSelectedId(null)}
@@ -104,8 +101,9 @@ export default function CounterMapClient({ heroes, counters, version }: CounterM
 
         <footer className="text-xs leading-relaxed text-[#7A8798]">
           Overwatch 및 영웅 이미지의 저작권은 Blizzard Entertainment에 있습니다. 이 페이지는 비상업적 팬 페이지입니다. 상성
-          정보는 counterwatch.gg 매치 통계와 rankedboost.com · games.gg 카운터 가이드를 종합해 &lsquo;유리&rsquo; 이상인
-          관계만 정리한 것으로, 실제 게임 상황과 다를 수 있습니다.
+          정보는 esports.gg · games.gg · rankedboost.com 카운터 가이드와 오버워치 인벤 상성 투표의 합의를 기준으로 하고,
+          counterwatch.gg 매치 통계로 보완했습니다. 3곳 이상이 꼽으면 하드 카운터로 표시하며, 실제 게임 상황과 다를 수
+          있습니다.
         </footer>
       </div>
     </div>

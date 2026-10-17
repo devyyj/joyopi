@@ -51,7 +51,7 @@ export default function GraphToolbar({ heroes, selectedId, notFound, onSearch, o
           ))}
         </select>
       </div>
-      <p className="self-center text-[13px] text-[#9AA7B8] sm:ml-auto">&lsquo;유리&rsquo; 이상인 카운터 관계만 표시합니다.</p>
+      <p className="self-center text-[13px] text-[#9AA7B8] sm:ml-auto">굵은 선은 하드 카운터, 얇은 선은 카운터입니다.</p>
     </div>
   );
 }

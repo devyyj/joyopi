@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { describe, it, expect } from 'vitest';
-import { HEROES, COUNTERS, OVERWATCH_DATA_VERSION, HERO_ROLES } from './overwatchData';
+import { HEROES, COUNTERS, OVERWATCH_DATA_VERSION, HERO_ROLES, COUNTER_LEVEL_LABELS } from './overwatchData';
 
 describe('오버워치 카운터 데이터 무결성', () => {
   const heroIds = Object.keys(HEROES);
@@ -58,10 +58,23 @@ describe('오버워치 카운터 데이터 무결성', () => {
     }
   });
 
-  it('상성 강도는 유리(2) 또는 매우 유리(3)이고 사유가 비어 있지 않다', () => {
+  it('영향도는 하드 카운터(hard) 또는 카운터(counter)이고 사유가 비어 있지 않다', () => {
     for (const c of COUNTERS) {
-      expect([2, 3]).toContain(c.strength);
+      expect(['hard', 'counter']).toContain(c.level);
       expect(c.reason.trim()).not.toBe('');
+    }
+  });
+
+  it('영향도 라벨이 정의되어 있다', () => {
+    expect(COUNTER_LEVEL_LABELS).toEqual({ hard: '하드 카운터', counter: '카운터' });
+  });
+
+  it('현재 솜브라에게 없는 단일 대상 해킹을 사유로 쓰지 않는다 (EMP 해킹만 허용)', () => {
+    for (const c of COUNTERS) {
+      if (/해킹/.test(c.reason)) {
+        expect(c.counter, `${c.counter}→${c.target}: ${c.reason}`).toBe('sombra');
+        expect(c.reason).toMatch(/EMP/);
+      }
     }
   });
 

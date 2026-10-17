@@ -2,11 +2,24 @@
 
 import Image from 'next/image';
 import React from 'react';
-import { ROLE_LABELS, type CounterRelation, type Hero } from '@/app/actions/overwatchData';
+import { COUNTER_LEVEL_LABELS, ROLE_LABELS, type CounterLevel, type CounterRelation, type Hero } from '@/app/actions/overwatchData';
 import { cn } from '@/utils/cn';
 import { getCounteredBy, getCountersOf } from '../lib/counter-graph';
 import { displayFont } from '../fonts';
-import { ACCENT, IN_COLOR, IN_TEXT_COLOR, OUT_COLOR, ROLE_FILL, STRENGTH_LABELS, strengthPips } from './theme';
+import { ACCENT, IN_COLOR, IN_TEXT_COLOR, OUT_COLOR, ROLE_FILL } from './theme';
+
+// 하드 카운터는 색을 채운 배지, 카운터는 테두리 배지
+function LevelBadge({ level, color }: { level: CounterLevel; color: string }) {
+  const hard = level === 'hard';
+  return (
+    <span
+      className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold leading-none"
+      style={hard ? { background: color, borderColor: color, color: '#0B1119' } : { borderColor: color, color }}
+    >
+      {COUNTER_LEVEL_LABELS[level]}
+    </span>
+  );
+}
 
 function Portrait({ hero, size, ring }: { hero: Hero; size: number; ring?: string }) {
   return (
@@ -59,16 +72,9 @@ function RelationList({
                 >
                   <Portrait hero={other} size={36} />
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="flex items-baseline justify-between gap-2">
+                    <span className="flex items-center justify-between gap-2">
                       <span className="text-[15px] font-bold text-[#E8EDF3]">{other.name}</span>
-                      <span
-                        className="shrink-0 text-xs tracking-[0.1em]"
-                        style={{ color: textColor }}
-                        title={STRENGTH_LABELS[r.strength]}
-                      >
-                        <span aria-hidden="true">{strengthPips(r.strength)}</span>
-                        <span className="sr-only">{STRENGTH_LABELS[r.strength]}</span>
-                      </span>
+                      <LevelBadge level={r.level} color={color} />
                     </span>
                     <span className="text-[13px] leading-snug text-[#9AA7B8]">{r.reason}</span>
                   </span>

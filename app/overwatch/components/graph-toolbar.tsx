@@ -2,83 +2,22 @@
 
 import React from 'react';
 import { Search } from 'lucide-react';
-import { HERO_ROLES, ROLE_LABELS, type Hero } from '@/app/actions/overwatchData';
-import { cn } from '@/utils/cn';
-import type { RoleFilter } from '../lib/counter-graph';
-
-const ROLE_OPTIONS: { value: RoleFilter; label: string }[] = [
-  { value: 'all', label: '전체' },
-  ...HERO_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] })),
-];
-
-const STRENGTH_OPTIONS = [
-  { value: 1, label: '모든 강도' },
-  { value: 2, label: '유리 이상' },
-  { value: 3, label: '매우 유리만' },
-];
-
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        'h-10 cursor-pointer rounded-full border px-4 text-sm font-semibold transition-colors',
-        active
-          ? 'border-[#F99E1A] bg-[#F99E1A] text-[#1A1206]'
-          : 'border-[#2E3B4E] bg-transparent text-[#C9D3DE] hover:border-[#F99E1A]/60'
-      )}
-    >
-      {children}
-    </button>
-  );
-}
+import { ROLE_LABELS, type Hero } from '@/app/actions/overwatchData';
 
 interface GraphToolbarProps {
   heroes: Record<string, Hero>;
-  role: RoleFilter;
-  minStrength: number;
   selectedId: string | null;
   notFound: boolean;
-  onRoleChange: (role: RoleFilter) => void;
-  onStrengthChange: (strength: number) => void;
   onSearch: (query: string) => void;
   onSelect: (heroId: string) => void;
 }
 
-export default function GraphToolbar({
-  heroes,
-  role,
-  minStrength,
-  selectedId,
-  notFound,
-  onRoleChange,
-  onStrengthChange,
-  onSearch,
-  onSelect,
-}: GraphToolbarProps) {
+export default function GraphToolbar({ heroes, selectedId, notFound, onSearch, onSelect }: GraphToolbarProps) {
   const sortedHeroes = Object.values(heroes).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
   return (
-    <div className="flex flex-wrap items-start gap-x-6 gap-y-3 rounded-2xl border border-[#1F2B3B] bg-[#111A26] p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-[13px] font-bold text-[#9AA7B8]">역할</span>
-        {ROLE_OPTIONS.map((o) => (
-          <Chip key={o.value} active={role === o.value} onClick={() => onRoleChange(o.value)}>
-            {o.label}
-          </Chip>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 text-[13px] font-bold text-[#9AA7B8]">상성 강도</span>
-        {STRENGTH_OPTIONS.map((o) => (
-          <Chip key={o.value} active={minStrength === o.value} onClick={() => onStrengthChange(o.value)}>
-            {o.label}
-          </Chip>
-        ))}
-      </div>
-      <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:min-w-[260px]">
+    <div className="flex flex-wrap items-start gap-3 rounded-2xl border border-[#1F2B3B] bg-[#111A26] p-4">
+      <div className="flex w-full flex-col gap-2 sm:w-[320px]">
         <div className="relative">
           <label htmlFor="hero-search" className="sr-only">
             영웅 검색
@@ -93,6 +32,8 @@ export default function GraphToolbar({
           />
         </div>
         {notFound && <span className="pl-3.5 text-xs text-[#FF8A66]">일치하는 영웅이 없습니다.</span>}
+      </div>
+      <div className="w-full sm:w-[280px] lg:hidden">
         <label htmlFor="hero-select" className="sr-only">
           영웅 목록에서 선택
         </label>
@@ -100,7 +41,7 @@ export default function GraphToolbar({
           id="hero-select"
           value={selectedId ?? ''}
           onChange={(e) => e.target.value && onSelect(e.target.value)}
-          className="h-10 w-full rounded-full border border-[#2E3B4E] bg-[#0B1119] px-4 text-sm text-[#E8EDF3] focus:border-[#F99E1A] focus:outline-none lg:hidden"
+          className="h-10 w-full rounded-full border border-[#2E3B4E] bg-[#0B1119] px-4 text-sm text-[#E8EDF3] focus:border-[#F99E1A] focus:outline-none"
         >
           <option value="">영웅 목록에서 선택</option>
           {sortedHeroes.map((h) => (
@@ -110,6 +51,7 @@ export default function GraphToolbar({
           ))}
         </select>
       </div>
+      <p className="self-center text-[13px] text-[#9AA7B8] sm:ml-auto">&lsquo;유리&rsquo; 이상인 카운터 관계만 표시합니다.</p>
     </div>
   );
 }

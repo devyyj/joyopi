@@ -47,7 +47,7 @@ describe('CounterMapClient', () => {
     expect(screen.getByText(/테스트 버전/)).toBeInTheDocument();
   });
 
-  it('2. 선택 전에는 안내 문구를 보여주고, 기본 강도 필터(유리 이상)를 적용한다', () => {
+  it('2. 선택 전에는 안내 문구를 보여주고, 유리 이상 관계만 그린다', () => {
     renderMap();
     expect(within(panel()).getByText('영웅을 선택하세요')).toBeInTheDocument();
     expect(edgeCount()).toBe(4);
@@ -62,8 +62,8 @@ describe('CounterMapClient', () => {
     const inList = within(panel()).getByRole('list', { name: '나를 잡는 영웅' });
     expect(within(outList).getByText('젠야타')).toBeInTheDocument();
     expect(within(outList).getByText('기동력 없는 후방 처치')).toBeInTheDocument();
-    // 상세 패널은 필터와 관계없이 모든 관계를 보여준다
-    expect(within(outList).getByText('아나')).toBeInTheDocument();
+    // 약간 유리(1) 관계는 상세 패널에도 표시하지 않는다
+    expect(within(outList).queryByText('아나')).not.toBeInTheDocument();
     expect(within(inList).getByText('윈스턴')).toBeInTheDocument();
   });
 
@@ -81,24 +81,17 @@ describe('CounterMapClient', () => {
     expect(within(panel()).getByText('영웅을 선택하세요')).toBeInTheDocument();
   });
 
-  it('6. 강도 필터를 바꾸면 보이는 관계가 달라진다', () => {
+  it('6. 역할·강도 필터 버튼은 없고, 모든 영웅이 흐려지지 않은 상태로 표시된다', () => {
     renderMap();
-    fireEvent.click(screen.getByRole('button', { name: '매우 유리만' }));
-    expect(edgeCount()).toBe(2);
-    fireEvent.click(screen.getByRole('button', { name: '모든 강도' }));
-    expect(edgeCount()).toBe(5);
-    expect(screen.getByRole('button', { name: '모든 강도' })).toHaveAttribute('aria-pressed', 'true');
+    for (const label of ['돌격', '공격', '지원', '모든 강도', '유리 이상', '매우 유리만']) {
+      expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument();
+    }
+    for (const button of within(graph()).getAllByRole('button')) {
+      expect(button).toHaveStyle({ opacity: '1' });
+    }
   });
 
-  it('7. 역할 필터는 해당 역할이 포함된 관계만 남긴다', () => {
-    renderMap();
-    fireEvent.click(screen.getByRole('button', { name: '모든 강도' }));
-    fireEvent.click(screen.getByRole('button', { name: '지원' }));
-    expect(screen.getByRole('button', { name: '지원' })).toHaveAttribute('aria-pressed', 'true');
-    expect(edgeCount()).toBe(3);
-  });
-
-  it('8. 검색하면 일치하는 영웅을 선택하고, 없으면 안내한다', () => {
+  it('7. 검색하면 일치하는 영웅을 선택하고, 없으면 안내한다', () => {
     renderMap();
     const input = screen.getByRole('searchbox', { name: '영웅 검색' });
     fireEvent.change(input, { target: { value: '위도' } });
@@ -108,7 +101,7 @@ describe('CounterMapClient', () => {
     expect(screen.getByText('일치하는 영웅이 없습니다.')).toBeInTheDocument();
   });
 
-  it('9. 영웅 목록 선택 상자로도 영웅을 고를 수 있다', () => {
+  it('8. 영웅 목록 선택 상자로도 영웅을 고를 수 있다', () => {
     renderMap();
     fireEvent.change(screen.getByRole('combobox', { name: '영웅 목록에서 선택' }), { target: { value: 'ana' } });
     expect(within(panel()).getByRole('heading', { name: '아나' })).toBeInTheDocument();

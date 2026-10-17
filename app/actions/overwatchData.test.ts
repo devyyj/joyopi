@@ -58,20 +58,21 @@ describe('오버워치 카운터 데이터 무결성', () => {
     }
   });
 
-  it('상성 강도는 1~3이고 사유가 비어 있지 않다', () => {
+  it('상성 강도는 유리(2) 또는 매우 유리(3)이고 사유가 비어 있지 않다', () => {
     for (const c of COUNTERS) {
-      expect([1, 2, 3]).toContain(c.strength);
+      expect([2, 3]).toContain(c.strength);
       expect(c.reason.trim()).not.toBe('');
     }
   });
 
-  it('영웅당 "내가 잡는 영웅"은 최대 6명이다 (그래프 복잡도 제한)', () => {
+  it('모든 영웅은 "나를 잡는 영웅"이 2~6명이다', () => {
     const counts: Record<string, number> = {};
     for (const c of COUNTERS) {
-      counts[c.counter] = (counts[c.counter] ?? 0) + 1;
+      counts[c.target] = (counts[c.target] ?? 0) + 1;
     }
-    for (const [id, count] of Object.entries(counts)) {
-      expect(count, `${id}의 카운터 수 초과`).toBeLessThanOrEqual(6);
+    for (const id of heroIds) {
+      expect(counts[id] ?? 0, `${id}의 카운터 수`).toBeGreaterThanOrEqual(2);
+      expect(counts[id] ?? 0, `${id}의 카운터 수`).toBeLessThanOrEqual(6);
     }
   });
 

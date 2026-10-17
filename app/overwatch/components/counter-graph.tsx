@@ -10,7 +10,6 @@ import {
   edgeGeometry,
   getEdgeKind,
   getNodeState,
-  type RoleFilter,
 } from '../lib/counter-graph';
 import { displayFont } from '../fonts';
 import { EDGE_COLOR, NODE_RING, ROLE_FILL } from './theme';
@@ -29,11 +28,10 @@ interface CounterGraphProps {
   heroes: Record<string, Hero>;
   edges: CounterRelation[];
   selectedId: string | null;
-  role: RoleFilter;
   onSelect: (heroId: string) => void;
 }
 
-export default function CounterGraph({ heroes, edges, selectedId, role, onSelect }: CounterGraphProps) {
+export default function CounterGraph({ heroes, edges, selectedId, onSelect }: CounterGraphProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const layout = useMemo(() => computeRingLayout(heroes, { cx: CENTER.x, cy: CENTER.y, radius: RADIUS }), [heroes]);
 
@@ -85,8 +83,8 @@ export default function CounterGraph({ heroes, edges, selectedId, role, onSelect
           <span
             key={s.role}
             aria-hidden="true"
-            className={cn(displayFont.className, 'absolute -translate-x-1/2 -translate-y-1/2 text-lg tracking-[0.1em] text-[#5E6C7E] transition-opacity')}
-            style={{ left: pct(s.x), top: pct(s.y), opacity: role === 'all' || role === s.role ? 1 : 0.35 }}
+            className={cn(displayFont.className, 'absolute -translate-x-1/2 -translate-y-1/2 text-lg tracking-[0.1em] text-[#5E6C7E]')}
+            style={{ left: pct(s.x), top: pct(s.y) }}
           >
             {ROLE_LABELS[s.role]}
           </span>
@@ -95,7 +93,6 @@ export default function CounterGraph({ heroes, edges, selectedId, role, onSelect
         {Object.values(heroes).map((hero) => {
           const p = layout[hero.id];
           const state = getNodeState(hero.id, selectedId, edges);
-          const inRole = role === 'all' || hero.role === role;
           const showLabel = state === 'selected' || state === 'out' || state === 'in';
           return (
             <button
@@ -109,7 +106,7 @@ export default function CounterGraph({ heroes, edges, selectedId, role, onSelect
                 left: pct(p.x),
                 top: pct(p.y),
                 width: pct(NODE_RADIUS * 2.2),
-                opacity: !inRole ? 0.25 : state === 'dim' ? 0.35 : 1,
+                opacity: state === 'dim' ? 0.35 : 1,
                 zIndex: showLabel ? 2 : 1,
               }}
             >

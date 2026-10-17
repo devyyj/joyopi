@@ -1,4 +1,4 @@
-# .gemini/verify.ps1
+# .claude/verify.ps1
 # 프로젝트 정합성 및 안전성 검증 스크립트
 
 Write-Host " 검증 프로세스를 시작합니다..." -ForegroundColor Cyan

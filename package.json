@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "verify": "powershell -ExecutionPolicy Bypass -File ./.gemini/verify.ps1"
+    "verify": "powershell -ExecutionPolicy Bypass -File ./.claude/verify.ps1"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

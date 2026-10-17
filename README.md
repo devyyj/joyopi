@@ -41,4 +41,4 @@ npm run verify
 ## 📄 관련 문서
 - [프로젝트 정의서 (docs/00_조요피연구소.md)](./docs/00_조요피연구소.md)
 - [자유게시판 상세 명세 (docs/01_자유게시판.md)](./docs/01_자유게시판.md)
-- [엔지니어링 가이드 (GEMINI.md)](./GEMINI.md)
+- [엔지니어링 가이드 (AGENTS.md)](./AGENTS.md)

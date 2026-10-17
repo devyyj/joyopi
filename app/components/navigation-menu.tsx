@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, MessageSquare, Radio, Notebook, Heart, Sparkles } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Radio, Notebook, Heart, Sparkles, Swords } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
 const ALLOWED_EMAILS = ['devyyj@gmail.com', 'noticeably34@gmail.com'];
@@ -56,6 +56,15 @@ const TOOLS: ToolItem[] = [
     hoverColor: 'hover:bg-red-50/80 hover:border-red-200/50',
     hoverTextColor: 'group-hover:text-[#8B0000]',
     accent: true
+  },
+  {
+    name: '오버워치 카운터 맵',
+    href: '/overwatch',
+    description: '영웅별 카운터 관계를 한눈에 보는 관계도',
+    icon: Swords,
+    color: 'text-[#d97706]',
+    hoverColor: 'hover:bg-amber-50/60 hover:border-amber-200/40',
+    hoverTextColor: 'group-hover:text-[#d97706]'
   },
   {
     name: '이름 랭킹 (Name Rank)',

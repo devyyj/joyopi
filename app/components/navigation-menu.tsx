@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, MessageSquare, Radio, Sparkles, Swords } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Radio, Sparkles } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { isEchoAllowedEmail } from '@/utils/echo-access';
 
@@ -36,15 +36,6 @@ const TOOLS: ToolItem[] = [
     color: 'text-[#06b6d4]',
     hoverColor: 'hover:bg-cyan-50/60 hover:border-cyan-200/40',
     hoverTextColor: 'group-hover:text-[#06b6d4]'
-  },
-  {
-    name: '오버워치 카운터 맵',
-    href: '/overwatch',
-    description: '영웅별 카운터 관계를 한눈에 보는 관계도',
-    icon: Swords,
-    color: 'text-[#d97706]',
-    hoverColor: 'hover:bg-amber-50/60 hover:border-amber-200/40',
-    hoverTextColor: 'group-hover:text-[#d97706]'
   }
 ];
 

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, MessageSquare, Radio, Sparkles } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Radio } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { isEchoAllowedEmail } from '@/utils/echo-access';
 
@@ -12,30 +12,20 @@ interface ToolItem {
   href: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  hoverColor: string;
-  hoverTextColor: string;
-  accent?: boolean;
 }
 
 const TOOLS: ToolItem[] = [
   {
-    name: '연구소 게시판',
+    name: '게시판',
     href: '/board',
     description: '연구원들의 자유로운 소통과 공유 공간',
     icon: MessageSquare,
-    color: 'text-[#4f46e5]',
-    hoverColor: 'hover:bg-indigo-50/60 hover:border-indigo-200/40',
-    hoverTextColor: 'group-hover:text-[#4f46e5]'
   },
   {
-    name: '메아리 에코',
+    name: '에코',
     href: '/echo',
     description: '발소리 재생 시간을 실시간으로 연장·동기화',
     icon: Radio,
-    color: 'text-[#06b6d4]',
-    hoverColor: 'hover:bg-cyan-50/60 hover:border-cyan-200/40',
-    hoverTextColor: 'group-hover:text-[#06b6d4]'
   }
 ];
 
@@ -72,19 +62,20 @@ export default function NavigationMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* 콤팩트한 런처 트리거 버튼 */}
+      {/* 런처 버튼: 브랜드 색 변수만 써서 라이트·다크 모드 모두 로고 색(크림·잉크·주황)에 맞춘다 */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-300 hover:border-[#8B0000]/30 bg-white hover:bg-neutral-50 text-xs sm:text-sm font-bold text-neutral-700 hover:text-neutral-900 transition-all active:scale-[0.98] group cursor-pointer shadow-sm"
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-card text-xs sm:text-sm font-bold text-foreground transition-all active:scale-[0.98] group cursor-pointer border-border hover:border-primary ${isOpen ? 'border-primary' : ''}`}
         aria-label="연구소 도구 메뉴 열기"
+        aria-expanded={isOpen}
       >
-        <LayoutGrid className="w-4 h-4 text-neutral-400 group-hover:text-[#8B0000] transition-colors" />
+        <LayoutGrid className={`w-4 h-4 transition-colors group-hover:text-primary ${isOpen ? 'text-primary' : 'text-muted'}`} />
         <span className="hidden sm:inline">연구소 도구</span>
         <span className="inline sm:hidden">도구</span>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
-          className="text-[10px] text-neutral-400 ml-0.5"
+          className="text-[10px] text-muted ml-0.5"
         >
           ▼
         </motion.span>
@@ -98,11 +89,14 @@ export default function NavigationMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 mt-2.5 w-[280px] sm:w-[320px] rounded-2xl border border-neutral-200/80 bg-white/95 backdrop-blur-md shadow-2xl p-3 z-50 flex flex-col gap-1.5"
+            className="absolute left-0 mt-2.5 w-[280px] sm:w-[320px] rounded-2xl border border-border bg-card text-card-foreground shadow-xl p-3 z-50 flex flex-col gap-1.5"
           >
-            <div className="px-2 py-1.5 border-b border-neutral-200 mb-1 flex items-center justify-between text-[11px] font-extrabold text-neutral-400 tracking-wider">
-              <span>JOYOPI SERVICES</span>
-              <Sparkles className="w-3 h-3 text-amber-500" />
+            {/* 로고 `> joyopi_` 처럼 고정폭 글꼴에 > 와 커서 _ 를 주황으로 */}
+            <div
+              data-testid="menu-header"
+              className="px-2 py-1.5 border-b border-border mb-1 font-mono text-[11px] font-extrabold tracking-tight text-muted"
+            >
+              <span className="text-primary">&gt;</span> services<span className="text-primary">_</span>
             </div>
 
             <div className="grid grid-cols-1 gap-1">
@@ -111,16 +105,16 @@ export default function NavigationMenu() {
                   key={tool.href}
                   href={tool.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex gap-3 items-start p-2.5 rounded-xl border border-transparent transition-all ${tool.hoverColor} group`}
+                  className="flex gap-3 items-start p-2.5 rounded-xl border border-transparent transition-all hover:bg-secondary hover:border-border group"
                 >
-                  <div className={`p-2 rounded-lg bg-neutral-50 border border-neutral-200 shrink-0 group-hover:scale-105 transition-transform`}>
-                    <tool.icon className={`w-4.5 h-4.5 ${tool.color}`} />
+                  <div className="p-2 rounded-lg bg-secondary border border-border shrink-0 group-hover:scale-105 transition-transform">
+                    <tool.icon className="w-4.5 h-4.5 text-primary" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className={`text-xs font-bold text-neutral-800 ${tool.hoverTextColor} transition-colors`}>
+                    <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                       {tool.name}
                     </span>
-                    <span className="text-[10px] text-neutral-500 leading-normal mt-0.5 font-medium">
+                    <span className="text-[10px] text-muted leading-normal mt-0.5 font-medium">
                       {tool.description}
                     </span>
                   </div>

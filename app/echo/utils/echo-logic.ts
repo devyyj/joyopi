@@ -22,42 +22,10 @@ export function calculateNewEndTime(currentEndTime: number, addedSeconds: number
   return base + validSeconds * 1000;
 }
 
-export function calculateNewTime(current: number, increment: number): number {
-  return current + increment;
-}
-
 export function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-/**
- * 샌더 및 스피커 간 시간 동기화 판단 유틸리티
- */
-export function resolveSyncTime(
-  currentTime: number,
-  syncTime: number,
-  lastRequestTimeMs: number = 0,
-  nowMs: number = Date.now(),
-  gracePeriodMs: number = 10000
-): number {
-  if (syncTime === 0) {
-    if (nowMs - lastRequestTimeMs < gracePeriodMs || currentTime > 60) {
-      return currentTime;
-    }
-    return 0;
-  }
-  if (nowMs - lastRequestTimeMs < gracePeriodMs && syncTime < currentTime) {
-    return currentTime;
-  }
-  if (syncTime > currentTime) {
-    return syncTime;
-  }
-  if (currentTime > 60 && (currentTime - syncTime > 10)) {
-    return currentTime;
-  }
-  return syncTime;
 }
 
 /**
@@ -123,11 +91,6 @@ export function parseSeconds(payload: unknown, defaultSeconds: number = 60): num
   return defaultSeconds;
 }
 
-export function resolveEchoRequest(currentTime: number, payload: unknown): number {
-  const addedSeconds = parseSeconds(payload, 60);
-  return currentTime + addedSeconds;
-}
-
 export function mapEventTypeToLogType(eventType: string): 'info' | 'success' | 'warning' | 'error' {
   switch (eventType) {
     case 'join':
@@ -143,5 +106,3 @@ export function mapEventTypeToLogType(eventType: string): 'info' | 'success' | '
       return 'info';
   }
 }
-
-

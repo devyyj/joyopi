@@ -1,88 +1,70 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/app/components/ui';
 import Link from 'next/link';
-import { formatTime, resolveSyncTime, parseSeconds, calculateRemainingSeconds, calculateNewEndTime } from '@/app/echo/utils/echo-logic';
+import { formatTime, parseSeconds, calculateRemainingSeconds, calculateNewEndTime } from '@/app/echo/utils/echo-logic';
+import { isWithinStopGrace, resolveSenderEndTime } from '@/app/echo/utils/echo-sync';
 import { EchoLog } from '../components/echo-log';
 import { useEchoSocket } from '../hooks/use-echo-socket';
+import { usePresenceId } from '../hooks/use-presence-id';
 
 export default function SenderPage() {
+  const presenceId = usePresenceId();
   const [remainingTime, setRemainingTime] = useState(0);
-  const lastRequestTimeRef = useRef<number>(0);
-  const senderTimeRef = useRef<number>(0); // remainingTime을 ref로 추적 (stale closure 방지)
-  // 메아리 종료 절대시각 (Unix ms). 스피커의 endTime과 동기화됨
+  // 메아리 종료 절대시각 (이 기기 시계 기준 Unix ms). 스피커가 보낸 남은 시간으로 다시 계산한다
   const endTimeRef = useRef<number>(0);
-  
-  const presenceId = useMemo(() => {
-    if (typeof window === 'undefined') return '';
-    const saved = sessionStorage.getItem('echo-presence-id');
-    if (saved) return saved;
-    const id = crypto.randomUUID();
-    sessionStorage.setItem('echo-presence-id', id);
-    return id;
-  }, []);
-
-  const isPlaying = remainingTime > 0;
+  const lastRequestAtRef = useRef<number>(0);
+  const lastStopAtRef = useRef<number>(0);
+  const presenceIdRef = useRef(presenceId);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // senderTimeRef를 remainingTime과 항상 동기화
-  useEffect(() => {
-    senderTimeRef.current = remainingTime;
-  }, [remainingTime]);
+  const isPlaying = remainingTime > 0;
 
-  // 로컬 타이머 (동기화 신호 사이의 공백을 메움)
   useEffect(() => {
-    if (isPlaying && !timerRef.current) {
-      timerRef.current = setInterval(() => {
-        if (endTimeRef.current > 0) {
-          const remaining = calculateRemainingSeconds(endTimeRef.current);
-          setRemainingTime(remaining);
-          senderTimeRef.current = remaining;
-        } else {
-          setRemainingTime((prev) => Math.max(0, prev - 1));
-        }
-      }, 1000);
-    } else if (!isPlaying && timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    presenceIdRef.current = presenceId;
+  }, [presenceId]);
+
+  const applyEndTime = useCallback((endTime: number) => {
+    endTimeRef.current = endTime;
+    setRemainingTime(calculateRemainingSeconds(endTime));
+  }, []);
+
+  // 동기화 신호 사이에는 자기 종료 시각으로 직접 카운트다운한다
+  useEffect(() => {
+    if (!isPlaying) return;
+    timerRef.current = setInterval(() => {
+      setRemainingTime(calculateRemainingSeconds(endTimeRef.current));
+    }, 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
     };
   }, [isPlaying]);
 
   const handleBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
     switch (event) {
       case 'ECHO_SYNC': {
-        const syncEndTime = typeof payload.endTime === 'number' ? payload.endTime : 0;
-        const syncRemaining = typeof payload.remainingTime === 'number' ? payload.remainingTime : 0;
-
-        if (syncEndTime > 0) {
-          if (syncEndTime > endTimeRef.current || endTimeRef.current === 0) {
-            endTimeRef.current = syncEndTime;
-          }
-          const remaining = calculateRemainingSeconds(endTimeRef.current);
-          setRemainingTime(remaining);
-          senderTimeRef.current = remaining;
-        } else if (syncRemaining > 0) {
-          setRemainingTime((prev) => resolveSyncTime(prev, syncRemaining, lastRequestTimeRef.current));
-        } else if (syncEndTime === 0 && syncRemaining === 0) {
-          const localRemaining = calculateRemainingSeconds(endTimeRef.current);
-          if (localRemaining === 0) {
-            endTimeRef.current = 0;
-            setRemainingTime(0);
-            senderTimeRef.current = 0;
-          }
-        }
+        if (typeof payload.remainingMs !== 'number' || isWithinStopGrace(lastStopAtRef.current)) break;
+        // 스피커 값을 기준으로 삼아 기기 시계 차이로 생긴 오차를 바로잡는다
+        applyEndTime(resolveSenderEndTime({
+          localEndTime: endTimeRef.current,
+          remainingMs: payload.remainingMs,
+          lastRequestAt: lastRequestAtRef.current,
+        }));
         break;
       }
+      case 'ECHO_REQUEST':
+        // 다른 사람의 연장 요청은 스피커 동기화가 오기 전까지 낙관적으로 반영해 둔다
+        if (payload?.senderId === presenceIdRef.current) break;
+        applyEndTime(calculateNewEndTime(endTimeRef.current, parseSeconds(payload, 60)));
+        break;
       case 'ECHO_STOP':
-        endTimeRef.current = 0;
-        setRemainingTime(0);
+        lastStopAtRef.current = Date.now();
+        applyEndTime(0);
         break;
     }
-  }, []);
+  }, [applyEndTime]);
 
   const {
     speakerCount,
@@ -100,31 +82,23 @@ export default function SenderPage() {
   const connectedUsers = speakerCount + senderCount;
   const isReady = status === 'CONNECTED';
 
-  const handleSendEcho = useCallback((seconds: unknown = 60) => {
+  const handleSendEcho = useCallback((seconds: number) => {
     if (!isReady) return;
-    lastRequestTimeRef.current = Date.now();
-
     const validSeconds = parseSeconds(seconds, 60);
-    endTimeRef.current = calculateNewEndTime(endTimeRef.current, validSeconds);
+    lastRequestAtRef.current = Date.now();
+    applyEndTime(calculateNewEndTime(endTimeRef.current, validSeconds));
 
-    const optimisticRemaining = calculateRemainingSeconds(endTimeRef.current);
-    setRemainingTime(optimisticRemaining);
-    senderTimeRef.current = optimisticRemaining;
-
-    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds, endTime: endTimeRef.current });
-    const minutes = Math.floor(validSeconds / 60);
-    addLog(`사용자가 메아리를 보냈습니다. (+${minutes}분)`, 'request', presenceId);
-  }, [presenceId, addLog, sendBroadcast, isReady]);
-
+    sendBroadcast('ECHO_REQUEST', { senderId: presenceId, seconds: validSeconds });
+    addLog(`사용자가 메아리를 보냈습니다. (+${Math.floor(validSeconds / 60)}분)`, 'request', presenceId);
+  }, [presenceId, addLog, sendBroadcast, isReady, applyEndTime]);
 
   const handleStopEcho = useCallback(() => {
     if (!isReady) return;
-    endTimeRef.current = 0;
+    lastStopAtRef.current = Date.now();
+    applyEndTime(0);
     sendBroadcast('ECHO_STOP', { triggeredBy: presenceId });
-    setRemainingTime(0);
-    senderTimeRef.current = 0;
     addLog('사용자가 모든 메아리를 중지시켰습니다.', 'stop', presenceId);
-  }, [presenceId, addLog, sendBroadcast, isReady]);
+  }, [presenceId, addLog, sendBroadcast, isReady, applyEndTime]);
 
   const handleManualExit = useCallback(() => {
     addLog('사용자가 퇴장했습니다. (이유: 사용자 요청)', 'leave');
@@ -160,27 +134,27 @@ export default function SenderPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-          <Button 
-            size="lg" 
-            className="h-20 text-base sm:text-lg font-bold" 
+          <Button
+            size="lg"
+            className="h-20 text-base sm:text-lg font-bold"
             onClick={() => handleSendEcho(60)}
             disabled={!isReady || speakerCount === 0}
           >
             {!isReady ? '준비중...' : speakerCount > 0 ? '+1분 보내기' : '스피커 없음'}
           </Button>
-          
-          <Button 
-            size="lg" 
-            className="h-20 text-base sm:text-lg font-bold" 
+
+          <Button
+            size="lg"
+            className="h-20 text-base sm:text-lg font-bold"
             onClick={() => handleSendEcho(600)}
             disabled={!isReady || speakerCount === 0}
           >
             {!isReady ? '준비중...' : speakerCount > 0 ? '+10분 보내기' : '스피커 없음'}
           </Button>
 
-          <Button 
-            variant="outline" 
-            size="lg" 
+          <Button
+            variant="outline"
+            size="lg"
             className="col-span-2 h-14 text-destructive border-destructive/20 hover:bg-destructive/10"
             onClick={handleStopEcho}
             disabled={!isReady || remainingTime === 0}

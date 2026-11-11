@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { echoLogs } from '@/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, lt } from 'drizzle-orm';
 import { createClient } from '@/utils/supabase/server';
 import { isEchoAllowedEmail } from '@/utils/echo-access';
 
@@ -10,6 +10,7 @@ import { mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_LOG_LIMIT = 100;
+const LOG_RETENTION_DAYS = 30;
 
 export interface CreateEchoLogParams {
   userId?: string;
@@ -31,6 +32,17 @@ async function isAuthorized() {
   }
 }
 
+// 보관 기간이 지난 로그는 저장할 때마다 함께 지워 테이블이 계속 커지지 않게 한다
+async function pruneOldLogs() {
+  try {
+    const cutoff = new Date(Date.now() - LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+    await db.delete(echoLogs).where(lt(echoLogs.createdAt, cutoff));
+  } catch (error) {
+    // 정리 실패는 저장 결과에 영향을 주지 않는다
+    console.error('Failed to prune old echo logs:', error);
+  }
+}
+
 export async function createEchoLog(params: CreateEchoLogParams) {
   if (!(await isAuthorized())) {
     return { success: false, error: 'Unauthorized' };
@@ -49,6 +61,7 @@ export async function createEchoLog(params: CreateEchoLogParams) {
       message,
       payload: params.payload ? JSON.stringify(params.payload) : null,
     });
+    await pruneOldLogs();
     return { success: true };
   } catch (error) {
     console.error('Failed to create echo log:', error);

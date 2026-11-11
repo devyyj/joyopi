@@ -13,6 +13,9 @@ vi.mock('@/db', () => ({
     insert: vi.fn(() => ({
       values: vi.fn().mockResolvedValue({}),
     })),
+    delete: vi.fn(() => ({
+      where: vi.fn().mockResolvedValue({}),
+    })),
     select: vi.fn(() => ({
       from: vi.fn(() => ({
         orderBy: vi.fn(() => ({
@@ -119,5 +122,16 @@ describe('Echo Actions', () => {
     await getEchoLogs(10000);
     const limitFn = vi.mocked(db.select).mock.results[0].value.from.mock.results[0].value.orderBy.mock.results[0].value.limit;
     expect(limitFn).toHaveBeenCalledWith(100);
+  });
+
+  it('로그를 저장할 때 보관 기간(30일)이 지난 로그를 함께 지운다', async () => {
+    await createEchoLog({ role: 'sender', eventType: 'request', message: '메아리 보냄' });
+    expect(db.delete).toHaveBeenCalled();
+  });
+
+  it('오래된 로그 삭제가 실패해도 저장은 성공으로 처리한다', async () => {
+    vi.mocked(db.delete).mockImplementationOnce(() => { throw new Error('boom'); });
+    const result = await createEchoLog({ role: 'sender', eventType: 'request', message: '메아리 보냄' });
+    expect(result.success).toBe(true);
   });
 });

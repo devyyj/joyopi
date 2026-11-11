@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useEchoSocket } from './use-echo-socket';
 
 // Mock server actions
@@ -162,5 +162,66 @@ describe('useEchoSocket Hook Concurrency & Cleanup Tests', () => {
     expect(result.current.logs.some(l => l.message.includes('퇴장') && l.userId === 'other-user')).toBe(true);
     expect(createEchoLog).not.toHaveBeenCalled();
     expect(channel.send).not.toHaveBeenCalled();
+  });
+
+  it('enabled가 false면 채널에 접속하지 않고, true가 되면 접속한다', async () => {
+    const { result, rerender } = renderHook(
+      ({ enabled }) => useEchoSocket({ role: 'speaker', presenceId: 'sp-1', enabled }),
+      { initialProps: { enabled: false } }
+    );
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    expect(mockSupabaseClient.channel).not.toHaveBeenCalled();
+    expect(result.current.status).toBe('INITIAL');
+
+    rerender({ enabled: true });
+    await waitFor(() => expect(result.current.status).toBe('CONNECTED'));
+    expect(mockSupabaseClient.channel).toHaveBeenCalledWith('echo-room', expect.any(Object));
+  });
+
+  it('연결 성공 로그는 내 화면에만 남기고 DB에 저장하지 않는다', async () => {
+    const { createEchoLog } = await import('@/app/actions/echo');
+    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    expect(result.current.logs.some(l => l.message.includes('서버 연결 성공'))).toBe(true);
+    expect(createEchoLog).not.toHaveBeenCalled();
+  });
+
+  it('별도 연결 유지 신호(ECHO_HEARTBEAT)를 보내지 않는다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+      const channel = mockChannels[0];
+      await act(async () => { await vi.advanceTimersByTimeAsync(31_000); });
+      const events = vi.mocked(channel.send).mock.calls.map((args) => (args as unknown as [{ event: string }])[0].event);
+      expect(events).not.toContain('ECHO_HEARTBEAT');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('presence에서 스피커 ID 목록을 제공한다', async () => {
+    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    const channel = mockChannels[0];
+    channel.presenceState = vi.fn().mockReturnValue({
+      'sp-b': [{ role: 'speaker' }],
+      'sp-a': [{ role: 'speaker' }],
+      me: [{ role: 'sender' }],
+    });
+    const syncCall = vi.mocked(channel.on).mock.calls.find(
+      ([type, filter]) => type === 'presence' && (filter as { event: string }).event === 'sync'
+    );
+    act(() => { (syncCall![2] as unknown as () => void)(); });
+    expect([...result.current.speakerIds].sort()).toEqual(['sp-a', 'sp-b']);
+    expect(result.current.speakerCount).toBe(2);
+    expect(result.current.senderCount).toBe(1);
+  });
+
+  it('첫 화면(landing)에서는 이전 로그를 불러오지 않는다', async () => {
+    const { getEchoLogs } = await import('@/app/actions/echo');
+    renderHook(() => useEchoSocket({ role: 'landing', presenceId: 'me' }));
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    expect(getEchoLogs).not.toHaveBeenCalled();
   });
 });

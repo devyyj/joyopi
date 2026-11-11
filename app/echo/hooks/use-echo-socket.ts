@@ -18,11 +18,14 @@ interface UseEchoSocketProps {
   role: EchoRole;
   presenceId: string;
   onBroadcast?: (event: string, payload: Record<string, unknown>) => void;
+  /** false면 채널에 접속하지 않는다 (스피커는 오디오를 켠 뒤에만 접속해 인원에 잡히도록) */
+  enabled?: boolean;
 }
 
-export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketProps) {
+export function useEchoSocket({ role, presenceId, onBroadcast, enabled = true }: UseEchoSocketProps) {
   const [speakerCount, setSpeakerCount] = useState<number>(0);
   const [senderCount, setSenderCount] = useState<number>(0);
+  const [speakerIds, setSpeakerIds] = useState<string[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [status, setStatus] = useState<'INITIAL' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR'>('INITIAL');
   const [isChannelJoined, setIsChannelJoined] = useState(false);
@@ -92,14 +95,15 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
     ].slice(-100));
   }, [presenceId, role]);
 
-  // 초기 로그 로드
+  // 초기 로그 로드 (첫 화면은 인원 수만 보여 주므로 불러오지 않는다)
   useEffect(() => {
+    if (role === 'landing') return;
     getEchoLogs().then(res => {
       if (res.success && res.data) {
         setLogs(res.data as LogEntry[]);
       }
     });
-  }, []);
+  }, [role]);
 
   const onBroadcastRef = useRef(onBroadcast);
   useEffect(() => {
@@ -182,13 +186,13 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         if (!isMountedRef.current) return;
         const state = channel.presenceState();
         const userIds = Object.keys(state);
-        
-        setSpeakerCount(userIds.filter(id => 
-          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'speaker')
-        ).length);
-        setSenderCount(userIds.filter(id => 
-          (state[id] as unknown as EchoPresence[]).some(p => p.role === 'sender')
-        ).length);
+        const hasRole = (id: string, r: string) =>
+          (state[id] as unknown as EchoPresence[]).some(p => p.role === r);
+
+        const speakers = userIds.filter(id => hasRole(id, 'speaker'));
+        setSpeakerIds(speakers);
+        setSpeakerCount(speakers.length);
+        setSenderCount(userIds.filter(id => hasRole(id, 'sender')).length);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         if (!isMountedRef.current || key === presenceId) return;
@@ -232,7 +236,8 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         retryCountRef.current = 0;
         setStatus('CONNECTED');
         setIsChannelJoined(true);
-        await addLog(`서버 연결 성공 (사유: ${reason})`, 'join', undefined, logPayload);
+        // 연결 상태 안내는 접속자마다 생기는 기록이라 DB에 쌓지 않고 내 화면에만 남긴다
+        addLocalLog(`서버 연결 성공 (사유: ${reason})`, 'join');
         await channel.track({ 
           role, 
           joinedAt: new Date().toISOString() 
@@ -250,7 +255,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
       if (subStatus === 'TIMED_OUT') {
         setStatus('DISCONNECTED');
         setIsChannelJoined(false);
-        addLog('서버 응답 시간 초과. 3초 후 재연결을 시도합니다.', 'warning', undefined, logPayload);
+        addLocalLog('서버 응답 시간 초과. 3초 후 재연결을 시도합니다.', 'warning');
         reconnectTimeoutRef.current = setTimeout(() => setupChannelRef.current('timeout'), 3000);
       }
 
@@ -260,7 +265,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
         if (retryCountRef.current < MAX_RETRIES) {
           const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 10000);
           retryCountRef.current++;
-          addLog(`연결이 중단되었습니다. ${delay/1000}초 후 자동 재접속합니다.`, 'warning', undefined, logPayload);
+          addLocalLog(`연결이 중단되었습니다. ${delay/1000}초 후 자동 재접속합니다.`, 'warning');
           reconnectTimeoutRef.current = setTimeout(() => setupChannelRef.current('closed_retry'), delay);
         } else {
           setStatus('ERROR');
@@ -296,19 +301,10 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
   }, [setupChannel]);
 
   useEffect(() => {
+    if (!enabled) return;
     isMountedRef.current = true;
+    // 연결 유지 신호는 Supabase 클라이언트가 25초마다 자체 전송하므로 따로 보내지 않는다
     setupChannelRef.current('init');
-
-    // Supabase Realtime WebSocket의 60초 유휴 끊김 방지용 15초 Keep-Alive 핑
-    const keepAliveInterval = setInterval(() => {
-      if (channelRef.current && channelRef.current.state === 'joined') {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'ECHO_HEARTBEAT',
-          payload: { role, timestamp: new Date().toISOString() }
-        });
-      }
-    }, 15000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && (!channelRef.current || channelRef.current.state !== 'joined')) {
@@ -325,15 +321,15 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
 
     return () => {
       isMountedRef.current = false;
-      clearInterval(keepAliveInterval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('online', handleOnline);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-  }, [supabase, role, presenceId]);
+  }, [supabase, role, presenceId, enabled]);
 
 
   const sendBroadcast = useCallback((event: string, payload: Record<string, unknown>) => {
@@ -351,6 +347,7 @@ export function useEchoSocket({ role, presenceId, onBroadcast }: UseEchoSocketPr
   return {
     speakerCount,
     senderCount,
+    speakerIds,
     logs,
     status,
     isChannelJoined,

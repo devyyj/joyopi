@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1f2328;
-  --muted: #656d76;
-  --border: #d0d7de;
-  --primary: #0969da;
+  /* joyopi 브랜드 (apps/logo/tokens/brand.css) */
+  --background: #F5F2EA;
+  --foreground: #1B1B1B;
+  --muted: #6B655A;
+  --border: #DDD5C4;
+  --primary: #E8590C;
   --primary-foreground: #ffffff;
-  --secondary: #f6f8fa;
-  --secondary-foreground: #1f2328;
+  --secondary: #EDE8DC;
+  --secondary-foreground: #1B1B1B;
   --card: #ffffff;
-  --card-foreground: #1f2328;
-  --ring: rgba(9, 105, 218, 0.2);
+  --card-foreground: #1B1B1B;
+  --ring: rgba(232, 89, 12, 0.2);
 }
 
 @theme inline {
@@ -32,16 +33,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0d1117;
-    --foreground: #e6edf3;
-    --muted: #848d97;
-    --border: #30363d;
-    --primary: #2f81f7;
+    --background: #161513;
+    --foreground: #F5F2EA;
+    --muted: #9A9488;
+    --border: #34312C;
+    --primary: #F06A1F;
     --primary-foreground: #ffffff;
-    --secondary: #21262d;
-    --secondary-foreground: #e6edf3;
-    --card: #0d1117;
-    --ring: rgba(47, 129, 247, 0.3);
+    --secondary: #211F1C;
+    --secondary-foreground: #F5F2EA;
+    --card: #1B1A17;
+    --card-foreground: #F5F2EA;
+    --ring: rgba(240, 106, 31, 0.3);
   }
 }
 
@@ -59,11 +61,11 @@ body[data-hide-header="true"] header {
 }
 
 ::selection {
-  background-color: rgba(9, 105, 218, 0.3);
+  background-color: rgba(232, 89, 12, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
   ::selection {
-    background-color: rgba(47, 129, 247, 0.4);
+    background-color: rgba(240, 106, 31, 0.35);
   }
 }

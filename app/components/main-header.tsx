@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
 import { signInWithGoogle } from '@/app/actions/auth';
 import { Button } from './ui/core';
 import UserProfileButton from './user-profile-button';
 import LogoutButton from './logout-button';
 import NavigationMenu from './navigation-menu';
+import BrandLogo from './brand/brand-logo';
 
 const MainHeader = async () => {
   const supabase = await createClient();
@@ -15,20 +15,8 @@ const MainHeader = async () => {
     <header className="sticky top-0 z-50 w-full bg-secondary border-b border-border">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/" className="group flex items-center gap-2">
-            <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-border/40 shadow-sm transition-transform group-hover:scale-105 active:scale-95">
-              <Image 
-                src="/apple-touch-icon.png" 
-                alt="조요피 연구소 Logo" 
-                fill 
-                className="object-cover"
-                priority
-                sizes="32px"
-              />
-            </div>
-            <span className="text-sm font-bold tracking-tight text-foreground group-hover:text-primary transition-colors hidden sm:inline">
-              YOPI LAB
-            </span>
+          <Link href="/" aria-label="조요피 연구소 홈" className="flex items-center transition-opacity hover:opacity-80 active:scale-95">
+            <BrandLogo className="h-5 w-auto" />
           </Link>
           <div className="ml-2">
             <NavigationMenu />

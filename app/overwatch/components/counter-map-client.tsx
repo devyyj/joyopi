@@ -45,7 +45,7 @@ export default function CounterMapClient({ heroes, counters, version }: CounterM
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
             <span className="text-xs font-bold tracking-[0.18em]" style={{ color: ACCENT }}>
-              YOPI LAB · OVERWATCH
+              JOYOPI · OVERWATCH
             </span>
             <h1 className={cn(displayFont.className, 'text-4xl leading-none text-white sm:text-5xl')}>카운터 맵</h1>
             <p className="text-[15px] text-[#9AA7B8]">영웅을 눌러 누구에게 강하고 누구에게 약한지 확인하세요.</p>

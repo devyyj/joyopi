@@ -141,7 +141,7 @@ export default async function Home() {
 
       <div className="pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-muted-foreground">
         <p className="text-[10px]">
-          &copy; {new Date().getFullYear()} <strong>YOPI LAB</strong>. Built with Next.js 15.
+          &copy; {new Date().getFullYear()} <strong>joyopi</strong>. Built with Next.js 15.
         </p>
       </div>
     </div>

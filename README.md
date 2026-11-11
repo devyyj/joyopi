@@ -1,4 +1,4 @@
-# 조요피 연구소 (YOPI LAB)
+# 조요피 연구소 (joyopi)
 
 Next.js 15와 Supabase를 활용한 초고속 반응형 커뮤니티 및 개인 개발 포털입니다.
 

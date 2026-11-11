@@ -12,7 +12,7 @@ export interface CardHoverEffectProps extends React.HTMLAttributes<HTMLDivElemen
 export const CardHoverEffect = ({
   children,
   className,
-  glowColor = "rgba(9, 105, 218, 0.15)", // 5색 파스텔/primary 매칭용
+  glowColor = "rgba(232, 89, 12, 0.15)", // 5색 파스텔/primary 매칭용
   ...props
 }: CardHoverEffectProps) => {
   const mouseX = useMotionValue(0);

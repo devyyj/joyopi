@@ -79,6 +79,9 @@ const mockSupabaseClient = {
     }
     return Promise.resolve('ok');
   }),
+  realtime: {
+    isDisconnecting: vi.fn(() => false),
+  },
 };
 
 vi.mock('@/utils/supabase/client', () => ({
@@ -216,6 +219,59 @@ describe('useEchoSocket Hook Concurrency & Cleanup Tests', () => {
     expect([...result.current.speakerIds].sort()).toEqual(['sp-a', 'sp-b']);
     expect(result.current.speakerCount).toBe(2);
     expect(result.current.senderCount).toBe(1);
+  });
+
+  it('이전 웹소켓이 닫히는 중이면 다 닫힌 뒤에 새 채널을 만든다 (닫힘 순간의 오류 방지)', async () => {
+    let closing = true;
+    mockSupabaseClient.realtime.isDisconnecting.mockImplementation(() => closing);
+    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+
+    await act(async () => { await new Promise(r => setTimeout(r, 150)); });
+    expect(mockSupabaseClient.channel).not.toHaveBeenCalled();
+
+    closing = false;
+    await waitFor(() => expect(result.current.status).toBe('CONNECTED'));
+    expect(mockSupabaseClient.channel).toHaveBeenCalledTimes(1);
+    mockSupabaseClient.realtime.isDisconnecting.mockImplementation(() => false);
+  });
+
+  it('오류 정보 없는 CHANNEL_ERROR는 연결 끊김으로 보고 화면에만 안내한 뒤 1초 후 재접속한다', async () => {
+    const { createEchoLog } = await import('@/app/actions/echo');
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+      const channel = mockChannels[0];
+      const subscribeCb = vi.mocked(channel.subscribe).mock.calls[0][0]!;
+      vi.mocked(createEchoLog).mockClear();
+      vi.mocked(mockSupabaseClient.channel).mockClear();
+
+      await act(async () => { subscribeCb('CHANNEL_ERROR', null); });
+
+      expect(result.current.logs.some(l => l.message.includes('알 수 없는 오류'))).toBe(false);
+      expect(result.current.logs.some(l => l.message.includes('연결이 잠시 끊겼습니다'))).toBe(true);
+      expect(createEchoLog).not.toHaveBeenCalled();
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+      expect(mockSupabaseClient.channel).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('서버가 이유를 알려 준 CHANNEL_ERROR는 오류로 DB에 남긴다', async () => {
+    const { createEchoLog } = await import('@/app/actions/echo');
+    renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    const subscribeCb = vi.mocked(mockChannels[0].subscribe).mock.calls[0][0]!;
+    vi.mocked(createEchoLog).mockClear();
+
+    await act(async () => { subscribeCb('CHANNEL_ERROR', new Error('Unauthorized: too many connections')); });
+
+    expect(createEchoLog).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: 'error',
+      message: expect.stringContaining('too many connections'),
+    }));
   });
 
   it('첫 화면(landing)에서는 이전 로그를 불러오지 않는다', async () => {

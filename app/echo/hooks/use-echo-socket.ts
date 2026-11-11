@@ -22,6 +22,16 @@ interface UseEchoSocketProps {
   enabled?: boolean;
 }
 
+const SOCKET_CLOSE_WAIT_MS = 3000;
+
+/** 이전 웹소켓이 닫히는 중이면 다 닫힐 때까지(최대 3초) 기다린다. */
+async function waitForSocketClosed(client: { realtime?: { isDisconnecting?: () => boolean } }) {
+  const deadline = Date.now() + SOCKET_CLOSE_WAIT_MS;
+  while (client.realtime?.isDisconnecting?.() && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
 export function useEchoSocket({ role, presenceId, onBroadcast, enabled = true }: UseEchoSocketProps) {
   const [speakerCount, setSpeakerCount] = useState<number>(0);
   const [senderCount, setSenderCount] = useState<number>(0);
@@ -141,6 +151,10 @@ export function useEchoSocket({ role, presenceId, onBroadcast, enabled = true }:
     } catch (e) {
       console.warn('Failed to cleanup existing channels:', e);
     }
+
+    // removeChannel은 마지막 채널이 지워지면 웹소켓을 끊기 시작하지만 다 끊길 때까지 기다리지 않는다.
+    // 닫히는 중에 새 채널을 구독하면 재연결이 건너뛰어지고, 닫히는 순간 오류 정보 없는 CHANNEL_ERROR가 난다.
+    await waitForSocketClosed(supabase);
 
     // 비동기 작업 도중 새로운 setupChannel이 호출되었거나 unmount 되었으면 중단
     if (currentSequence !== setupSequenceRef.current || !isMountedRef.current) {
@@ -274,9 +288,25 @@ export function useEchoSocket({ role, presenceId, onBroadcast, enabled = true }:
       }
 
       if (subStatus === 'CHANNEL_ERROR') {
-        setStatus('ERROR');
         setIsChannelJoined(false);
         const errMsg = err?.message || '';
+
+        // 오류 정보가 없으면 서버 거절이 아니라 웹소켓 연결이 끊긴 것이다. 오류로 저장하지 않고 재접속한다
+        if (!errMsg) {
+          setStatus('DISCONNECTED');
+          if (retryCountRef.current < MAX_RETRIES) {
+            const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 10000);
+            retryCountRef.current++;
+            addLocalLog(`연결이 잠시 끊겼습니다. ${delay / 1000}초 후 다시 연결합니다.`, 'warning');
+            reconnectTimeoutRef.current = setTimeout(() => setupChannelRef.current('socket_error_retry'), delay);
+          } else {
+            setStatus('ERROR');
+            addLog('연결이 계속 끊겨 재접속을 멈췄습니다. 페이지 새로고침이 필요합니다.', 'error', undefined, logPayload);
+          }
+          return;
+        }
+
+        setStatus('ERROR');
         addLog(`채널 오류 발생: ${errMsg || '알 수 없는 오류'}`, 'error', undefined, logPayload);
 
         const isJwtExpired = errMsg.includes('InvalidJWTToken') || errMsg.includes('expired');

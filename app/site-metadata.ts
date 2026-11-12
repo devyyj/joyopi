@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 
-// 로고 에셋 원본: apps/logo (joyopi 브랜드)
+// 로고 에셋 원본: apps/business/logo (joyopi 브랜드)
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

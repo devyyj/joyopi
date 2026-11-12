@@ -37,6 +37,10 @@ describe('홈 (앱 목록)', () => {
 
     expect(screen.getByText('사업자등록번호')).toBeInTheDocument();
     expect(screen.getByText('180-21-02731')).toBeInTheDocument();
+    // 통신판매업자 표시: 신고번호·주소·전화가 채워져 있어야 한다
+    for (const label of ['통신판매업 신고번호', '주소', '전화']) {
+      expect(screen.getByText(label).nextElementSibling?.textContent).toBeTruthy();
+    }
     expect(hasMailLink()).toBe(true);
   });
 

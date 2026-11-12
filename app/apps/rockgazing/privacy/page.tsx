@@ -263,7 +263,7 @@ const en: DocLocale = {
       heading: '8. Privacy officer',
       body: (
         <p>
-          {BUSINESS_INFO.privacyOfficer} ({BUSINESS_INFO.nameEn}), {mail}
+          {BUSINESS_INFO.privacyOfficerEn} ({BUSINESS_INFO.nameEn}), {mail}
         </p>
       ),
     },
@@ -387,7 +387,7 @@ const ja: DocLocale = {
       heading: '8. 個人情報保護責任者',
       body: (
         <p>
-          {BUSINESS_INFO.privacyOfficer}（{BUSINESS_INFO.nameEn}）、{mail}
+          {BUSINESS_INFO.privacyOfficerEn}（{BUSINESS_INFO.nameEn}）、{mail}
         </p>
       ),
     },

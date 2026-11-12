@@ -44,6 +44,8 @@ describe('BusinessInfo (사업자 정보)', () => {
     expect(screen.getByText('Business registration no.')).toBeInTheDocument();
     expect(screen.getByText('1, Test-ro, Test-si')).toBeInTheDocument();
     expect(screen.getByText('JOYOPI')).toBeInTheDocument();
+    expect(screen.getByText('JO YOUNGYONG')).toBeInTheDocument();
+    expect(screen.queryByText('조영용')).not.toBeInTheDocument();
     unmount();
 
     render(<BusinessInfo lang="ja" info={full} />);

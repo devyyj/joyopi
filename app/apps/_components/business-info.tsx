@@ -46,7 +46,7 @@ export default function BusinessInfo({ lang = 'ko', info = BUSINESS_INFO, classN
   const t = LABELS[lang];
   const rows: [string, string | null][] = [
     [t.name, lang === 'ko' ? `${info.nameKo}(${info.nameEn})` : info.nameEn],
-    [t.representative, info.representative],
+    [t.representative, lang === 'ko' ? info.representative : info.representativeEn],
     [t.registration, info.registrationNumber],
     [t.mailOrder, info.mailOrderNumber],
     [t.address, lang === 'ko' ? info.addressKo : info.addressEn],

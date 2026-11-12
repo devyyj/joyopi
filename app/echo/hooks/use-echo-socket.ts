@@ -161,23 +161,6 @@ export function useEchoSocket({ role, presenceId, onBroadcast, enabled = true }:
       return;
     }
 
-    // 세션 만료 방지: 소켓 생성 전 Supabase Auth 세션 상태 확인 및 자동 갱신
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && session.expires_at) {
-        const expiresAtMs = session.expires_at * 1000;
-        if (Date.now() >= expiresAtMs - 60000) {
-          await supabase.auth.refreshSession();
-        }
-      }
-    } catch (authErr) {
-      console.warn('Auth session refresh check failed:', authErr);
-    }
-
-    if (currentSequence !== setupSequenceRef.current || !isMountedRef.current) {
-      return;
-    }
-
     const debugInfo = {
       reason,
       online: typeof navigator !== 'undefined' ? navigator.onLine : true,
@@ -309,19 +292,12 @@ export function useEchoSocket({ role, presenceId, onBroadcast, enabled = true }:
         setStatus('ERROR');
         addLog(`채널 오류 발생: ${errMsg || '알 수 없는 오류'}`, 'error', undefined, logPayload);
 
-        const isJwtExpired = errMsg.includes('InvalidJWTToken') || errMsg.includes('expired');
-        reconnectTimeoutRef.current = setTimeout(async () => {
+        // 로그인이 없어 갱신할 세션도 없다. 잠시 뒤 다시 접속만 한다
+        reconnectTimeoutRef.current = setTimeout(() => {
           if (isMountedRef.current && (!channelRef.current || channelRef.current.state !== 'joined')) {
-            if (isJwtExpired) {
-              try {
-                await supabase.auth.refreshSession();
-              } catch (e) {
-                console.error('Session refresh failed:', e);
-              }
-            }
-            setupChannelRef.current(isJwtExpired ? 'jwt_refresh_retry' : 'channel_error_retry');
+            setupChannelRef.current('channel_error_retry');
           }
-        }, isJwtExpired ? 1000 : 5000);
+        }, 5000);
       }
     });
   }, [presenceId, role, supabase, addLog, addLocalLog]);

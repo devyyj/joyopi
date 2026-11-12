@@ -24,7 +24,6 @@ describe('SiteFooter (공통 푸터)', () => {
         '/about',
         '/news',
         '/support',
-        '/board',
         '/policies',
         '/apps/rockgazing/privacy',
         '/apps/agirok/privacy',

@@ -10,12 +10,12 @@ describe('SiteNav (대표 메뉴)', () => {
     mockPathname.mockReturnValue('/');
   });
 
-  it('대표 메뉴를 앱·소개·소식·지원·문의 순서로 보여 준다', () => {
+  it('대표 메뉴를 앱·소개·소식·지원 순서로 보여 준다 (문의 게시판 없음)', () => {
     render(<SiteNav />);
     const nav = screen.getByRole('navigation', { name: '주 메뉴' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['앱', '소개', '소식', '지원', '문의']);
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/apps', '/about', '/news', '/support', '/board']);
+    expect(links.map((a) => a.textContent)).toEqual(['앱', '소개', '소식', '지원']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/apps', '/about', '/news', '/support']);
   });
 
   it('에코는 메뉴에 없다 (주소를 아는 사람만 들어간다)', () => {
@@ -44,7 +44,6 @@ describe('SiteNav (대표 메뉴)', () => {
       '/about',
       '/news',
       '/support',
-      '/board',
     ]);
     expect(screen.getByRole('button', { name: '메뉴 닫기' })).toHaveAttribute('aria-expanded', 'true');
 

@@ -60,12 +60,12 @@ export default function Home() {
         <div className="rounded-2xl border border-border bg-card p-5">
           <h2 className="text-base font-bold">문의</h2>
           <p className="mt-3 text-sm leading-relaxed">
-            앱을 쓰다가 궁금한 점이나 문제가 있으면 문의 게시판에 남기거나 메일로 보내 주세요. 제가 직접 답합니다.
+            앱을 쓰다가 궁금한 점이나 문제가 있으면 메일로 보내 주세요. 제가 직접 답합니다.
           </p>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
             <li>
-              <Link href="/board" className="text-primary underline underline-offset-2">
-                문의 게시판
+              <Link href="/support" className="text-primary underline underline-offset-2">
+                지원 · 자주 묻는 질문
               </Link>
             </li>
             <li>

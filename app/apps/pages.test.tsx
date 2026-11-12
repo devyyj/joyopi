@@ -5,8 +5,7 @@ import AboutPage, { metadata as aboutMeta } from '@/app/about/page';
 import NewsPage, { metadata as newsMeta } from '@/app/news/page';
 import SupportPage, { metadata as supportMeta } from '@/app/support/page';
 import PoliciesPage, { metadata as policiesMeta } from '@/app/policies/page';
-import BoardIntro from '@/app/board/components/board-intro';
-import { metadata as echoMeta } from '@/app/echo/layout';
+import EchoLayout, { metadata as echoMeta } from '@/app/echo/layout';
 import AppsIndex, { metadata as appsMeta } from './page';
 import RockgazingPage, { metadata as rockgazingMeta } from './rockgazing/page';
 import AgirokPage, { metadata as agirokMeta } from './agirok/page';
@@ -29,8 +28,11 @@ describe('홈', () => {
     expect(screen.getByRole('heading', { name: /Rockgazing/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '아기록' })).toBeInTheDocument();
     expect(hrefs()).toEqual(
-      expect.arrayContaining(['/apps/rockgazing', '/apps/agirok', '/apps', '/news', '/support', '/board']),
+      expect.arrayContaining(['/apps/rockgazing', '/apps/agirok', '/apps', '/news', '/support']),
     );
+    // 문의는 메일로만 받는다 (공개 게시판 없음)
+    expect(hrefs()).not.toContain('/board');
+    expect(hasMailLink()).toBe(true);
     expect(container.innerHTML).not.toContain('/echo');
   });
 });
@@ -85,13 +87,14 @@ describe('소개·소식·지원·약관·정책', () => {
     expect(dates).toEqual([...dates].sort().reverse());
   });
 
-  it('지원: 앱별 지원 페이지, 문의 게시판, 메일', () => {
+  it('지원: 앱별 지원 페이지와 메일 문의 (게시판·로그인 없음)', () => {
     render(<SupportPage />);
     expect(supportMeta.title).toBe('지원 — 조요피');
     expect(screen.getByRole('heading', { level: 1, name: '지원' })).toBeInTheDocument();
     expect(hrefs()).toEqual(
-      expect.arrayContaining(['/apps/rockgazing/support', '/apps/agirok/support', '/apps/agirok/delete-account', '/board']),
+      expect.arrayContaining(['/apps/rockgazing/support', '/apps/agirok/support', '/apps/agirok/delete-account']),
     );
+    expect(hrefs()).not.toContain('/board');
     expect(hasMailLink()).toBe(true);
   });
 
@@ -105,21 +108,13 @@ describe('소개·소식·지원·약관·정책', () => {
   });
 });
 
-describe('문의 게시판', () => {
-  it('머리말: 이름, 공개 게시판 주의, 메일 문의, 앱별 자주 묻는 질문', () => {
-    const { container } = render(<BoardIntro />);
-    expect(screen.getByRole('heading', { level: 1, name: '문의 게시판' })).toBeInTheDocument();
-    expect(container.textContent).toContain('누구나 볼 수 있');
-    expect(container.textContent).toContain('개인정보');
-    expect(hasMailLink()).toBe(true);
-    expect(hrefs()).toContain('/support');
-    expect(container.textContent).not.toMatch(/자유게시판|소식 전하기/);
-  });
-});
-
 describe('에코', () => {
   it('검색엔진에 나오지 않게 noindex 로 둔다', () => {
     expect(echoMeta.robots).toEqual({ index: false, follow: false });
+  });
+
+  it('로그인 없이 누구나 연다 (레이아웃이 하위 페이지를 그대로 그린다)', () => {
+    expect(EchoLayout({ children: 'echo-page' })).toBe('echo-page');
   });
 });
 

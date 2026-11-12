@@ -2,12 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createEchoLog, getEchoLogs } from './echo';
 import { db } from '@/db';
 
-const mockGetUser = vi.fn();
-
-vi.mock('@/utils/supabase/server', () => ({
-  createClient: async () => ({ auth: { getUser: mockGetUser } }),
-}));
-
 vi.mock('@/db', () => ({
   db: {
     insert: vi.fn(() => ({
@@ -35,13 +29,9 @@ vi.mock('@/db', () => ({
   },
 }));
 
-const loginAs = (email: string | null) =>
-  mockGetUser.mockResolvedValue({ data: { user: email ? { id: 'u', email } : null } });
-
 describe('Echo Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    loginAs('devyyj@gmail.com');
   });
 
   it('createEchoLog should insert log into database', async () => {
@@ -83,26 +73,31 @@ describe('Echo Actions', () => {
     expect(result.error).toBe('Failed to save log');
   });
 
-  it('비로그인 사용자는 로그를 저장하거나 조회할 수 없다', async () => {
-    loginAs(null);
-
+  it('로그인 없이 누구나 저장하고 조회한다 (인증 정보를 읽지 않는다)', async () => {
     const created = await createEchoLog({ role: 'sender', eventType: 'request', message: 'x' });
     const fetched = await getEchoLogs();
 
-    expect(created).toEqual({ success: false, error: 'Unauthorized' });
-    expect(fetched).toEqual({ success: false, error: 'Unauthorized' });
-    expect(db.insert).not.toHaveBeenCalled();
-    expect(db.select).not.toHaveBeenCalled();
+    expect(created).toEqual({ success: true });
+    expect(fetched.success).toBe(true);
   });
 
-  it('허용 목록에 없는 계정은 로그를 저장하거나 조회할 수 없다', async () => {
-    loginAs('stranger@gmail.com');
+  it('역할·이벤트 종류가 없거나 100자를 넘으면 저장하지 않는다', async () => {
+    const invalid = { success: false, error: 'Invalid log' };
+    expect(await createEchoLog({ role: '', eventType: 'request', message: 'x' })).toEqual(invalid);
+    expect(await createEchoLog({ role: 'sender', eventType: 'a'.repeat(101), message: 'x' })).toEqual(invalid);
+    expect(await createEchoLog({ role: 'sender', eventType: 'request', message: 'x', userId: 'u'.repeat(101) })).toEqual(invalid);
+    expect(await createEchoLog({ role: 123 as unknown as string, eventType: 'request', message: 'x' })).toEqual(invalid);
+    expect(db.insert).not.toHaveBeenCalled();
+  });
 
-    expect(await createEchoLog({ role: 'sender', eventType: 'request', message: 'x' })).toEqual({
-      success: false,
-      error: 'Unauthorized',
+  it('payload 가 2000자를 넘으면 저장하지 않는다', async () => {
+    const result = await createEchoLog({
+      role: 'sender',
+      eventType: 'request',
+      message: 'x',
+      payload: { blob: 'a'.repeat(2001) },
     });
-    expect(await getEchoLogs()).toEqual({ success: false, error: 'Unauthorized' });
+    expect(result).toEqual({ success: false, error: 'Invalid log' });
     expect(db.insert).not.toHaveBeenCalled();
   });
 

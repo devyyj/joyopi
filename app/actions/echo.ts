@@ -3,12 +3,12 @@
 import { db } from '@/db';
 import { echoLogs } from '@/db/schema';
 import { desc, lt } from 'drizzle-orm';
-import { createClient } from '@/utils/supabase/server';
-import { isEchoAllowedEmail } from '@/utils/echo-access';
 
 import { mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
 
 const MAX_MESSAGE_LENGTH = 500;
+const MAX_FIELD_LENGTH = 100;
+const MAX_PAYLOAD_LENGTH = 2000;
 const MAX_LOG_LIMIT = 100;
 const LOG_RETENTION_DAYS = 30;
 
@@ -20,16 +20,10 @@ export interface CreateEchoLogParams {
   payload?: unknown;
 }
 
-// 서버 액션은 공개 엔드포인트이므로 페이지 접근 제어와 별개로 호출자를 직접 검증한다
-async function isAuthorized() {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    return isEchoAllowedEmail(user?.email);
-  } catch (error) {
-    console.error('Failed to verify echo user:', error);
-    return false;
-  }
+// 에코는 로그인 없이 누구나 쓴다. 서버 액션도 누구나 부를 수 있으므로 저장하는 값의 크기를 여기서 제한한다.
+function isShortText(value: unknown, required: boolean) {
+  if (value === undefined || value === null) return !required;
+  return typeof value === 'string' && value.length > 0 && value.length <= MAX_FIELD_LENGTH;
 }
 
 // 보관 기간이 지난 로그는 저장할 때마다 함께 지워 테이블이 계속 커지지 않게 한다
@@ -44,12 +38,17 @@ async function pruneOldLogs() {
 }
 
 export async function createEchoLog(params: CreateEchoLogParams) {
-  if (!(await isAuthorized())) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
   const message = params.message?.trim();
   if (!message || message.length > MAX_MESSAGE_LENGTH) {
+    return { success: false, error: 'Invalid log' };
+  }
+
+  if (!isShortText(params.role, true) || !isShortText(params.eventType, true) || !isShortText(params.userId, false)) {
+    return { success: false, error: 'Invalid log' };
+  }
+
+  const payload = params.payload ? JSON.stringify(params.payload) : null;
+  if (payload && payload.length > MAX_PAYLOAD_LENGTH) {
     return { success: false, error: 'Invalid log' };
   }
 
@@ -59,7 +58,7 @@ export async function createEchoLog(params: CreateEchoLogParams) {
       role: params.role,
       eventType: params.eventType,
       message,
-      payload: params.payload ? JSON.stringify(params.payload) : null,
+      payload,
     });
     await pruneOldLogs();
     return { success: true };
@@ -70,10 +69,6 @@ export async function createEchoLog(params: CreateEchoLogParams) {
 }
 
 export async function getEchoLogs(limit = 10) {
-  if (!(await isAuthorized())) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
   const safeLimit = Math.min(Math.max(Math.floor(limit) || 1, 1), MAX_LOG_LIMIT);
 
   try {

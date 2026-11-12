@@ -58,10 +58,6 @@ const createMockChannel = (topic: string): MockChannel => {
 };
 
 const mockSupabaseClient = {
-  auth: {
-    getSession: vi.fn().mockImplementation(() => new Promise(res => setTimeout(() => res({ data: { session: null } }), 10))),
-    refreshSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-  },
   channel: vi.fn((topic: string) => {
     const existing = mockChannels.find(c => c.topic === topic || c.topic === `realtime:${topic}`);
     if (existing) {

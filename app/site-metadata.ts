@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://joyopi.com'),
   title: '조요피 (joyopi)',
-  description: '조요피(JOYOPI)가 만드는 앱 — Rockgazing(돌멍타임), 아기록',
+  description: '모바일 앱을 만드는 조요피입니다 — Rockgazing(돌멍타임), 아기록',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '48x48' },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
   openGraph: {
     title: '조요피 (joyopi)',
-    description: '조요피(JOYOPI)가 만드는 앱 — Rockgazing(돌멍타임), 아기록',
+    description: '모바일 앱을 만드는 조요피입니다 — Rockgazing(돌멍타임), 아기록',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'joyopi' }],
   },
 };

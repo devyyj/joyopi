@@ -5,7 +5,7 @@ import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 export const metadata: Metadata = {
   title: '약관·정책 — 조요피',
-  description: '조요피(JOYOPI) 앱의 개인정보 처리방침과 계정 삭제 안내',
+  description: '조요피가 만드는 앱의 개인정보 처리방침과 계정 삭제 안내',
 };
 
 export default function PoliciesPage() {

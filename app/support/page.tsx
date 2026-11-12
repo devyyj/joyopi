@@ -5,7 +5,7 @@ import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 export const metadata: Metadata = {
   title: '지원 — 조요피',
-  description: '조요피(JOYOPI) 앱 지원: 자주 묻는 질문과 문의 방법',
+  description: '조요피의 앱 지원: 자주 묻는 질문과 문의 방법',
 };
 
 export default function SupportPage() {
@@ -35,7 +35,7 @@ export default function SupportPage() {
             주세요.
           </li>
         </ul>
-        <p>영업일 3일 이내에 답합니다. 기기 종류와 앱 버전, 문제가 생긴 화면을 함께 알려 주시면 더 빨리 도울 수 있습니다.</p>
+        <p>제가 직접 확인하고 영업일 3일 이내에 답합니다. 기기 종류와 앱 버전, 문제가 생긴 화면을 함께 알려 주시면 더 빨리 도울 수 있습니다.</p>
       </PageSection>
 
       <PageSection heading="결제와 환불">

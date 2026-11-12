@@ -23,7 +23,9 @@ const hasMailLink = () =>
 describe('홈', () => {
   it('회사 소개 한 줄, 두 앱(소개 페이지 링크), 최근 소식, 문의 안내를 보여 준다', () => {
     const { container } = render(<Home />);
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('조요피');
+    // 조요피는 회사가 아니라 사람(온라인 활동명)으로 소개한다
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('조요피입니다');
+    expect(container.textContent).not.toMatch(/개발사|회사/);
     expect(screen.getByRole('heading', { name: /Rockgazing/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '아기록' })).toBeInTheDocument();
     expect(hrefs()).toEqual(
@@ -62,8 +64,11 @@ describe('앱 (제품)', () => {
 });
 
 describe('소개·소식·지원·약관·정책', () => {
-  it('소개: 회사가 무엇을 하는지와 연락처', () => {
+  it('소개: 조요피를 사람으로 소개하고(1인칭), 하는 일과 연락처를 적는다', () => {
     const { container } = render(<AboutPage />);
+    expect(container.textContent).toContain('조요피입니다');
+    expect(container.textContent).toContain('저는');
+    expect(container.textContent).not.toMatch(/개발사|회사/);
     expect(aboutMeta.title).toBe('소개 — 조요피');
     expect(screen.getByRole('heading', { level: 1, name: '소개' })).toBeInTheDocument();
     expect(container.textContent).toContain('JOYOPI');

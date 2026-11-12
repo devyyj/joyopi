@@ -4,7 +4,7 @@ import { getNews } from './_lib/news';
 
 export const metadata: Metadata = {
   title: '소식 — 조요피',
-  description: '조요피(JOYOPI)의 앱 출시·업데이트 소식',
+  description: '조요피의 앱 출시·업데이트 소식',
 };
 
 export default function NewsPage() {

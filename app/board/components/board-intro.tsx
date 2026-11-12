@@ -7,7 +7,7 @@ export default function BoardIntro() {
     <header className="mb-8">
       <h1 className="text-2xl font-extrabold tracking-tight">문의 게시판</h1>
       <p className="mt-2 text-sm text-muted leading-relaxed">
-        앱을 쓰다가 궁금한 점이나 문제를 남겨 주세요. 글과 댓글로 답변드립니다. 글을 쓰려면 로그인이 필요합니다.
+        앱을 쓰다가 궁금한 점이나 문제를 남겨 주세요. 제가 댓글로 답합니다. 글을 쓰려면 로그인이 필요합니다.
       </p>
       <ul className="mt-4 space-y-1.5 rounded-xl border border-border bg-card p-4 text-xs leading-relaxed">
         <li>

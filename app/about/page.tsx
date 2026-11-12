@@ -6,18 +6,18 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 export const metadata: Metadata = {
   title: '소개 — 조요피',
-  description: '조요피(JOYOPI)는 모바일 앱을 만드는 개인 개발사입니다.',
+  description: '모바일 앱을 만드는 조요피입니다.',
 };
 
 export default function AboutPage() {
   return (
     <PageShell
       title="소개"
-      lead={`${BUSINESS_INFO.nameKo}(${BUSINESS_INFO.nameEn})는 모바일 앱을 만드는 개인 개발사입니다.`}
+      lead="안녕하세요, 조요피입니다. 온라인에서 조요피(joyopi)라는 이름으로 활동하며 모바일 앱을 만듭니다."
     >
       <PageSection heading="하는 일">
         <p>
-          앱을 직접 만들고 운영하며, 문의에도 직접 답합니다. 지금은 두 개의 앱을 준비하고 있습니다.
+          저는 앱을 직접 만들고 운영하며, 문의에도 직접 답합니다. 지금은 두 개의 앱을 준비하고 있습니다.
         </p>
         <ul>
           {APPS.map((app) => (
@@ -31,7 +31,7 @@ export default function AboutPage() {
         </p>
       </PageSection>
 
-      <PageSection heading="개인정보를 다루는 원칙">
+      <PageSection heading="제가 지키는 원칙">
         <ul>
           <li>앱에 꼭 필요한 정보만 다룹니다.</li>
           <li>앱마다 무엇을 어디에 저장하는지 개인정보 처리방침에 적어 공개합니다.</li>
@@ -43,6 +43,9 @@ export default function AboutPage() {
       </PageSection>
 
       <PageSection heading="연락처">
+        <p>
+          앱은 같은 이름의 사업자({BUSINESS_INFO.nameKo}, {BUSINESS_INFO.nameEn})로 냅니다. 사업자 정보는 페이지 아래에 있습니다.
+        </p>
         <p>
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, MessageSquare, Radio } from 'lucide-react';
+import { LayoutGrid, MessageSquare, Radio, Smartphone } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { isEchoAllowedEmail } from '@/utils/echo-access';
 
@@ -16,9 +16,15 @@ interface ToolItem {
 
 const TOOLS: ToolItem[] = [
   {
+    name: '앱',
+    href: '/',
+    description: '조요피가 만드는 앱과 지원·개인정보 안내',
+    icon: Smartphone,
+  },
+  {
     name: '게시판',
     href: '/board',
-    description: '연구원들의 자유로운 소통과 공유 공간',
+    description: '자유로운 소통과 공유 공간',
     icon: MessageSquare,
   },
   {
@@ -66,12 +72,11 @@ export default function NavigationMenu() {
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-card text-xs sm:text-sm font-bold text-foreground transition-all active:scale-[0.98] group cursor-pointer border-border hover:border-primary ${isOpen ? 'border-primary' : ''}`}
-        aria-label="연구소 도구 메뉴 열기"
+        aria-label="메뉴 열기"
         aria-expanded={isOpen}
       >
         <LayoutGrid className={`w-4 h-4 transition-colors group-hover:text-primary ${isOpen ? 'text-primary' : 'text-muted'}`} />
-        <span className="hidden sm:inline">연구소 도구</span>
-        <span className="inline sm:hidden">도구</span>
+        <span>메뉴</span>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -96,7 +101,7 @@ export default function NavigationMenu() {
               data-testid="menu-header"
               className="px-2 py-1.5 border-b border-border mb-1 font-mono text-[11px] font-extrabold tracking-tight text-muted"
             >
-              <span className="text-primary">&gt;</span> services<span className="text-primary">_</span>
+              <span className="text-primary">&gt;</span> menu<span className="text-primary">_</span>
             </div>
 
             <div className="grid grid-cols-1 gap-1">

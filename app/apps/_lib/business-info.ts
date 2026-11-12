@@ -11,9 +11,9 @@ export interface BusinessInfoData {
   registrationNumber: string;
   /** 통신판매업 신고번호 (신고증) */
   mailOrderNumber: string | null;
-  /** 국문 사업장 주소 */
+  /** 국문 사업장 주소. 자택이라 도로명까지만 적는다(동·호수는 적지 않는다, 2026-11-12 결정) */
   addressKo: string | null;
-  /** 영문 사업자등록증명과 같은 표기 */
+  /** 영문 사업자등록증명의 표기에서 동·호수만 뺀 것 */
   addressEn: string | null;
   /** 사업용 전화 */
   phone: string | null;
@@ -30,8 +30,8 @@ export const BUSINESS_INFO: BusinessInfoData = {
   representativeEn: 'JO YOUNGYONG',
   registrationNumber: '180-21-02731',
   mailOrderNumber: '제 2026-용인처인-02193 호',
-  addressKo: '경기도 용인시 처인구 낙은로 11, 103동 1103호 (역북동, 역북신원아침도시)',
-  addressEn: '103-1103, 11 Nageun-ro, Cheoin-gu, Yongin-si, Gyeonggi-do, 17046, Republic of Korea',
+  addressKo: '경기도 용인시 처인구 낙은로 11',
+  addressEn: '11 Nageun-ro, Cheoin-gu, Yongin-si, Gyeonggi-do, 17046, Republic of Korea',
   phone: '010-6441-4436',
   email: 'hello@joyopi.com',
   privacyOfficer: '조영용',

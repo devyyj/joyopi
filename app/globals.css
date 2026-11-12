@@ -56,7 +56,8 @@ body {
   line-height: 1.5;
 }
 
-body[data-hide-header="true"] header {
+body[data-hide-header="true"] header,
+body[data-hide-header="true"] footer[data-site-footer] {
   display: none !important;
 }
 

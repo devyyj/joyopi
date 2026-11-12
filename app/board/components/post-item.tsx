@@ -38,8 +38,8 @@ export default function PostItem({ item, currentUserId, onSuccess }: PostItemPro
   const { alert, confirm } = useDialog();
 
   const handleDelete = async () => {
-    const ok = await confirm('정말로 이 게시글을 삭제하시겠습니까? 삭제된 글은 복구할 수 없습니다.', {
-      title: '게시글 삭제',
+    const ok = await confirm('정말로 이 문의를 삭제하시겠습니까? 삭제된 글은 복구할 수 없습니다.', {
+      title: '문의 삭제',
       variant: 'danger',
       confirmText: '삭제'
     });
@@ -237,7 +237,7 @@ export default function PostItem({ item, currentUserId, onSuccess }: PostItemPro
                   item.images.length === 1 ? 'aspect-[4/3] w-full' : 'aspect-square'
                 }`}
               >
-                <SafeImage src={img.url} alt="게시글 사진" />
+                <SafeImage src={img.url} alt="문의 첨부 사진" />
               </button>
             ))}
           </div>

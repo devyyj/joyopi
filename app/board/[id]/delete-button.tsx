@@ -14,7 +14,7 @@ export default function DeletePostButton({ postId }: DeletePostButtonProps) {
   const { alert, confirm } = useDialog();
 
   const handleDelete = async () => {
-    const ok = await confirm('정말로 이 게시글을 삭제하시겠습니까?', {
+    const ok = await confirm('정말로 이 문의를 삭제하시겠습니까?', {
       variant: 'danger',
       confirmText: '삭제하기'
     });

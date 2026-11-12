@@ -111,7 +111,7 @@ export default function PostList({
         <div className="py-20 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/30 border border-border/40">
             <div className="w-1 h-1 rounded-full bg-primary/40" />
-            <p className="text-[10px] text-muted font-bold uppercase tracking-wider">모든 소식을 확인했습니다</p>
+            <p className="text-[10px] text-muted font-bold uppercase tracking-wider">모든 문의를 확인했습니다</p>
             <div className="w-1 h-1 rounded-full bg-primary/40" />
           </div>
         </div>

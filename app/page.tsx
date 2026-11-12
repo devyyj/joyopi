@@ -1,65 +1,81 @@
 import Link from 'next/link';
-import BusinessInfo from '@/app/apps/_components/business-info';
-import { APPS, type AppEntry } from '@/app/apps/_lib/apps';
+import AppCard from '@/app/apps/_components/app-card';
+import { APPS } from '@/app/apps/_lib/apps';
+import { getNews } from '@/app/news/_lib/news';
 
-function StoreLinks({ app }: { app: AppEntry }) {
-  const stores = [
-    { label: 'App Store', url: app.appStoreUrl },
-    { label: 'Google Play', url: app.googlePlayUrl },
-  ].filter((s): s is { label: string; url: string } => Boolean(s.url));
-
-  if (stores.length === 0) {
-    return <p className="text-xs text-muted">출시 준비 중</p>;
-  }
-  return (
-    <ul className="flex flex-wrap gap-2">
-      {stores.map((s) => (
-        <li key={s.label}>
-          <a
-            href={s.url}
-            className="inline-block rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground"
-          >
-            {s.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// 홈 = 조요피(JOYOPI)가 만드는 앱 목록과 사업자 정보. 스토어의 「개발자 웹사이트」로 쓰인다.
+// 홈 — 조요피(JOYOPI) 공식 사이트 첫 화면. 스토어의 「개발자 웹사이트」로 쓰인다.
 export default function Home() {
+  const latestNews = getNews().slice(0, 3);
+
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6 md:py-10">
-      <h1 className="text-xl font-extrabold tracking-tight">조요피(JOYOPI)의 앱</h1>
-      <p className="mt-1 text-sm text-muted">조요피가 만들고 운영하는 모바일 앱입니다.</p>
+    <div className="mx-auto w-full max-w-5xl px-4">
+      <section className="py-12 md:py-20">
+        <p className="font-mono text-xs font-bold text-primary">JOYOPI</p>
+        <h1 className="mt-3 text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+          조요피는
+          <br />
+          모바일 앱을 만듭니다
+        </h1>
+        <p className="mt-4 max-w-xl text-sm md:text-base text-muted leading-relaxed">
+          돌 하나를 바라보는 Rockgazing, 한 번 탭으로 끝나는 육아 기록 아기록을 만들고 있습니다.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/apps" className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">
+            앱 보기
+          </Link>
+          <Link href="/support" className="rounded-full border border-border bg-card px-5 py-2 text-sm font-bold hover:border-primary">
+            지원
+          </Link>
+        </div>
+      </section>
 
-      <ul className="mt-6 space-y-4">
-        {APPS.map((app) => (
-          <li key={app.slug} className="rounded-2xl border border-border bg-card p-4 text-card-foreground">
-            <h2 className="text-base font-bold">{app.name}</h2>
-            {app.altNames.length > 0 && <p className="text-xs text-muted">{app.altNames.join(' · ')}</p>}
-            <p className="mt-2 text-sm">{app.description}</p>
-            <div className="mt-3">
-              <StoreLinks app={app} />
-            </div>
-            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-3 text-xs">
-              {app.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-primary underline underline-offset-2">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+      <section aria-label="앱" className="pb-12">
+        <div className="grid gap-4 md:grid-cols-2">
+          {APPS.map((app) => (
+            <AppCard key={app.slug} app={app} />
+          ))}
+        </div>
+      </section>
 
-      <footer className="mt-10 border-t border-border pt-6">
-        <BusinessInfo />
-        <p className="mt-4 text-[10px] text-muted">&copy; 2026 JOYOPI</p>
-      </footer>
+      <section className="grid gap-4 pb-16 md:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-base font-bold">소식</h2>
+            <Link href="/news" className="text-xs text-primary underline underline-offset-2">
+              모두 보기
+            </Link>
+          </div>
+          <ul className="mt-3 space-y-3 text-sm">
+            {latestNews.map((item) => (
+              <li key={item.date + item.title}>
+                <time dateTime={item.date} className="block text-xs text-muted">
+                  {item.date}
+                </time>
+                {item.title}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <h2 className="text-base font-bold">문의</h2>
+          <p className="mt-3 text-sm leading-relaxed">
+            앱을 쓰다가 궁금한 점이나 문제가 있으면 문의 게시판에 남기거나 메일로 보내 주세요.
+          </p>
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <li>
+              <Link href="/board" className="text-primary underline underline-offset-2">
+                문의 게시판
+              </Link>
+            </li>
+            <li>
+              <a href="mailto:hello@joyopi.com" className="text-primary underline underline-offset-2">
+                hello@joyopi.com
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
     </div>
   );
 }

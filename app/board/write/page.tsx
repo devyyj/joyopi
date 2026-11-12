@@ -5,8 +5,8 @@ export default function WritePage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <SectionHeader 
-        title="새 글 작성"
-        description="새로운 이야기를 들려주세요."
+        title="문의 작성"
+        description="궁금한 점이나 문제를 적어 주세요. 누구나 볼 수 있으니 개인정보는 적지 마세요."
         className="mb-8"
       />
       <PostForm />

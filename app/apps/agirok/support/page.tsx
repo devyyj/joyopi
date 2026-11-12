@@ -84,7 +84,6 @@ const ko: DocLocale = {
   ],
   effectiveDate: EFFECTIVE_DATE,
   updatedDate: UPDATED_DATE,
-  showBusinessInfo: true,
 };
 
 export default function AgirokSupportPage() {

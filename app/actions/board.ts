@@ -95,7 +95,7 @@ export async function createPost(formData: FormData): Promise<ActionResult<{ id:
     return { success: true, data: { id: newPost.id } };
   } catch (error) {
     console.error(error);
-    return { success: false, message: '게시글 작성 중 오류가 발생했습니다.' };
+    return { success: false, message: '문의 작성 중 오류가 발생했습니다.' };
   }
 }
 

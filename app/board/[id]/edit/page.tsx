@@ -32,8 +32,8 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <SectionHeader 
-        title="게시글 수정"
-        description="게시글의 내용을 수정합니다."
+        title="문의 수정"
+        description="문의 내용을 수정합니다."
         className="mb-8"
       />
       <PostForm initialData={{ id: post.id, title: post.title, content: post.content }} />

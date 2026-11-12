@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MainHeader from "./components/main-header";
+import SiteFooter from "./components/site-footer";
 import { DialogProvider } from "./components/ui/dialog-provider";
 
 const geistSans = Geist({
@@ -31,6 +32,7 @@ export default function RootLayout({
           <main className="flex-1">
             {children}
           </main>
+          <SiteFooter />
         </DialogProvider>
       </body>
     </html>

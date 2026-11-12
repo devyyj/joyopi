@@ -1,6 +1,6 @@
 import { getProfile } from '@/app/actions/profile';
 import { redirect } from 'next/navigation';
-import ProfileForm from './profile-form';
+import DeleteAccount from './delete-account';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,17 +15,13 @@ export default async function ProfilePage() {
     <div className="max-w-2xl mx-auto px-4 py-12">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">프로필 설정</h1>
+          <h1 className="text-2xl font-bold tracking-tight">내 계정</h1>
           <p className="text-sm text-muted mt-1">
-            닉네임과 한줄 자기소개를 설정하여 자신을 표현해보세요.
+            문의 게시판에는 <strong className="text-foreground">{profile.nickname}</strong>(으)로 표시됩니다. 가입할 때 무작위로 정해진 이름이며 실명은 받지 않습니다.
           </p>
         </div>
 
-        <ProfileForm initialData={{
-          nickname: profile.nickname,
-          bio: profile.bio,
-          avatarUrl: profile.avatarUrl
-        }} />
+        <DeleteAccount />
       </div>
     </div>
   );

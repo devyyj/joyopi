@@ -42,4 +42,21 @@ describe('signInWithGoogle Server Action', () => {
       })
     );
   });
+
+  it('구글에는 식별자와 이메일만 요청한다 (profile 범위를 넣으면 실명·사진이 넘어온다)', async () => {
+    (headers as Mock).mockResolvedValue({ get: vi.fn(() => 'joyopi.vercel.app') });
+
+    const mockSupabase = {
+      auth: {
+        signInWithOAuth: vi.fn().mockResolvedValue({ data: { url: 'https://supabase.com/auth' } }),
+      },
+    };
+    (createClient as Mock).mockResolvedValue(mockSupabase);
+
+    await signInWithGoogle();
+
+    const { options } = mockSupabase.auth.signInWithOAuth.mock.calls[0][0];
+    expect(options.queryParams.scope).toBe('openid email');
+    expect(options.scopes).toBeUndefined();
+  });
 });

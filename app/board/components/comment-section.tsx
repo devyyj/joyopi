@@ -10,7 +10,6 @@ interface CommentSectionProps {
   comments: CommentWithDetails[];
   currentUserId?: string;
   currentUserName?: string;
-  onNicknameClick?: (userId: string) => void;
   onSuccess?: () => void;
 }
 
@@ -19,8 +18,7 @@ const MAX_COMMENT_LENGTH = 200;
 export default function CommentSection({ 
   postId, 
   comments, 
-  currentUserId, 
-  onNicknameClick,
+  currentUserId,
   onSuccess
 }: CommentSectionProps) {
   const [content, setContent] = useState('');
@@ -121,12 +119,7 @@ export default function CommentSection({
         {comments.map((comment) => (
           <div key={comment.id} className="flex gap-3">
             <div className="mt-0.5">
-              <UserAvatar 
-                url={comment.author?.avatarUrl} 
-                name={comment.authorName} 
-                size="md" 
-                onClick={() => comment.authorId && onNicknameClick?.(comment.authorId)}
-              />
+              <UserAvatar name={comment.authorName} size="md" />
             </div>
             <Card className={`flex-1 p-2 px-3 border-border/60 bg-secondary/5 min-w-0 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
               <div className="flex justify-between items-center mb-1 gap-4">
@@ -134,8 +127,7 @@ export default function CommentSection({
                   <UserNickname 
                     name={comment.authorName}
                     size="sm"
-                    onClick={() => comment.authorId && onNicknameClick?.(comment.authorId)}
-                    className="text-muted-foreground/80 hover:text-primary transition-colors font-semibold"
+                    className="text-muted-foreground/80 font-semibold"
                   />
                   <span className="text-muted/30 text-[9px]">|</span>
                   <span className="text-[9px] text-muted-foreground/50 shrink-0 font-medium" suppressHydrationWarning>

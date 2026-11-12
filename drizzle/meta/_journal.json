@@ -43,6 +43,13 @@
       "when": 1780917516604,
       "tag": "0005_foamy_whistler",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794479355023,
+      "tag": "0006_minimal_profile",
+      "breakpoints": true
     }
   ]
 }

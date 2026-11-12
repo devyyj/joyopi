@@ -6,7 +6,6 @@ import LikeButton from './like-button';
 import CommentSection from './comment-section';
 import SafeImage from './safe-image';
 import ImageViewer from './image-viewer';
-import UserProfileModal from '@/app/components/user-profile-modal';
 import { deletePost, updatePost, PostWithDetails } from '@/app/actions/board';
 import { useDialog } from '@/app/components/ui/dialog-provider';
 
@@ -34,7 +33,6 @@ export default function PostItem({ item, currentUserId, onSuccess }: PostItemPro
   const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<{ id: string; url: string; blob: Blob }[]>([]);
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { alert, confirm } = useDialog();
 
   const handleDelete = async () => {
@@ -141,32 +139,14 @@ export default function PostItem({ item, currentUserId, onSuccess }: PostItemPro
   const formattedDate = new Date(item.createdAt).toLocaleDateString() + ' ' + 
                        new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const handleUserClick = () => {
-    if (item.authorId) {
-      setSelectedUserId(item.authorId);
-    } else {
-      alert('탈퇴하거나 정보가 없는 사용자입니다.');
-    }
-  };
-
   return (
     <article className="space-y-1">
       <Card className="p-0 overflow-hidden shadow-sm border-border/60">
         {/* Identity Bar (Top) */}
         <div className="px-4 py-2 bg-secondary/40 border-b border-border/40 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <UserAvatar 
-              url={item.author?.avatarUrl} 
-              name={item.authorName} 
-              size="md" 
-              onClick={handleUserClick}
-            />
-            <UserNickname 
-              name={item.authorName}
-              size="md"
-              onClick={handleUserClick}
-              className="hover:text-primary transition-colors"
-            />
+            <UserAvatar name={item.authorName} size="md" />
+            <UserNickname name={item.authorName} size="md" />
           </div>
 
           <div className="flex gap-1.5 shrink-0 items-center">
@@ -327,8 +307,7 @@ export default function PostItem({ item, currentUserId, onSuccess }: PostItemPro
           <CommentSection 
             postId={item.id} 
             comments={item.comments} 
-            currentUserId={currentUserId} 
-            onNicknameClick={(uid) => setSelectedUserId(uid)}
+            currentUserId={currentUserId}
             onSuccess={onSuccess}
           />
         </div>
@@ -336,9 +315,6 @@ export default function PostItem({ item, currentUserId, onSuccess }: PostItemPro
 
       <div className="pt-2 border-b border-border/20 last:border-0" />
 
-      {/* Modals */}
-      <UserProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
-      
       {/* Image Viewer Lightbox */}
       {viewerIndex !== null && (
         <ImageViewer 

@@ -336,7 +336,6 @@ export interface CommentWithDetails {
   postId: number;
   authorId: string | null;
   authorName: string;
-  author?: { avatarUrl: string | null } | null;
   content: string;
   createdAt: Date;
   likeCount: number;
@@ -354,7 +353,6 @@ export interface PostWithDetails {
   content: string;
   authorId: string | null;
   authorName: string;
-  author?: { avatarUrl: string | null } | null;
   createdAt: Date;
   comments: CommentWithDetails[];
   images: PostImage[];
@@ -373,21 +371,11 @@ export async function getPaginatedPosts(offset: number = 0, limit: number = 10):
       limit,
       offset,
       with: {
-        author: {
-          columns: {
-            avatarUrl: true
-          }
-        },
         likes: true,
         images: true,
         comments: {
           orderBy: [desc(comments.createdAt)],
           with: {
-            author: {
-              columns: {
-                avatarUrl: true
-              }
-            },
             likes: true
           }
         }
@@ -423,21 +411,11 @@ export async function getPostDetail(postId: number): Promise<PostWithDetails | n
       db.query.posts.findFirst({
         where: eq(posts.id, postId),
         with: {
-          author: {
-            columns: {
-              avatarUrl: true
-            }
-          },
           likes: true,
           images: true,
           comments: {
             orderBy: [desc(comments.createdAt)],
             with: {
-              author: {
-                columns: {
-                  avatarUrl: true
-                }
-              },
               likes: true
             }
           }

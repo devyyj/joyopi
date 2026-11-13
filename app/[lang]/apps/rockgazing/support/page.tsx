@@ -6,7 +6,7 @@ import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 돌보기(Rockgazing / 돌멍타임 / 石の子守り) 지원 페이지.
 // 내용 기준: docs/03_앱_스토어_페이지.md 4-2. 결제 화면 문구가 확정되면 FAQ를 실제 문구와 맞춘다.
 const EFFECTIVE_DATE = '2026-11-12';
-const UPDATED_DATE = '2026-11-12';
+const UPDATED_DATE = '2026-11-13';
 
 
 const APPLE_REFUND = 'https://reportaproblem.apple.com';
@@ -34,12 +34,12 @@ const ko: DocLocale = {
     },
     {
       id: 'faq-purchase',
-      heading: '돌 만나기·이름 바꾸기는 무엇인가요?',
+      heading: '다른 돌 만나기·이름 바꾸기는 무엇인가요?',
       body: (
         <ul>
           <li>둘 다 한 번 살 때마다 한 번 쓰는 상품(소모성)입니다.</li>
           <li>
-            <strong>돌 만나기</strong>: 아직 만나지 않은 돌 가운데 하나를 같은 확률로 만납니다. 이미 만난 돌은 다시 나오지
+            <strong>다른 돌 만나기</strong>: 아직 만나지 않은 돌 가운데 하나를 같은 확률로 만납니다. 이미 만난 돌은 다시 나오지
             않습니다. 만난 돌은 모아 두고 언제든 무료로 바꿔 볼 수 있습니다.
           </li>
           <li>
@@ -99,12 +99,12 @@ const en: DocLocale = {
     },
     {
       id: 'faq-purchase',
-      heading: 'What are “Meet a stone” and “Rename”?',
+      heading: 'What are “Meet another stone” and “Rename”?',
       body: (
         <ul>
           <li>Both are consumable purchases: each purchase can be used once.</li>
           <li>
-            <strong>Meet a stone</strong>: you meet one of the stones you have not met yet, each with equal probability.
+            <strong>Meet another stone</strong>: you meet one of the stones you have not met yet, each with equal probability.
             A stone you have already met never comes up again. Stones you have met are kept, and you can switch between
             them for free at any time.
           </li>
@@ -169,12 +169,12 @@ const ja: DocLocale = {
     },
     {
       id: 'faq-purchase',
-      heading: '「石に出会う」「名前を変える」とは？',
+      heading: '「ほかの石に出会う」「名前を変える」とは？',
       body: (
         <ul>
           <li>どちらも 1 回の購入につき 1 回使える消耗型の商品です。</li>
           <li>
-            <strong>石に出会う</strong>
+            <strong>ほかの石に出会う</strong>
             ：まだ出会っていない石の中から、同じ確率でひとつに出会います。すでに出会った石は二度と出ません。出会った石は集めておけて、いつでも無料で切り替えられます。
           </li>
           <li>

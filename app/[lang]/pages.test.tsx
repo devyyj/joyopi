@@ -231,6 +231,15 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
     expect(text).toContain('구매 기록');
     expect(text).not.toContain('iCloud');
     expect(text).not.toMatch(/개발자 서버로 보내는 개인정보가 없습니다|분석 도구가 없습니다/);
+    // PostHog가 받는 IP 주소와 그로 추정한 국가·도시(처리 항목·국외 이전 항목 모두), 정확한 위치는 받지 않음
+    expect(text.match(/IP 주소/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(text).toContain('국가·도시');
+    expect(screen.getByRole('note').textContent).toContain('정확한 위치는 받지 않습니다');
+    expect(screen.getByRole('note').textContent).toContain('IP 주소');
+    // 실제로 보내지 않는 기기 종류·언어는 적지 않는다. 상품 이름은 앱 화면 문구
+    expect(text).not.toMatch(/기기 종류|운영체제 버전/);
+    expect(text).toContain('해시');
+    expect(text).toContain('다른 돌 만나기');
   });
 
   it('개인정보 처리방침(en·ja): 그 언어 본문만', async () => {
@@ -240,11 +249,16 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
     expect(en.container.querySelector('section#ko')).toBeNull();
     for (const item of ['Germany', 'International transfer']) expect(en.container.textContent).toContain(item);
     expect(en.container.textContent).not.toMatch(/no sign-up, login, advertising, tracking, or\s+analytics/);
+    expect(en.container.textContent).toContain('IP address');
+    expect(en.container.textContent).toContain('country and city');
+    expect(en.container.textContent).toContain('Meet another stone');
+    expect(en.container.textContent).not.toMatch(/Device model|Meet a stone/);
     en.unmount();
 
     const ja = await renderPage(RockgazingPrivacy, 'ja');
     expect(screen.getByRole('heading', { level: 1, name: 'Rockgazing プライバシーポリシー' })).toBeInTheDocument();
-    for (const item of ['ドイツ', '国外移転']) expect(ja.container.textContent).toContain(item);
+    for (const item of ['ドイツ', '国外移転', 'IP アドレス', '国・都市', 'ほかの石に出会う']) expect(ja.container.textContent).toContain(item);
+    expect(ja.container.textContent).not.toMatch(/端末の機種|「石に出会う」/);
     expect(ja.container.textContent).not.toContain('독일');
   });
 
@@ -252,7 +266,7 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
     const ko = await renderPage(RockgazingSupport, 'ko');
     expect((await meta(rockgazingSupportMeta, 'ko')).title).toBe('Rockgazing 지원');
     expect(ko.container.textContent).toContain('reportaproblem.apple.com');
-    expect(ko.container.textContent).toContain('돌 만나기');
+    expect(ko.container.textContent).toContain('다른 돌 만나기');
     expect(ko.container.querySelector('section#en')).toBeNull();
     expect(screen.queryByText('사업자등록번호')).not.toBeInTheDocument();
     expect(hasMailLink()).toBe(true);
@@ -262,6 +276,8 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
     expect(en.container.querySelector('section#en')).not.toBeNull();
     expect(en.container.querySelector('section#ja')).toBeNull();
     expect(en.container.textContent).toContain('reportaproblem.apple.com');
+    expect(en.container.textContent).toContain('Meet another stone');
+    expect(en.container.textContent).not.toContain('Meet a stone');
   });
 });
 

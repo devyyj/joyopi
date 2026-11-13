@@ -6,6 +6,7 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 돌보기(Rockgazing / 돌멍타임 / 石の子守り) 개인정보 처리방침.
 // 내용 기준: docs/03_앱_스토어_페이지.md 4-1. 앱 기능이 바뀌면 그 표부터 고치고 여기와 날짜를 고친다.
 // 2026-11-13: 1.0.0 동작(분석·오류 수집 PostHog, 실제 날씨 WeatherKit, Apple 구매 기록·Google Block Store)에 맞춤. 앱 출시에 맞춰 공개한다.
+// 2026-11-13: PostHog가 받는 IP 주소와 그로 추정한 국가·도시, 실제 전송 항목(해시한 기기 값·이벤트 4개·가린 오류 메시지·앱 버전·OS 종류), 상품 이름(앱 화면 문구)을 반영.
 const EFFECTIVE_DATE = '2026-11-13';
 const UPDATED_DATE = '2026-11-13';
 
@@ -27,7 +28,8 @@ const ko: DocLocale = {
   notice: (
     <p>
       앱에는 회원가입·로그인·광고·추적이 없습니다. 개발자가 받는 정보는 앱을 고치고 오류를 바로잡기 위한 사용 통계와 오류
-      정보뿐이며, 이름·돌 이름·위치·날씨는 받지 않습니다.
+      정보뿐이며, 이름·돌 이름·날씨와 정확한 위치는 받지 않습니다. 통계를 위해 앱이 통신할 때 전달되는 IP 주소로 국가·도시
+      수준의 대략적인 위치만 추정합니다.
     </p>
   ),
   sections: [
@@ -51,32 +53,41 @@ const ko: DocLocale = {
               <tr>
                 <td>기기 무작위 값</td>
                 <td>
-                  앱이 분석에만 쓰려고 만든 무작위 값. 다시 설치하면 바뀌고, 다른 정보와 연결하지 않습니다.
+                  앱이 분석에만 쓰려고 기기에서 만든 무작위 값을 변환(해시)한 값. 다시 설치하면 바뀌고, 다른 정보와 연결하지
+                  않습니다.
                 </td>
                 <td>사용자 수·재방문 세기</td>
               </tr>
               <tr>
                 <td>앱 사용 기록</td>
                 <td>
-                  앱을 연 것, 사용 시간 구간(1분 미만·1~10분·10~60분·60분 이상), 결제 안내를 본 것, 결제를 마쳤을 때 상품
-                  종류(돌 만나기·이름 바꾸기). 가격과 거래 ID는 보내지 않습니다.
+                  앱을 연 것, 사용 시간 구간(1분 미만·1~10분·10~60분·60분 이상), 결제 안내를 본 것과 결제를 마친 것(각각 상품
+                  종류: 다른 돌 만나기·이름 바꾸기). 가격과 거래 ID는 보내지 않습니다.
                 </td>
                 <td>앱 개선</td>
               </tr>
               <tr>
                 <td>오류 정보</td>
-                <td>오류 종류, 오류가 난 코드 위치(스택)</td>
+                <td>오류 종류, 오류 메시지(사용자가 입력한 값은 가림), 오류가 난 코드 위치(파일·줄)</td>
                 <td>오류 수정</td>
               </tr>
               <tr>
-                <td>기기 정보</td>
-                <td>기기 종류, 운영체제 버전, 앱 버전, 언어</td>
+                <td>앱 정보</td>
+                <td>앱 버전, 운영체제 종류(iOS·Android)</td>
                 <td>앱 개선·오류 수정</td>
+              </tr>
+              <tr>
+                <td>IP 주소와 대략적인 위치</td>
+                <td>
+                  IP 주소(앱이 통신할 때 자동으로 전달됨)와 그로 추정한 대략적인 위치(국가·도시). 기기의 위치 서비스는 쓰지
+                  않습니다.
+                </td>
+                <td>지역별 사용 통계</td>
               </tr>
             </tbody>
           </table>
           <ul>
-            <li>이름·이메일·연락처·광고 식별자·돌에 지어 준 이름·위치·날씨는 보내지 않습니다.</li>
+            <li>이름·이메일·연락처·광고 식별자·돌에 지어 준 이름·위치 서비스로 얻은 위치·날씨는 보내지 않습니다.</li>
             <li>
               사람별 프로필을 만들지 않고, 다른 회사의 앱·웹사이트 정보와 연결하지 않으며, 광고에 쓰지 않습니다(추적 없음).
             </li>
@@ -165,7 +176,7 @@ const ko: DocLocale = {
       heading: '4. 결제',
       body: (
         <p>
-          앱 내 구입(돌 만나기, 이름 바꾸기)은 Apple App Store 또는 Google Play가 처리합니다. 개발자는 카드 번호 등 결제 정보를
+          앱 내 구입(다른 돌 만나기, 이름 바꾸기)은 Apple App Store 또는 Google Play가 처리합니다. 개발자는 카드 번호 등 결제 정보를
           받지 않으며, 앱은 스토어가 알려 주는 거래 기록만 기기 안에서 확인합니다. 분석으로는 결제를 마친 상품의 종류만
           보냅니다(1번). 결제 정보는 각 회사의 방침을 따릅니다: <a href={APPLE_PRIVACY}>Apple 개인정보 처리방침</a>,{' '}
           <a href={GOOGLE_PRIVACY}>Google 개인정보처리방침</a>.
@@ -238,7 +249,9 @@ const ko: DocLocale = {
               </tr>
               <tr>
                 <th>이전 항목</th>
-                <td>기기 무작위 값, 앱 사용 기록, 오류 정보, 기기 정보 (1번 표)</td>
+                <td>
+                  기기 무작위 값(해시), 앱 사용 기록, 오류 정보, 앱 정보, IP 주소와 그로 추정한 대략적인 위치(국가·도시) (1번 표)
+                </td>
               </tr>
               <tr>
                 <th>이전 시기·방법</th>
@@ -278,7 +291,7 @@ const ko: DocLocale = {
       body: (
         <ul>
           <li>분석 정보는 암호화된 연결(TLS)로 보냅니다.</li>
-          <li>사용자가 입력한 내용(돌 이름)과 위치는 보내지 않습니다.</li>
+          <li>사용자가 입력한 내용(돌 이름)과 위치 서비스로 얻은 위치는 보내지 않습니다.</li>
           <li>분석 정보에 접근할 수 있는 사람을 개인정보 보호책임자 한 명으로 제한합니다.</li>
         </ul>
       ),
@@ -339,7 +352,8 @@ const en: DocLocale = {
     <p>
       There is no sign-up, login, advertising, or tracking. The only information the developer receives is usage
       statistics and error reports used to improve the app and fix bugs. The developer never receives your name, your
-      stone’s name, your location, or your weather.
+      stone’s name, your weather, or your precise location. For statistics, only an approximate country- and city-level
+      location is estimated from the IP address that is passed along when the app communicates.
     </p>
   ),
   sections: [
@@ -364,8 +378,8 @@ const en: DocLocale = {
               <tr>
                 <td>Random device value</td>
                 <td>
-                  A random value the app creates for analytics only. It changes when you reinstall the app and is not
-                  linked to any other information.
+                  A hashed form of a random value the app creates on your device for analytics only. It changes when you
+                  reinstall the app and is not linked to any other information.
                 </td>
                 <td>Counting users and return visits</td>
               </tr>
@@ -373,27 +387,35 @@ const en: DocLocale = {
                 <td>App usage</td>
                 <td>
                   Opening the app, a usage-time range (under 1 min, 1–10 min, 10–60 min, over 60 min), viewing a purchase
-                  screen, and the product type when a purchase completes (Meet a stone, Rename). Prices and transaction IDs
-                  are not sent.
+                  screen and completing a purchase (each with the product type: Meet another stone, Rename). Prices and
+                  transaction IDs are not sent.
                 </td>
                 <td>Improving the app</td>
               </tr>
               <tr>
                 <td>Error information</td>
-                <td>Error type and where in the code it happened (stack trace)</td>
+                <td>Error type, error message (with anything you typed masked), and where in the code it happened (file and line)</td>
                 <td>Fixing bugs</td>
               </tr>
               <tr>
-                <td>Device information</td>
-                <td>Device model, OS version, app version, language</td>
+                <td>App information</td>
+                <td>App version, operating system type (iOS or Android)</td>
                 <td>Improving the app and fixing bugs</td>
+              </tr>
+              <tr>
+                <td>IP address and approximate location</td>
+                <td>
+                  IP address (passed along automatically when the app communicates) and the approximate location estimated
+                  from it (country and city). Your device’s location services are not used for this.
+                </td>
+                <td>Usage statistics by region</td>
               </tr>
             </tbody>
           </table>
           <ul>
             <li>
-              Your name, email, contacts, advertising identifier, the names you give your stones, your location, and the
-              weather are not sent.
+              Your name, email, contacts, advertising identifier, the names you give your stones, location from location
+              services, and the weather are not sent.
             </li>
             <li>
               No per-person profiles are built, the data is not combined with data from other companies’ apps or websites,
@@ -493,7 +515,7 @@ const en: DocLocale = {
       heading: '4. Purchases',
       body: (
         <p>
-          In-app purchases (Meet a stone, Rename) are processed by the Apple App Store or Google Play. The developer does
+          In-app purchases (Meet another stone, Rename) are processed by the Apple App Store or Google Play. The developer does
           not receive card numbers or other payment details; the app only checks the transaction records provided by the
           store, on your device. Analytics only receive the type of product purchased (section 1). Payment information is
           handled under each company’s policy: <a href={APPLE_PRIVACY}>Apple Privacy Policy</a>,{' '}
@@ -570,7 +592,10 @@ const en: DocLocale = {
               </tr>
               <tr>
                 <th>Items</th>
-                <td>Random device value, app usage, error information, device information (table in section 1)</td>
+                <td>
+                  Random device value (hashed), app usage, error information, app information, IP address and the approximate
+                  location estimated from it (country and city) (table in section 1)
+                </td>
               </tr>
               <tr>
                 <th>When and how</th>
@@ -613,7 +638,7 @@ const en: DocLocale = {
       body: (
         <ul>
           <li>Analytics information is sent over an encrypted connection (TLS).</li>
-          <li>What you type (stone names) and your location are never sent.</li>
+          <li>What you type (stone names) and location from location services are never sent.</li>
           <li>Access to analytics information is limited to one person, the privacy officer.</li>
         </ul>
       ),
@@ -673,7 +698,7 @@ const ja: DocLocale = {
   ),
   notice: (
     <p>
-      本アプリには会員登録・ログイン・広告・トラッキングはありません。開発者が受け取るのは、アプリの改善と不具合の修正のための利用統計とエラー情報だけで、氏名・石の名前・位置情報・天気は受け取りません。
+      本アプリには会員登録・ログイン・広告・トラッキングはありません。開発者が受け取るのは、アプリの改善と不具合の修正のための利用統計とエラー情報だけで、氏名・石の名前・天気と正確な位置情報は受け取りません。統計のため、アプリが通信するときに伝わる IP アドレスから国・都市レベルのおおよその位置だけを推定します。
     </p>
   ),
   sections: [
@@ -694,31 +719,38 @@ const ja: DocLocale = {
             <tbody>
               <tr>
                 <td>端末のランダム値</td>
-                <td>本アプリが分析のためだけに作るランダムな値。再インストールすると変わり、ほかの情報とは結びつけません。</td>
+                <td>本アプリが分析のためだけに端末で作るランダムな値を変換（ハッシュ化）した値。再インストールすると変わり、ほかの情報とは結びつけません。</td>
                 <td>利用者数・再訪問の集計</td>
               </tr>
               <tr>
                 <td>アプリの利用記録</td>
                 <td>
-                  アプリを開いたこと、利用時間の区分（1 分未満・1〜10 分・10〜60 分・60 分以上）、購入の案内を見たこと、購入完了時の商品の種類（石に出会う・名前を変える）。価格と取引
+                  アプリを開いたこと、利用時間の区分（1 分未満・1〜10 分・10〜60 分・60 分以上）、購入の案内を見たことと購入を完了したこと（それぞれ商品の種類：ほかの石に出会う・名前を変える）。価格と取引
                   ID は送信しません。
                 </td>
                 <td>アプリの改善</td>
               </tr>
               <tr>
                 <td>エラー情報</td>
-                <td>エラーの種類、エラーが起きたコードの位置（スタック）</td>
+                <td>エラーの種類、エラーメッセージ（利用者が入力した値は伏せる）、エラーが起きたコードの位置（ファイル・行）</td>
                 <td>不具合の修正</td>
               </tr>
               <tr>
-                <td>端末情報</td>
-                <td>端末の機種、OS のバージョン、アプリのバージョン、言語</td>
+                <td>アプリ情報</td>
+                <td>アプリのバージョン、OS の種類（iOS・Android）</td>
                 <td>アプリの改善・不具合の修正</td>
+              </tr>
+              <tr>
+                <td>IP アドレスとおおよその位置</td>
+                <td>
+                  IP アドレス（アプリが通信するときに自動で伝わる）と、そこから推定したおおよその位置（国・都市）。端末の位置情報サービスは使いません。
+                </td>
+                <td>地域別の利用統計</td>
               </tr>
             </tbody>
           </table>
           <ul>
-            <li>氏名・メールアドレス・連絡先・広告識別子・石につけた名前・位置情報・天気は送信しません。</li>
+            <li>氏名・メールアドレス・連絡先・広告識別子・石につけた名前・位置情報サービスで得た位置情報・天気は送信しません。</li>
             <li>
               個人ごとのプロフィールは作らず、他社のアプリやウェブサイトの情報と結びつけず、広告にも使いません（トラッキングなし）。
             </li>
@@ -807,7 +839,7 @@ const ja: DocLocale = {
       heading: '4. 購入',
       body: (
         <p>
-          アプリ内課金（石に出会う、名前を変える）は Apple App Store または Google Play
+          アプリ内課金（ほかの石に出会う、名前を変える）は Apple App Store または Google Play
           が処理します。開発者はカード番号などの決済情報を受け取らず、本アプリはストアから提供される取引記録を端末内で確認するだけです。分析には購入が完了した商品の種類だけを送信します（1
           項）。決済情報は各社のポリシーに従います：
           <a href={APPLE_PRIVACY}>Apple プライバシーポリシー</a>、<a href={GOOGLE_PRIVACY}>Google プライバシーポリシー</a>。
@@ -881,7 +913,10 @@ const ja: DocLocale = {
               </tr>
               <tr>
                 <th>移転する項目</th>
-                <td>端末のランダム値、アプリの利用記録、エラー情報、端末情報（1 項の表）</td>
+                <td>
+                  端末のランダム値（ハッシュ化）、アプリの利用記録、エラー情報、アプリ情報、IP アドレスとそこから推定したおおよその位置（国・都市）（1
+                  項の表）
+                </td>
               </tr>
               <tr>
                 <th>移転の時期・方法</th>
@@ -921,7 +956,7 @@ const ja: DocLocale = {
       body: (
         <ul>
           <li>分析情報は暗号化された通信（TLS）で送信します。</li>
-          <li>利用者が入力した内容（石の名前）と位置情報は送信しません。</li>
+          <li>利用者が入力した内容（石の名前）と位置情報サービスで得た位置情報は送信しません。</li>
           <li>分析情報にアクセスできるのは個人情報保護責任者 1 名に限ります。</li>
         </ul>
       ),

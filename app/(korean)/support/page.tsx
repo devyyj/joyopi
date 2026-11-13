@@ -14,7 +14,7 @@ export default function SupportPage() {
       <PageSection heading="앱별 지원">
         <ul>
           <li>
-            <Link href="/ko/apps/rockgazing/support">Rockgazing(돌멍타임) 지원</Link> — 돌 만나기·이름 바꾸기, 재설치, 환불
+            <Link href="/ko/apps/rockgazing/support">Rockgazing(돌멍타임) 지원</Link> — 다른 돌 만나기·이름 바꾸기, 재설치, 환불
           </li>
           <li>
             <Link href="/ko/apps/agirok/support">아기록 지원</Link> — 기기 변경, 공동양육자 초대, 광고 제거, 환불

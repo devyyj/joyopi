@@ -79,12 +79,12 @@ const SOURCES: AppSource[] = [
       ja: {
         name: '石の子守り',
         altNames: ['Rockgazing', '돌멍타임'],
-        description: '背景と天気が移り変わる場所に石をひとつ置いて、ながめるアプリ',
+        description: '背景と天気が移り変わる場所に石をひとつ置いて、眺めるアプリ',
         features: [
           '背景と天気が移り変わる風景の中に、石がひとつ置かれています。',
           '自分の石に名前をつけられます。',
-          'つけたまま眺めるアプリなので、開いている間は画面が消えません。',
-          '会員登録・ログイン・広告はなく、記録は端末の中にだけ保存します。',
+          '画面をつけっぱなしで眺めるアプリなので、開いている間は画面がスリープしません。',
+          '会員登録・ログイン・広告はなく、データは端末内にだけ保存されます。',
         ],
         facts: [
           { label: '端末', value: 'iPhone、iPad（Android は準備中）' },
@@ -101,7 +101,7 @@ const SOURCES: AppSource[] = [
           'A single stone sits in a scene where the background and weather change.',
           'Give your stone a name.',
           "It's an app you leave on and gaze at, so the screen stays on while it's open.",
-          'No sign-up, login, or ads. Your records are stored only on your device.',
+          'No sign-up, login, or ads. Your data stays on your device.',
         ],
         facts: [
           { label: 'Devices', value: 'iPhone, iPad (Android coming soon)' },
@@ -143,36 +143,36 @@ const SOURCES: AppSource[] = [
       ja: {
         name: 'ベビろく',
         altNames: ['아기록', 'Agirok'],
-        description: '片手で、ワンタップで終わる育児記録',
+        description: '片手でワンタップ、すぐ終わる育児記録',
         features: [
           '授乳・睡眠・おむつをワンタップで記録します。',
           '1日のまとめとグラフで、赤ちゃんの1日がひと目でわかります。',
-          '招待コードを使って、一緒に育児をする家族と同じ記録を使えます。',
+          '招待コードで、一緒に育児をする家族と記録を共有できます。',
           '同じアカウントでログインすれば、機種変更後も続けて使えます。',
           '赤ちゃんの育児記録を広告に使うことはありません。',
         ],
         facts: [
           { label: '端末', value: 'iPhone、Android' },
           { label: '言語', value: '한국어, English, 日本語' },
-          { label: '価格', value: '無料（広告あり、広告を非表示にする購入あり）' },
+          { label: '価格', value: '無料（広告あり。アプリ内課金で広告を非表示にできます）' },
         ],
         pageLabels: { privacy: 'プライバシーポリシー', support: 'サポート', deleteAccount: 'アカウント・データの削除' },
       },
       en: {
         name: 'Agirok',
         altNames: ['아기록', 'ベビろく'],
-        description: 'A baby log you can keep with one hand and one tap',
+        description: 'A one-handed, one-tap baby log',
         features: [
           'Log feeding, sleep, and diapers with a single tap.',
           "See your baby's day at a glance with daily summaries and charts.",
-          'Share the same log with co-caregivers using an invite code.',
+          'Share the log with your partner or other caregivers using an invite code.',
           'Sign in with the same account to pick up where you left off on a new device.',
           "Your baby's records are never used for advertising.",
         ],
         facts: [
           { label: 'Devices', value: 'iPhone, Android' },
           { label: 'Languages', value: '한국어, English, 日本語' },
-          { label: 'Price', value: 'Free (contains ads; ad removal available as an in-app purchase)' },
+          { label: 'Price', value: 'Free (with ads; remove ads with a one-time in-app purchase)' },
         ],
         pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data' },
       },

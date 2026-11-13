@@ -64,12 +64,12 @@ export type Dictionary = typeof ko;
 const ja: Dictionary = {
   site: {
     title: 'JOYOPI（joyopi）',
-    description: 'モバイルアプリを作っている JOYOPI です — 石の子守り（Rockgazing）、ベビろく',
-    homeAria: 'JOYOPI ホーム',
+    description: 'モバイルアプリを作っているJOYOPIです — 石の子守り（Rockgazing）、ベビろく',
+    homeAria: 'JOYOPIホーム',
   },
   nav: {
     apps: 'アプリ',
-    about: '紹介',
+    about: 'JOYOPIについて',
     news: 'お知らせ',
     support: 'サポート',
     mainMenu: 'メインメニュー',
@@ -82,7 +82,7 @@ const ja: Dictionary = {
     policies: '規約・ポリシー',
   },
   home: {
-    greeting: ['こんにちは、', 'JOYOPI です'],
+    greeting: ['こんにちは、', 'JOYOPIです'],
     intro:
       'モバイルアプリを作っています。いまは、石をひとつ眺める「石の子守り」と、ワンタップで終わる育児記録「ベビろく」を作っています。',
     viewApps: 'アプリを見る',
@@ -98,7 +98,7 @@ const ja: Dictionary = {
   apps: {
     title: 'アプリ',
     metaTitle: 'アプリ — JOYOPI',
-    metaDescription: 'JOYOPI が作るアプリ：石の子守り（Rockgazing）、ベビろく',
+    metaDescription: 'JOYOPIが作るアプリ：石の子守り（Rockgazing）、ベビろく',
     lead: '私が作り、運営しているモバイルアプリです。',
     comingSoon: 'リリース準備中',
     details: '詳しく見る',

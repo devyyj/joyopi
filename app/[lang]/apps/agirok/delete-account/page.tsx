@@ -111,7 +111,7 @@ const ja: DocLocale = {
   title: 'ベビろく アカウント・データの削除',
   lead: (
     <p>
-      アプリ名：<strong>ベビろく</strong>（韓国名「아기록」） · 開発者：<strong>{BUSINESS_INFO.nameEn}</strong>
+      アプリ名：<strong>ベビろく</strong>（韓国語名「아기록」） · 開発者：<strong>{BUSINESS_INFO.nameEn}</strong>
       <br />
       ベビろくのアカウントと、そのアカウントのデータを削除する方法をご案内します。
     </p>
@@ -148,11 +148,11 @@ const ja: DocLocale = {
           <ol>
             <li>
               ベビろくのログインに使ったアカウントのメールアドレスから {mail} にメールを送ってください。件名は「ベビろく
-              アカウント削除リクエスト」としてください。
+              アカウント削除依頼」としてください。
             </li>
             <li>ご本人のアカウントであることを確認したうえでアカウントとデータを削除し、完了したら返信でお知らせします。</li>
           </ol>
-          <p>リクエストを受け取った日から 7 営業日以内に対応します。</p>
+          <p>リクエストを受け取った日から7営業日以内に対応します。</p>
         </>
       ),
     },
@@ -187,7 +187,7 @@ const ja: DocLocale = {
               </tr>
               <tr>
                 <td>アプリの利用統計・エラー情報（IP アドレスとおおよその位置を含む）</td>
-                <td>アカウントと結び付けていないため退会してもすぐには削除されず、収集日から 1 年間保管したあと削除されます（PostHog、ドイツ）。</td>
+                <td>アカウントと結び付けていないため退会してもすぐには削除されず、収集日から1年間保管したあと削除されます（PostHog、ドイツ）。</td>
               </tr>
             </tbody>
           </table>
@@ -204,7 +204,7 @@ const ja: DocLocale = {
 
 const en: DocLocale = {
   lang: 'en',
-  title: 'Agirok: Delete Your Account and Data',
+  title: 'Delete Your Agirok Account and Data',
   lead: (
     <p>
       App name: <strong>Agirok</strong> (아기록 in Korea) · Developer: <strong>{BUSINESS_INFO.nameEn}</strong>
@@ -275,7 +275,7 @@ const en: DocLocale = {
                 <td>All deleted without delay. This cannot be undone.</td>
               </tr>
               <tr>
-                <td>Records of a baby you shared with other co-caregivers</td>
+                <td>Records of a baby you shared with others</td>
                 <td>Only you are removed. The records remain so the people you shared them with can keep viewing them.</td>
               </tr>
               <tr>

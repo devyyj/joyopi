@@ -92,14 +92,14 @@ const ko: DocLocale = {
 const ja: DocLocale = {
   lang: 'ja',
   title: 'ベビろく サポート',
-  lead: <p>ベビろく（韓国名「아기록」）は、片手で、ワンタップで終わる育児記録アプリです。</p>,
+  lead: <p>ベビろく（韓国語名「아기록」）は、片手でワンタップ、すぐ終わる育児記録アプリです。</p>,
   sections: [
     {
       id: 'contact',
       heading: 'お問い合わせ',
       body: (
         <p>
-          ご質問や不具合は {mail} までお送りください。3 営業日以内にお返事します。端末の機種、アプリのバージョン、問題が起きた画面をあわせてお知らせいただくと、より早く対応できます。
+          ご質問や不具合は {mail} までお送りください。3営業日以内にお返事します。端末の機種、アプリのバージョン、問題が起きた画面をあわせてお知らせいただくと、より早く対応できます。
         </p>
       ),
     },
@@ -113,7 +113,7 @@ const ja: DocLocale = {
       heading: '一緒に育児をする家族はどうやって招待しますか？',
       body: (
         <ol>
-          <li>設定で「招待コードを作る」をタップし、6 桁の招待コードを作ります。コードは 24 時間使えます。</li>
+          <li>設定で「招待コードを作る」をタップし、6桁の招待コードを作ります。コードは24時間使えます。</li>
           <li>受け取った人はアプリにログインしてから「招待コードを受け取りました」をタップし、コードを入力します。</li>
         </ol>
       ),
@@ -163,7 +163,7 @@ const ja: DocLocale = {
 const en: DocLocale = {
   lang: 'en',
   title: 'Agirok Support',
-  lead: <p>Agirok (아기록 in Korea) is a baby log app you can use with one hand and a single tap.</p>,
+  lead: <p>Agirok (아기록 in Korea) is a one-handed, one-tap baby log app.</p>,
   sections: [
     {
       id: 'contact',
@@ -182,7 +182,7 @@ const en: DocLocale = {
     },
     {
       id: 'faq-invite',
-      heading: 'How do I invite a co-caregiver?',
+      heading: 'How do I invite my partner or another caregiver?',
       body: (
         <ol>
           <li>In Settings, tap “Create invite code” to make a 6-digit invite code. The code can be used for 24 hours.</li>

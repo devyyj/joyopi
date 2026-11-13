@@ -65,7 +65,7 @@ describe('SiteNav (대표 메뉴)', () => {
     render(<SiteNavBase items={getNavItems('ja')} labels={getDictionary('ja').nav} />);
     const nav = screen.getByRole('navigation', { name: 'メインメニュー' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['アプリ', '紹介', 'お知らせ', 'サポート']);
+    expect(links.map((a) => a.textContent)).toEqual(['アプリ', 'JOYOPIについて', 'お知らせ', 'サポート']);
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/ja/apps', '/about', '/news', '/support']);
     expect(links[2]).toHaveAttribute('hreflang', 'ko');
     expect(screen.getByRole('button', { name: 'メニューを開く' })).toBeInTheDocument();

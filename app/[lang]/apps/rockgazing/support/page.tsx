@@ -92,8 +92,8 @@ const en: DocLocale = {
       heading: 'Contact',
       body: (
         <p>
-          If you have a question or a problem, email {mail}. We reply within 3 business days. Telling us your device,
-          the app version, and the screen where the problem happened helps us help you faster.
+          If you have a question or a problem, email {mail}. I reply within 3 business days. Telling me your device,
+          the app version, and the screen where the problem happened helps me help you faster.
         </p>
       ),
     },
@@ -153,7 +153,7 @@ const ja: DocLocale = {
   title: '石の子守り サポート',
   lead: (
     <p>
-      Rockgazing（日本のストア名「石の子守り」）は、背景や天気が移り変わる場所に石をひとつ置いて、静かに眺めるアプリです。
+      石の子守り（英語名 Rockgazing）は、背景や天気が移り変わる場所に石をひとつ置いて、静かに眺めるアプリです。
     </p>
   ),
   sections: [
@@ -163,7 +163,7 @@ const ja: DocLocale = {
       body: (
         <p>
           ご質問や不具合は {mail}{' '}
-          までお送りください。3 営業日以内に返信します。端末の種類、アプリのバージョン、問題が起きた画面をお知らせいただくと、より早く対応できます。
+          までお送りください。3営業日以内に返信します。端末の種類、アプリのバージョン、問題が起きた画面をお知らせいただくと、より早く対応できます。
         </p>
       ),
     },
@@ -178,7 +178,7 @@ const ja: DocLocale = {
             ：まだ出会っていない石の中から、同じ確率でひとつに出会います。すでに出会った石は二度と出ません。出会った石は集めておけて、いつでも無料で切り替えられます。
           </li>
           <li>
-            <strong>名前を変える</strong>：今の石に新しい名前をつけます。名前は石ごとに覚えています。
+            <strong>名前を変える</strong>：今の石に新しい名前をつけます。名前は石ごとに保存されます。
           </li>
         </ul>
       ),
@@ -208,7 +208,7 @@ const ja: DocLocale = {
     {
       id: 'faq-screen',
       heading: '画面が消えないのはなぜですか？',
-      body: <p>つけたまま眺めるアプリのため、アプリを開いている間は画面が自動で消えないようにしています。</p>,
+      body: <p>画面をつけっぱなしで眺めるアプリなので、アプリを開いている間は画面が自動で消えないようにしています。</p>,
     },
   ],
   effectiveDate: EFFECTIVE_DATE,

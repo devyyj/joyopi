@@ -96,7 +96,7 @@ describe('홈', () => {
 
   it('일본어·영어: 그 언어 문구와 스토어 이름, 그 언어 앱 주소', async () => {
     const ja = await renderPage(Home, 'ja');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('JOYOPI です');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('JOYOPIです');
     expect(screen.getByRole('heading', { name: '石の子守り' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'ベビろく' })).toBeInTheDocument();
     expect(hrefs()).toEqual(expect.arrayContaining(['/ja/apps', '/ja/apps/agirok/delete-account']));
@@ -323,7 +323,7 @@ describe('아기록 문서', () => {
     [
       'ja',
       'ベビろく プライバシーポリシー',
-      ['PostHog Inc.', 'ドイツ', 'IP アドレス', '国・都市', '1 年', 'GDPR', '正当な利益', '取り扱いの制限', 'データポータビリティ', '異議', '監督機関', '標準契約条項', 'CCPA', '韓国語版が優先', '広告のプライバシー設定', '退会してデータを削除', '広告を非表示'],
+      ['PostHog Inc.', 'ドイツ', 'IP アドレス', '国・都市', '1年', 'GDPR', '正当な利益', '取り扱いの制限', 'データポータビリティ', '異議', '監督機関', '標準契約条項', 'CCPA', '韓国語版が優先', '広告のプライバシー設定', '退会してデータを削除', '広告を非表示'],
     ],
     [
       'en',
@@ -396,7 +396,7 @@ describe('아기록 문서', () => {
   });
 
   it.each([
-    ['ja', 'ベビろく', '退会してデータを削除', 'ベビろく アカウント削除リクエスト', '7 営業日'],
+    ['ja', 'ベビろく', '退会してデータを削除', 'ベビろく アカウント削除依頼', '7営業日'],
     ['en', 'Agirok', 'Delete account and data', 'Agirok account deletion request', '7 business days'],
   ] as const)('계정·데이터 삭제(%s): 앱 이름과 개발자(JOYOPI), 앱에서 지우는 법, 앱 없이 요청하는 법', async (lang, name, button, subject, days) => {
     const { container } = await renderPage(AgirokDeleteAccount, lang);

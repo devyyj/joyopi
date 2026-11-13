@@ -315,4 +315,43 @@ describe('아기록 문서', () => {
     expect(hasMailLink()).toBe(true);
     expect(within(container).getAllByRole('link').map((a) => a.getAttribute('href'))).toContain('/ko/apps/agirok/privacy');
   });
+
+  it('지원(ja·en): 번역본만 보여 주고, 버튼 이름은 앱 화면 문구, 계정 삭제 링크는 그 언어 주소', async () => {
+    const ja = await renderPage(AgirokSupport, 'ja');
+    expect((await meta(agirokSupportMeta, 'ja')).title).toBe('ベビろく サポート');
+    expect(ja.container.querySelector('section#ja')).toHaveAttribute('lang', 'ja');
+    expect(ja.container.querySelector('section#ko')).toBeNull();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    for (const item of ['招待コードを作る', '招待コードを受け取りました', '購入を復元', '退会してデータを削除', 'reportaproblem.apple.com']) {
+      expect(ja.container.textContent).toContain(item);
+    }
+    expect(hrefs()).toContain('/ja/apps/agirok/delete-account');
+    expect(hasMailLink()).toBe(true);
+    ja.unmount();
+
+    const en = await renderPage(AgirokSupport, 'en');
+    expect((await meta(agirokSupportMeta, 'en')).title).toBe('Agirok Support');
+    for (const item of ['Create invite code', 'I have an invite code', 'Restore purchase', 'Delete account and data']) {
+      expect(en.container.textContent).toContain(item);
+    }
+    expect(en.container.textContent).not.toContain('초대 코드');
+    expect(hrefs()).toContain('/en/apps/agirok/delete-account');
+  });
+
+  it.each([
+    ['ja', 'ベビろく', '退会してデータを削除', 'ベビろく アカウント削除リクエスト', '7 営業日'],
+    ['en', 'Agirok', 'Delete account and data', 'Agirok account deletion request', '7 business days'],
+  ] as const)('계정·데이터 삭제(%s): 앱 이름과 개발자(JOYOPI), 앱에서 지우는 법, 앱 없이 요청하는 법', async (lang, name, button, subject, days) => {
+    const { container } = await renderPage(AgirokDeleteAccount, lang);
+    const text = container.textContent ?? '';
+    expect(container.querySelector(`section#${lang}`)).toHaveAttribute('lang', lang);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(text).toContain(name);
+    expect(text).toContain('JOYOPI');
+    expect(text).toContain(button);
+    expect(text).toContain(subject);
+    expect(text).toContain(days);
+    expect(hasMailLink()).toBe(true);
+    expect(hrefs()).toContain(`/${lang}/apps/agirok/privacy`);
+  });
 });

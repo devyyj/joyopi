@@ -11,7 +11,6 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 const EFFECTIVE_DATE = '2026-11-12';
 const UPDATED_DATE = '2026-11-12';
 
-
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 /** 한국어 본문. lang은 본문 안 링크를 어느 언어 주소로 걸지 정한다 */
@@ -272,9 +271,17 @@ const ko = (lang: Lang): DocLocale => ({
   updatedDate: UPDATED_DATE,
 });
 
+// 일본어·영어판은 원고(agirok docs/privacy-policy.md)를 고치는 작업이 끝난 뒤 번역한다(docs/03_앱_스토어_페이지.md 7장).
+// 그때까지 /ja·/en 주소는 한국어 본문을 보여 주고 맨 위에 「번역 준비 중, 한국어판이 기준」 한 줄을 둔다.
+const TITLES: Record<Lang, { title: string; description: string }> = {
+  ko: { title: '아기록 개인정보처리방침', description: '아기록 개인정보처리방침' },
+  ja: { title: 'ベビろく プライバシーポリシー（韓国語版）', description: 'ベビろく（아기록）プライバシーポリシー。日本語版は翻訳準備中です。' },
+  en: { title: 'Agirok Privacy Policy (Korean)', description: 'Agirok (아기록) Privacy Policy. The English version is being translated.' },
+};
+
 export async function generateMetadata({ params }: LangParams): Promise<Metadata> {
   const lang = await resolveLang(params);
-  return localizedMetadata(lang, '/apps/agirok/privacy', { title: '아기록 개인정보처리방침', description: '아기록 개인정보처리방침' });
+  return localizedMetadata(lang, '/apps/agirok/privacy', TITLES[lang]);
 }
 
 export default async function AgirokPrivacyPage({ params }: LangParams) {

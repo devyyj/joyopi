@@ -4,13 +4,14 @@
 
 ## 🚀 주요 기능
 
-- **개발사 공식 사이트**: 대표 메뉴 앱·소개·소식·지원과 공통 푸터(사업자 정보). 앱마다 소개·개인정보 처리방침·지원·계정 삭제 안내(`/apps/...`). 로그인 없이 열립니다.
+- **개발사 공식 사이트**: 대표 메뉴 앱·소개·소식·지원과 공통 푸터(사업자 정보). 앱마다 소개·개인정보 처리방침·지원·계정 삭제 안내. 로그인 없이 열립니다.
+- **3개 언어**: 앱 관련 페이지는 한국어·일본어·영어(`/ko/apps/...`, `/ja/...`, `/en/...`). 스토어에 등록한 언어 없는 주소(`/apps/...`)는 브라우저 언어로 보냅니다(`proxy.ts`). 소개·소식·지원·약관·에코는 한국어만. 자세한 규칙은 [docs/03 10장](./docs/03_앱_스토어_페이지.md).
 - **회원·로그인 없음**: 사이트는 개인정보를 받지 않습니다. 문의는 메일(`hello@joyopi.com`)로 받습니다.
 - **에코**(`/echo`): 메뉴에 없는 실시간 실험 서비스. 주소를 아는 사람은 로그인 없이 씁니다.
 
 ## 🛠 기술 스택
 
-- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS
+- **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind CSS
 - **Backend**: Supabase (Realtime)
 - **Database**: PostgreSQL (Supabase) + Drizzle ORM
 - **Testing/Lint**: Vitest, ESLint

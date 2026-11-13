@@ -39,6 +39,10 @@ describe('proxy (언어 없는 예전 주소 → /{lang}/…)', () => {
     expect(location.pathname + location.search).toBe('/ja/apps/rockgazing/privacy?from=store');
   });
 
+  it('matcher 목록이 LEGACY_PATHS와 같다(한쪽만 고치지 않게)', () => {
+    expect(config.matcher).toEqual([...LEGACY_PATHS]);
+  });
+
   it('matcher는 9개 예전 주소에만 걸린다', () => {
     for (const path of LEGACY_PATHS) {
       expect(unstable_doesMiddlewareMatch({ config, url: path })).toBe(true);

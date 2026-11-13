@@ -182,6 +182,10 @@ const ko: DocLocale = {
                 <td>Apple Inc.</td>
                 <td>로그인(Apple로 로그인, iOS)</td>
               </tr>
+              <tr>
+                <td>Vercel Inc.</td>
+                <td>탈퇴 요청 처리(로그인 계정 삭제)</td>
+              </tr>
             </tbody>
           </table>
           <p>결제(광고 제거)는 Apple App Store, Google Play가 각자의 방침에 따라 처리합니다.</p>
@@ -224,6 +228,16 @@ const ko: DocLocale = {
               ['이전 시기·방법', 'Apple로 로그인할 때 암호화된 통신망으로 전송'],
               ['이용 목적', '로그인'],
               ['보유 기간', '탈퇴 시까지(탈퇴하면 Apple 로그인 토큰을 취소)'],
+            ]}
+          />
+          <KeyValueTable
+            rows={[
+              ['받는 자', 'Vercel Inc.'],
+              ['이전 국가', '미국'],
+              ['이전 항목', '계정 식별자·이메일이 담긴 로그인 토큰'],
+              ['이전 시기·방법', '탈퇴할 때 암호화된 통신망으로 전송'],
+              ['이용 목적', '로그인 계정 삭제'],
+              ['보유 기간', '저장하지 않음(요청을 처리하면 바로 버림)'],
             ]}
           />
           <ul>
@@ -384,7 +398,7 @@ const ko: DocLocale = {
             </li>
             <li>앱 사용 통계·오류 정보는 EU(독일)의 PostHog에 저장합니다.</li>
             <li>
-              로그인·광고를 위해 미국 등으로 가는 정보(Google LLC, Apple Inc., 6장 표)는 각 회사가 제공하는
+              로그인·광고·탈퇴를 위해 미국 등으로 가는 정보(Google LLC, Apple Inc., Vercel Inc., 6장 표)는 각 회사가 제공하는
               표준계약조항(EU 집행위원회가 승인한 표준 계약 문구) 등 GDPR이 인정하는 안전장치에 따라 이전됩니다. 안전장치의
               사본이나 내용은 문의 메일로 요청할 수 있습니다.
             </li>
@@ -394,7 +408,7 @@ const ko: DocLocale = {
           <ul>
             <li>
               외국에 있는 제3자에게 개인정보가 가는 경우, 받는 자와 이전 국가는 6장 표와 같습니다(Google LLC: 미국 등, Apple
-              Inc.: 미국, PostHog Inc.: 독일). 회사는 대한민국에 있으며 계정·기록은 대한민국에 저장합니다.
+              Inc.: 미국, Vercel Inc.: 미국, PostHog Inc.: 독일). 회사는 대한민국에 있으며 계정·기록은 대한민국에 저장합니다.
             </li>
             <li>
               이전 국가의 개인정보 보호 제도와 받는 자가 취하는 보호 조치에 관한 정보는 문의 메일로 요청하면 제공합니다.
@@ -599,6 +613,10 @@ const ja: DocLocale = {
                 <td>Apple Inc.</td>
                 <td>ログイン（Apple でサインイン、iOS）</td>
               </tr>
+              <tr>
+                <td>Vercel Inc.</td>
+                <td>退会リクエストの処理（ログインアカウントの削除）</td>
+              </tr>
             </tbody>
           </table>
           <p>支払い（「広告を非表示」）は、Apple App Store と Google Play がそれぞれの方針に従って取り扱います。</p>
@@ -641,6 +659,16 @@ const ja: DocLocale = {
               ['移転の時期・方法', 'Apple でサインインするときに暗号化された通信で送信'],
               ['利用目的', 'ログイン'],
               ['保有期間', '退会するまで（退会すると Apple のログイントークンを取り消します）'],
+            ]}
+          />
+          <KeyValueTable
+            rows={[
+              ['移転先', 'Vercel Inc.'],
+              ['移転先の国', 'アメリカ'],
+              ['移転する項目', 'アカウント識別子・メールアドレスを含むログイントークン'],
+              ['移転の時期・方法', '退会するときに暗号化された通信で送信'],
+              ['利用目的', 'ログインアカウントの削除'],
+              ['保有期間', '保存しません（リクエストを処理するとすぐに破棄）'],
             ]}
           />
           <ul>
@@ -791,7 +819,7 @@ const ja: DocLocale = {
             </li>
             <li>アプリの利用統計・エラー情報は、EU（ドイツ）の PostHog に保存します。</li>
             <li>
-              ログイン・広告のためにアメリカなどへ移転する情報（Google LLC、Apple Inc.、第6項の表）は、各社が提供する標準契約条項（欧州委員会が承認した標準の契約文言）など、GDPR
+              ログイン・広告・退会のためにアメリカなどへ移転する情報（Google LLC、Apple Inc.、Vercel Inc.、第6項の表）は、各社が提供する標準契約条項（欧州委員会が承認した標準の契約文言）など、GDPR
               が認める保護措置に従って移転されます。保護措置の写しや内容は、お問い合わせメールでリクエストできます。
             </li>
           </ul>
@@ -800,7 +828,7 @@ const ja: DocLocale = {
           <ul>
             <li>
               外国にある第三者に個人情報が移転する場合の移転先と移転先の国は、第6項の表のとおりです（Google
-              LLC：アメリカなど、Apple Inc.：アメリカ、PostHog Inc.：ドイツ）。開発者は大韓民国にあり、アカウントと記録は大韓民国に保存します。
+              LLC：アメリカなど、Apple Inc.：アメリカ、Vercel Inc.：アメリカ、PostHog Inc.：ドイツ）。開発者は大韓民国にあり、アカウントと記録は大韓民国に保存します。
             </li>
             <li>
               移転先の国の個人情報の保護に関する制度と、移転先が講じる保護のための措置に関する情報は、お問い合わせメールでリクエストいただければ提供します。
@@ -1014,6 +1042,10 @@ const en: DocLocale = {
                 <td>Apple Inc.</td>
                 <td>Sign-in (Sign in with Apple, iOS)</td>
               </tr>
+              <tr>
+                <td>Vercel Inc.</td>
+                <td>Processing account deletion requests (deleting the sign-in account)</td>
+              </tr>
             </tbody>
           </table>
           <p>Payments (“Remove ads”) are handled by the Apple App Store and Google Play under their own policies.</p>
@@ -1056,6 +1088,16 @@ const en: DocLocale = {
               ['When and how', 'Sent over encrypted connections when you sign in with Apple'],
               ['Purpose', 'Sign-in'],
               ['Retention', 'Until you delete your account (the Apple sign-in token is revoked when you do)'],
+            ]}
+          />
+          <KeyValueTable
+            rows={[
+              ['Recipient', 'Vercel Inc.'],
+              ['Country', 'United States'],
+              ['Items', 'Sign-in token containing your account identifier and email address'],
+              ['When and how', 'Sent over encrypted connections when you delete your account'],
+              ['Purpose', 'Deleting the sign-in account'],
+              ['Retention', 'Not stored (discarded as soon as the request is processed)'],
             ]}
           />
           <ul>
@@ -1224,7 +1266,7 @@ const en: DocLocale = {
             </li>
             <li>App usage statistics and error information are stored with PostHog in the EU (Germany).</li>
             <li>
-              Information sent to the United States and other countries for sign-in and ads (Google LLC, Apple Inc.; see the
+              Information sent to the United States and other countries for sign-in, ads and account deletion (Google LLC, Apple Inc., Vercel Inc.; see the
               tables in section 6) is transferred under safeguards recognized by the GDPR, such as the standard contractual
               clauses (standard contract terms approved by the European Commission) offered by each company. You can request a
               copy or details of these safeguards by email.
@@ -1235,7 +1277,7 @@ const en: DocLocale = {
           <ul>
             <li>
               When personal information goes to a third party in a foreign country, the recipients and countries are as listed
-              in the tables in section 6 (Google LLC: United States and others; Apple Inc.: United States; PostHog Inc.:
+              in the tables in section 6 (Google LLC: United States and others; Apple Inc.: United States; Vercel Inc.: United States; PostHog Inc.:
               Germany). The developer is located in the Republic of Korea, and accounts and records are stored there.
             </li>
             <li>

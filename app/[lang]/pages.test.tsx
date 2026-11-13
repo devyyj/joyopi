@@ -294,7 +294,7 @@ describe('아기록 문서', () => {
       expect(text).toContain(item);
     }
     // 분석·오류 수집은 PostHog(독일, 1년), IP 주소와 대략적 위치. Firebase Analytics·Crashlytics는 없다
-    for (const item of ['PostHog Inc.', '독일', 'IP 주소', '국가·도시', '1년']) expect(text).toContain(item);
+    for (const item of ['PostHog Inc.', '독일', 'IP 주소', '국가·도시', '1년', 'Vercel Inc.', '탈퇴 요청 처리']) expect(text).toContain(item);
     expect(text).not.toMatch(/Firebase Analytics|Crashlytics/);
     // 해외 이용자: GDPR 법적 근거·권리, 일본 APPI, 캘리포니아, 아동
     for (const item of [
@@ -323,12 +323,12 @@ describe('아기록 문서', () => {
     [
       'ja',
       'ベビろく プライバシーポリシー',
-      ['PostHog Inc.', 'ドイツ', 'IP アドレス', '国・都市', '1年', 'GDPR', '正当な利益', '取り扱いの制限', 'データポータビリティ', '異議', '監督機関', '標準契約条項', 'CCPA', '韓国語版が優先', '広告のプライバシー設定', '退会してデータを削除', '広告を非表示'],
+      ['Vercel Inc.', '退会リクエストの処理', 'PostHog Inc.', 'ドイツ', 'IP アドレス', '国・都市', '1年', 'GDPR', '正当な利益', '取り扱いの制限', 'データポータビリティ', '異議', '監督機関', '標準契約条項', 'CCPA', '韓国語版が優先', '広告のプライバシー設定', '退会してデータを削除', '広告を非表示'],
     ],
     [
       'en',
       'Agirok Privacy Policy',
-      ['PostHog Inc.', 'Germany', 'IP address', 'country and city', '1 year', 'GDPR', 'Legitimate interests', 'restrict its processing', 'data portability', 'right to object', 'supervisory authority', 'standard contractual clauses', 'cross-context behavioral advertising', 'Korean version prevails', 'Ad privacy settings', 'Delete account and data', 'Remove ads'],
+      ['Vercel Inc.', 'account deletion requests', 'PostHog Inc.', 'Germany', 'IP address', 'country and city', '1 year', 'GDPR', 'Legitimate interests', 'restrict its processing', 'data portability', 'right to object', 'supervisory authority', 'standard contractual clauses', 'cross-context behavioral advertising', 'Korean version prevails', 'Ad privacy settings', 'Delete account and data', 'Remove ads'],
     ],
   ] as const)('개인정보처리방침(%s): 번역본만, 앱 화면 문구, PostHog·GDPR 권리, Firebase Analytics·Crashlytics 없음', async (lang, title, items) => {
     const { container } = await renderPage(AgirokPrivacy, lang);

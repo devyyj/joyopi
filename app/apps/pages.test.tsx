@@ -129,9 +129,21 @@ describe('돌보기(Rockgazing) 문서', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Rockgazing Privacy Policy' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Rockgazing プライバシーポリシー' })).toBeInTheDocument();
     expect(hasMailLink()).toBe(true);
-    expect(container.textContent).toContain('개발자 서버로 보내는 개인정보가 없습니다');
-    expect(container.textContent).toContain('Keychain');
-    expect(container.textContent).toContain('13세 미만');
+    const text = container.textContent ?? '';
+    // 1.0.0 동작: 분석·오류 수집(PostHog, 독일 저장)과 실제 날씨(위치, Apple WeatherKit)
+    for (const item of ['PostHog Inc.', '독일', '국외 이전', '보유 기간', '1년', '위탁', '거부', 'WeatherKit', '13세 미만']) {
+      expect(text).toContain(item);
+    }
+    for (const item of ['Germany', 'International transfer', 'ドイツ', '国外移転']) {
+      expect(text).toContain(item);
+    }
+    // 저장 위치: iOS Keychain·Apple 구매 기록, Android Block Store. iCloud는 쓰지 않는다
+    expect(text).toContain('Keychain');
+    expect(text).toContain('Block Store');
+    expect(text).toContain('구매 기록');
+    expect(text).not.toContain('iCloud');
+    // 예전 문구(분석 도구 없음)가 남지 않는다
+    expect(text).not.toMatch(/개발자 서버로 보내는 개인정보가 없습니다|분석 도구가 없습니다|no sign-up, login, advertising, tracking, or\s+analytics/);
   });
 
   it('지원: 세 언어, 자주 묻는 질문, 환불 안내. 영어·일본어 구역에는 그 언어의 사업자 정보', () => {

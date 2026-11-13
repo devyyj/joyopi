@@ -15,7 +15,7 @@ const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 const ko: DocLocale = {
   lang: 'ko',
-  title: 'Rockgazing 지원',
+  title: '돌멍타임 지원',
   lead: (
     <p>
       Rockgazing(한국 스토어 이름 「돌멍타임」)은 배경과 날씨가 바뀌는 곳에 돌 하나를 두고 가만히 바라보는 앱입니다.
@@ -150,7 +150,7 @@ const en: DocLocale = {
 
 const ja: DocLocale = {
   lang: 'ja',
-  title: 'Rockgazing サポート',
+  title: '石の子守り サポート',
   lead: (
     <p>
       Rockgazing（日本のストア名「石の子守り」）は、背景や天気が移り変わる場所に石をひとつ置いて、静かに眺めるアプリです。

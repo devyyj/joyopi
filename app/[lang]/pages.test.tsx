@@ -195,9 +195,12 @@ describe('소개·소식·지원·약관·정책 (한국어만, 언어 없는 �
         '/en/apps/rockgazing/privacy',
         '/ja/apps/rockgazing/privacy',
         '/ko/apps/agirok/privacy',
+        '/en/apps/agirok/privacy',
+        '/ja/apps/agirok/privacy',
         '/ko/apps/agirok/delete-account',
       ]),
     );
+    expect(document.body.textContent).not.toContain('준비 중');
   });
 });
 
@@ -214,11 +217,11 @@ describe('에코', () => {
 describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 하나만', () => {
   it('개인정보 처리방침(ko): 제목, 필수 항목, 문의 메일. 다른 언어 구역은 없다', async () => {
     const { container } = await renderPage(RockgazingPrivacy, 'ko');
-    expect((await meta(rockgazingPrivacyMeta, 'ko')).title).toBe('Rockgazing 개인정보 처리방침');
+    expect((await meta(rockgazingPrivacyMeta, 'ko')).title).toBe('돌멍타임 개인정보 처리방침');
     expect(container.querySelector('section#ko')).toHaveAttribute('lang', 'ko');
     expect(container.querySelector('section#en')).toBeNull();
     expect(container.querySelector('section#ja')).toBeNull();
-    expect(screen.getByRole('heading', { level: 1, name: 'Rockgazing 개인정보 처리방침' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '돌멍타임 개인정보 처리방침' })).toBeInTheDocument();
     expect(hasMailLink()).toBe(true);
     const text = container.textContent ?? '';
     // 1.0.0 동작: 분석·오류 수집(PostHog, 독일 저장)과 실제 날씨(위치, Apple WeatherKit)
@@ -256,7 +259,7 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
     en.unmount();
 
     const ja = await renderPage(RockgazingPrivacy, 'ja');
-    expect(screen.getByRole('heading', { level: 1, name: 'Rockgazing プライバシーポリシー' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '石の子守り プライバシーポリシー' })).toBeInTheDocument();
     for (const item of ['ドイツ', '国外移転', 'IP アドレス', '国・都市', 'ほかの石に出会う']) expect(ja.container.textContent).toContain(item);
     expect(ja.container.textContent).not.toMatch(/端末の機種|「石に出会う」/);
     expect(ja.container.textContent).not.toContain('독일');
@@ -264,7 +267,7 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
 
   it('지원: 언어별 한 페이지, 자주 묻는 질문, 환불 안내 (사업자 정보는 그 언어의 공통 푸터가 맡는다)', async () => {
     const ko = await renderPage(RockgazingSupport, 'ko');
-    expect((await meta(rockgazingSupportMeta, 'ko')).title).toBe('Rockgazing 지원');
+    expect((await meta(rockgazingSupportMeta, 'ko')).title).toBe('돌멍타임 지원');
     expect(ko.container.textContent).toContain('reportaproblem.apple.com');
     expect(ko.container.textContent).toContain('다른 돌 만나기');
     expect(ko.container.querySelector('section#en')).toBeNull();
@@ -282,7 +285,7 @@ describe('돌멍타임(Rockgazing) 문서 — 언어별 페이지는 그 언어 
 });
 
 describe('아기록 문서', () => {
-  it('개인정보처리방침(ko): 제목, 필수 항목, 광고에 쓰지 않는다는 강조', async () => {
+  it('개인정보처리방침(ko): 제목, 필수 항목, 광고에 쓰지 않는다는 강조, PostHog 반영, 해외 이용자 안내', async () => {
     const { container } = await renderPage(AgirokPrivacy, 'ko');
     expect((await meta(agirokPrivacyMeta, 'ko')).title).toBe('아기록 개인정보처리방침');
     expect(screen.getByRole('heading', { level: 1, name: '아기록 개인정보처리방침' })).toBeInTheDocument();
@@ -290,23 +293,57 @@ describe('아기록 문서', () => {
     for (const item of ['보유', '파기', '제3자 제공', '위탁', '국외 이전', '안전성 확보', '광고 식별자', '보호책임자', '변경']) {
       expect(text).toContain(item);
     }
+    // 분석·오류 수집은 PostHog(독일, 1년), IP 주소와 대략적 위치. Firebase Analytics·Crashlytics는 없다
+    for (const item of ['PostHog Inc.', '독일', 'IP 주소', '국가·도시', '1년']) expect(text).toContain(item);
+    expect(text).not.toMatch(/Firebase Analytics|Crashlytics/);
+    // 해외 이용자: GDPR 법적 근거·권리, 일본 APPI, 캘리포니아, 아동
+    for (const item of [
+      '해외 이용자에 대한 추가 안내',
+      'GDPR',
+      '정당한 이익',
+      '처리 제한',
+      '이동',
+      '반대',
+      '감독기관',
+      '표준계약조항',
+      'APPI',
+      'CCPA',
+      '한국어판이 우선',
+    ]) {
+      expect(text).toContain(item);
+    }
     expect(screen.getByRole('note').textContent).toContain('광고에 쓰지 않');
     expect(text).not.toMatch(/\[이름\]|\[이메일\]|\[YYYY-MM-DD\]/);
     expect(hasMailLink()).toBe(true);
-    // 한국어판에는 번역 준비 중 안내가 없다
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(text).toContain('최종 수정일: 2026-11-13');
   });
 
   it.each([
-    ['ja', '翻訳準備中'],
-    ['en', 'being translated'],
-  ] as const)('개인정보처리방침(%s): 번역 전이라 한국어 본문, 맨 위에 그 언어로 「번역 준비 중, 한국어판이 기준」', async (lang, pending) => {
+    [
+      'ja',
+      'ベビろく プライバシーポリシー',
+      ['PostHog Inc.', 'ドイツ', 'IP アドレス', '国・都市', '1 年', 'GDPR', '正当な利益', '取り扱いの制限', 'データポータビリティ', '異議', '監督機関', '標準契約条項', 'CCPA', '韓国語版が優先', '広告のプライバシー設定', '退会してデータを削除', '広告を非表示'],
+    ],
+    [
+      'en',
+      'Agirok Privacy Policy',
+      ['PostHog Inc.', 'Germany', 'IP address', 'country and city', '1 year', 'GDPR', 'Legitimate interests', 'restrict its processing', 'data portability', 'right to object', 'supervisory authority', 'standard contractual clauses', 'cross-context behavioral advertising', 'Korean version prevails', 'Ad privacy settings', 'Delete account and data', 'Remove ads'],
+    ],
+  ] as const)('개인정보처리방침(%s): 번역본만, 앱 화면 문구, PostHog·GDPR 권리, Firebase Analytics·Crashlytics 없음', async (lang, title, items) => {
     const { container } = await renderPage(AgirokPrivacy, lang);
-    const status = screen.getByRole('status');
-    expect(status).toHaveAttribute('lang', lang);
-    expect(status.textContent).toContain(pending);
-    expect(container.querySelector('section#ko')).toHaveAttribute('lang', 'ko');
-    expect(screen.getByRole('heading', { level: 1, name: '아기록 개인정보처리방침' })).toBeInTheDocument();
+    expect((await meta(agirokPrivacyMeta, lang)).title).toBe(title);
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+    expect(container.querySelector(`section#${lang}`)).toHaveAttribute('lang', lang);
+    expect(container.querySelector('section#ko')).toBeNull();
+    // 「번역 준비 중」 안내는 없다
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    const text = container.textContent ?? '';
+    for (const item of items) expect(text).toContain(item);
+    expect(text).not.toMatch(/Firebase Analytics|Crashlytics|翻訳準備中|being translated/);
+    expect(text).not.toMatch(/개인정보|광고 식별자/);
+    expect(screen.getByRole('note')).toBeInTheDocument();
+    expect(hasMailLink()).toBe(true);
     // 본문 안 링크는 그 언어 페이지로
     expect(hrefs()).toContain(`/${lang}/apps/agirok/delete-account`);
   });
@@ -328,6 +365,10 @@ describe('아기록 문서', () => {
     expect(text).toContain('탈퇴하고 데이터 지우기');
     expect(text).toContain('아기록 계정 삭제 요청');
     expect(text).toContain('영업일 7일');
+    // 앱 사용 통계·오류 정보는 계정과 연결하지 않아 수집일로부터 1년 보관(PostHog, 독일)
+    expect(text).toContain('PostHog');
+    expect(text).toContain('1년');
+    expect(text).not.toContain('Google의 보유 기간');
     expect(hasMailLink()).toBe(true);
     expect(within(container).getAllByRole('link').map((a) => a.getAttribute('href'))).toContain('/ko/apps/agirok/privacy');
   });
@@ -367,6 +408,8 @@ describe('아기록 문서', () => {
     expect(text).toContain(button);
     expect(text).toContain(subject);
     expect(text).toContain(days);
+    expect(text).toContain('PostHog');
+    expect(text).not.toMatch(/Google’s retention period|Google の保存期間/);
     expect(hasMailLink()).toBe(true);
     expect(hrefs()).toContain(`/${lang}/apps/agirok/privacy`);
   });

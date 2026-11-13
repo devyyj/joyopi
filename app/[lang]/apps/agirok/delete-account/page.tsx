@@ -9,7 +9,7 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 내용 기준: docs/03_앱_스토어_페이지.md 5-3, apps/agirok/docs/privacy-policy.md 2장.
 // 일본어·영어는 한국어판을 옮긴 것이다. 「」 안의 버튼 이름은 앱 화면 문구(agirok src/i18n/{ja,en}.ts)와 같게 쓴다.
 const EFFECTIVE_DATE = '2026-11-12';
-const UPDATED_DATE = '2026-11-12';
+const UPDATED_DATE = '2026-11-13';
 /** 일본어·영어판을 처음 올린 날 */
 const TRANSLATED_DATE = '2026-11-13';
 
@@ -90,8 +90,8 @@ const ko: DocLocale = {
                 <td>Apple·Google이 각자의 방침에 따라 보관합니다. 회사는 카드 정보 등을 갖고 있지 않습니다.</td>
               </tr>
               <tr>
-                <td>앱 사용 통계·오류 보고</td>
-                <td>Google의 보유 기간에 따라 보관된 뒤 지워집니다.</td>
+                <td>앱 사용 통계·오류 정보(IP 주소와 대략적 위치 포함)</td>
+                <td>계정과 연결하지 않아 탈퇴로 바로 지워지지 않으며, 수집일로부터 1년 보관한 뒤 지워집니다(PostHog, 독일).</td>
               </tr>
             </tbody>
           </table>
@@ -186,8 +186,8 @@ const ja: DocLocale = {
                 <td>Apple・Google がそれぞれの方針に従って保管します。開発者はカード情報などを保有していません。</td>
               </tr>
               <tr>
-                <td>アプリの利用統計・エラーレポート</td>
-                <td>Google の保存期間に従って保管されたあと削除されます。</td>
+                <td>アプリの利用統計・エラー情報（IP アドレスとおおよその位置を含む）</td>
+                <td>アカウントと結び付けていないため退会してもすぐには削除されず、収集日から 1 年間保管したあと削除されます（PostHog、ドイツ）。</td>
               </tr>
             </tbody>
           </table>
@@ -283,8 +283,8 @@ const en: DocLocale = {
                 <td>Kept by Apple and Google under their own policies. The developer does not hold card details or similar information.</td>
               </tr>
               <tr>
-                <td>App usage statistics and error reports</td>
-                <td>Kept for Google’s retention period and then deleted.</td>
+                <td>App usage statistics and error information (including IP address and approximate location)</td>
+                <td>Not linked to your account, so it is not deleted right away when you delete your account. It is kept for 1 year from collection and then deleted (PostHog, Germany).</td>
               </tr>
             </tbody>
           </table>

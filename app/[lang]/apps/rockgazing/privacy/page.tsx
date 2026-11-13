@@ -18,7 +18,7 @@ const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 const ko: DocLocale = {
   lang: 'ko',
-  title: 'Rockgazing 개인정보 처리방침',
+  title: '돌멍타임 개인정보 처리방침',
   lead: (
     <p>
       Rockgazing(한국 스토어 이름 「돌멍타임」, 이하 ‘앱’)은 {BUSINESS_INFO.nameKo}({BUSINESS_INFO.nameEn}, 이하 ‘개발자’)가
@@ -689,7 +689,7 @@ const en: DocLocale = {
 
 const ja: DocLocale = {
   lang: 'ja',
-  title: 'Rockgazing プライバシーポリシー',
+  title: '石の子守り プライバシーポリシー',
   lead: (
     <p>
       Rockgazing（日本のストア名「石の子守り」、以下「本アプリ」）は {BUSINESS_INFO.nameEn}

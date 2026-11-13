@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function PoliciesPage() {
   return (
     <PageShell title="약관·정책" lead="앱마다 다루는 정보가 달라 개인정보 처리방침을 앱별로 둡니다.">
-      <PageSection heading="Rockgazing (돌멍타임 / 石の子守り)">
+      <PageSection heading="돌멍타임 (Rockgazing / 石の子守り)">
         <ul>
           <li>
             <Link href="/ko/apps/rockgazing/privacy">개인정보 처리방침</Link> (<Link href="/en/apps/rockgazing/privacy" hrefLang="en">English</Link> ·{' '}
@@ -20,10 +20,11 @@ export default function PoliciesPage() {
         </ul>
       </PageSection>
 
-      <PageSection heading="아기록">
+      <PageSection heading="아기록 (ベビろく / Agirok)">
         <ul>
           <li>
-            <Link href="/ko/apps/agirok/privacy">개인정보처리방침</Link> (일본어·영어판 준비 중)
+            <Link href="/ko/apps/agirok/privacy">개인정보처리방침</Link> (<Link href="/en/apps/agirok/privacy" hrefLang="en">English</Link> ·{' '}
+            <Link href="/ja/apps/agirok/privacy" hrefLang="ja">日本語</Link>)
           </li>
           <li>
             <Link href="/ko/apps/agirok/delete-account">계정·데이터 삭제 안내</Link>

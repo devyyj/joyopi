@@ -113,7 +113,7 @@ const ja: DocLocale = {
       heading: '一緒に育児をする家族はどうやって招待しますか？',
       body: (
         <ol>
-          <li>設定で「招待コードを作る」をタップし、6桁の招待コードを作ります。コードは24時間使えます。</li>
+          <li>設定で「招待コードを作る」をタップし、英数字6文字の招待コードを作ります。コードは24時間使えます。</li>
           <li>受け取った人はアプリにログインしてから「招待コードを受け取りました」をタップし、コードを入力します。</li>
         </ol>
       ),
@@ -185,7 +185,7 @@ const en: DocLocale = {
       heading: 'How do I invite my partner or another caregiver?',
       body: (
         <ol>
-          <li>In Settings, tap “Create invite code” to make a 6-digit invite code. The code can be used for 24 hours.</li>
+          <li>In Settings, tap “Create invite code” to make a 6-character invite code. The code can be used for 24 hours.</li>
           <li>The other person signs in to the app, taps “I have an invite code”, and enters the code.</li>
         </ol>
       ),

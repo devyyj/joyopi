@@ -676,7 +676,7 @@ const ja: DocLocale = {
         <ul>
           <li>すべての通信は暗号化された接続（TLS）でやり取りします。</li>
           <li>データベースのセキュリティルールにより、その赤ちゃんの保護者として登録されたアカウントだけが記録を読み書きできるようにしています。</li>
-          <li>一緒に使う家族を招待するコードは6桁で、24時間を過ぎると使えません。</li>
+          <li>一緒に使う家族を招待するコードは英数字6文字で、24時間を過ぎると使えません。</li>
           <li>運用データにアクセスできる人を、個人情報保護責任者1人に限定しています。</li>
         </ul>
       ),
@@ -1093,7 +1093,7 @@ const en: DocLocale = {
         <ul>
           <li>All communication uses encrypted connections (TLS).</li>
           <li>Database security rules allow only accounts registered as that baby’s caregivers to read and write its records.</li>
-          <li>Invite codes for other caregivers have 6 digits and cannot be used after 24 hours.</li>
+          <li>Invite codes for other caregivers are 6 characters (letters and numbers) and cannot be used after 24 hours.</li>
           <li>Access to operational data is limited to one person, the privacy officer.</li>
         </ul>
       ),

@@ -1,6 +1,7 @@
+import type { Lang } from '@/app/_i18n/config';
 import { BUSINESS_INFO, type BusinessInfoData } from '../_lib/business-info';
 
-export type Lang = 'ko' | 'en' | 'ja';
+export type { Lang };
 
 const LABELS: Record<Lang, Record<'heading' | 'name' | 'representative' | 'registration' | 'mailOrder' | 'address' | 'phone' | 'email', string>> = {
   ko: {

@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { echoLogs } from '@/db/schema';
 import { desc, lt } from 'drizzle-orm';
 
-import { mapEventTypeToLogType } from '@/app/echo/utils/echo-logic';
+import { mapEventTypeToLogType } from '@/app/(korean)/echo/utils/echo-logic';
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_FIELD_LENGTH = 100;

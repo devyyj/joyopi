@@ -3,7 +3,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import BrandLogo from './brand-logo';
-import { metadata, viewport } from '@/app/site-metadata';
+import { getSiteMetadata, viewport } from '@/app/site-metadata';
+import { LANGS } from '@/app/_i18n/config';
+
+const metadata = getSiteMetadata('ko');
 
 const publicDir = join(process.cwd(), 'public');
 
@@ -51,9 +54,12 @@ describe('브랜드 에셋 적용', () => {
     expect(JSON.stringify(viewport.themeColor)).toContain('#F5F2EA');
   });
 
-  it('영문 표기는 YOPI LAB 대신 joyopi를 쓴다', () => {
-    expect(String(metadata.title)).toContain('joyopi');
-    expect(String(metadata.title)).not.toContain('YOPI LAB');
+  it('영문 표기는 YOPI LAB 대신 joyopi를 쓴다 (세 언어 모두)', () => {
+    for (const lang of LANGS) {
+      const title = String(getSiteMetadata(lang).title);
+      expect(title).toContain('joyopi');
+      expect(title).not.toContain('YOPI LAB');
+    }
   });
 
   it('전역 색이 브랜드 값(크림·잉크·주황)을 쓴다', () => {

@@ -30,5 +30,6 @@ export const config = {
     '/apps/agirok/privacy',
     '/apps/agirok/support',
     '/apps/agirok/delete-account',
+    '/apps/agirok/terms',
   ],
 };

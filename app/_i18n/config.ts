@@ -37,6 +37,7 @@ export const LEGACY_PATHS = [
   '/apps/agirok/privacy',
   '/apps/agirok/support',
   '/apps/agirok/delete-account',
+  '/apps/agirok/terms',
 ] as const;
 
 export const isLegacyPath = (pathname: string): boolean => (LEGACY_PATHS as readonly string[]).includes(pathname);

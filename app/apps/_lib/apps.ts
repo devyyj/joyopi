@@ -120,6 +120,7 @@ const SOURCES: AppSource[] = [
       { key: 'privacy', path: '/apps/agirok/privacy' },
       { key: 'support', path: '/apps/agirok/support' },
       { key: 'deleteAccount', path: '/apps/agirok/delete-account' },
+      { key: 'terms', path: '/apps/agirok/terms' },
     ],
     text: {
       ko: {
@@ -138,7 +139,7 @@ const SOURCES: AppSource[] = [
           { label: '언어', value: '한국어, English, 日本語' },
           { label: '가격', value: '무료 (광고 있음, 광고 제거 구입 가능)' },
         ],
-        pageLabels: { privacy: '개인정보처리방침', support: '지원', deleteAccount: '계정·데이터 삭제' },
+        pageLabels: { privacy: '개인정보처리방침', support: '지원', deleteAccount: '계정·데이터 삭제', terms: '이용약관' },
       },
       ja: {
         name: 'ベビろく',
@@ -156,7 +157,7 @@ const SOURCES: AppSource[] = [
           { label: '言語', value: '한국어, English, 日本語' },
           { label: '価格', value: '無料（広告あり。アプリ内課金で広告を非表示にできます）' },
         ],
-        pageLabels: { privacy: 'プライバシーポリシー', support: 'サポート', deleteAccount: 'アカウント・データの削除' },
+        pageLabels: { privacy: 'プライバシーポリシー', support: 'サポート', deleteAccount: 'アカウント・データの削除', terms: '利用規約' },
       },
       en: {
         name: 'Agirok',
@@ -174,7 +175,7 @@ const SOURCES: AppSource[] = [
           { label: 'Languages', value: '한국어, English, 日本語' },
           { label: 'Price', value: 'Free (with ads; remove ads with a one-time in-app purchase)' },
         ],
-        pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data' },
+        pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data', terms: 'Terms of Use' },
       },
     },
   },

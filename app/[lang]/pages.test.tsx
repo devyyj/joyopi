@@ -14,6 +14,7 @@ import RockgazingSupport, { generateMetadata as rockgazingSupportMeta } from './
 import AgirokPrivacy, { generateMetadata as agirokPrivacyMeta } from './apps/agirok/privacy/page';
 import AgirokSupport, { generateMetadata as agirokSupportMeta } from './apps/agirok/support/page';
 import AgirokDeleteAccount, { generateMetadata as agirokDeleteMeta } from './apps/agirok/delete-account/page';
+import AgirokTerms, { generateMetadata as agirokTermsMeta } from './apps/agirok/terms/page';
 import AboutPage, { metadata as aboutMeta } from '@/app/(korean)/about/page';
 import NewsPage, { metadata as newsMeta } from '@/app/(korean)/news/page';
 import SupportPage, { metadata as supportMeta } from '@/app/(korean)/support/page';
@@ -62,6 +63,7 @@ describe('hreflang 대체 주소', () => {
     ['/apps/agirok/privacy', agirokPrivacyMeta],
     ['/apps/agirok/support', agirokSupportMeta],
     ['/apps/agirok/delete-account', agirokDeleteMeta],
+    ['/apps/agirok/terms', agirokTermsMeta],
   ];
 
   it.each(cases)('%s: canonical은 지금 언어, 대체 주소는 ko·ja·en과 x-default(언어 없는 주소)', async (path, fn) => {
@@ -393,6 +395,23 @@ describe('아기록 문서', () => {
     }
     expect(en.container.textContent).not.toContain('초대 코드');
     expect(hrefs()).toContain('/en/apps/agirok/delete-account');
+  });
+
+  it.each([
+    ['ko', '아기록 이용약관', '의료 조언이 아닙니다', '탈퇴하고 데이터 지우기', '대한민국 법'],
+    ['ja', 'ベビろく 利用規約', '医療上の助言ではありません', '退会してデータを削除', '大韓民国の法律'],
+    ['en', 'Agirok Terms of Use', 'Not medical advice', 'Delete account and data', 'Republic of Korea'],
+  ] as const)('이용약관(%s): 제목, 의료 조언 아님, 탈퇴 메뉴 이름, 준거법, 처리방침·지원 링크', async (lang, title, medical, deleteMenu, law) => {
+    const { container } = await renderPage(AgirokTerms, lang);
+    expect((await meta(agirokTermsMeta, lang)).title).toBe(title);
+    const text = container.textContent ?? '';
+    expect(container.querySelector(`section#${lang}`)).toHaveAttribute('lang', lang);
+    expect(text).toContain(medical);
+    expect(text).toContain(deleteMenu);
+    expect(text).toContain(law);
+    expect(text).toContain('JOYOPI');
+    expect(hasMailLink()).toBe(true);
+    expect(hrefs()).toEqual(expect.arrayContaining([`/${lang}/apps/agirok/privacy`, `/${lang}/apps/agirok/support`]));
   });
 
   it.each([

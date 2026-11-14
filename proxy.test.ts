@@ -43,7 +43,7 @@ describe('proxy (언어 없는 예전 주소 → /{lang}/…)', () => {
     expect(config.matcher).toEqual([...LEGACY_PATHS]);
   });
 
-  it('matcher는 9개 예전 주소에만 걸린다', () => {
+  it('matcher는 10개 예전 주소에만 걸린다', () => {
     for (const path of LEGACY_PATHS) {
       expect(unstable_doesMiddlewareMatch({ config, url: path })).toBe(true);
     }

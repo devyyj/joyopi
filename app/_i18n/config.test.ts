@@ -33,8 +33,8 @@ describe('주소 규칙', () => {
     expect(splitLocalePath('/')).toBeNull();
   });
 
-  it('스토어에 등록한 9개 주소만 예전 주소로 본다', () => {
-    expect(LEGACY_PATHS).toHaveLength(9);
+  it('스토어·앱에 등록한 10개 주소만 예전 주소로 본다', () => {
+    expect(LEGACY_PATHS).toHaveLength(10);
     for (const path of ['/echo', '/news', '/about', '/policies', '/support', '/app-ads.txt', '/ko/apps', '/apps/unknown']) {
       expect(isLegacyPath(path)).toBe(false);
     }

@@ -47,8 +47,7 @@ const ko: DocLocale = {
             중요한 변경은 30일 전)부터 앱 공지나 이 페이지로 알립니다.
           </li>
           <li>
-            바뀐 약관에 동의하지 않으면 탈퇴할 수 있습니다. 시행일 뒤에도 서비스를 계속 쓰면 바뀐 약관에 동의한 것으로
-            봅니다.
+            바뀐 약관에 동의하지 않으면 탈퇴할 수 있습니다. 회사가 변경을 알리면서 ‘시행일까지 거부하지 않으면 동의한 것으로 본다’는 뜻을 함께 분명히 알렸는데도 이용자가 시행일까지 거부하지 않고 서비스를 계속 쓰면, 바뀐 약관에 동의한 것으로 봅니다.
           </li>
         </ol>
       ),
@@ -75,7 +74,9 @@ const ko: DocLocale = {
           <li>서비스는 수유·수면·기저귀 기록, 요약과 차트, 공동양육자와의 기록 공유를 제공합니다.</li>
           <li>회사는 기능을 더하거나 바꾸거나 없앨 수 있습니다. 이용자에게 크게 영향을 주는 변경은 미리 알립니다.</li>
           <li>점검, 장애, 통신 문제, 외부 서비스(Google Firebase 등)의 사정으로 서비스가 잠시 멈출 수 있습니다.</li>
-          <li>회사가 서비스를 끝내려면 끝내는 날 30일 전까지 앱 공지나 이 페이지로 알립니다.</li>
+          <li>
+            회사가 서비스를 끝내려면 끝내는 날 30일 전까지 앱 공지나 이 페이지로 알립니다. 이미 결제한 이용자에 대한 조치는 관련 법령을 따릅니다.
+          </li>
         </ol>
       ),
     },
@@ -102,8 +103,7 @@ const ko: DocLocale = {
           </li>
           <li>아기를 등록한 사람은 함께 쓰는 사람을 내보낼 수 있고, 함께 쓰는 사람은 언제든 스스로 그만둘 수 있습니다.</li>
           <li>
-            함께 쓰는 사람이 한 기록 추가·수정·삭제로 생긴 문제는 이용자들 사이에서 해결해야 하며, 회사는 책임지지
-            않습니다.
+            함께 쓰는 사람이 한 기록 추가·수정·삭제로 생긴 문제는 이용자들 사이에서 해결해야 하며, 회사는 고의 또는 과실이 없는 한 책임지지 않습니다.
           </li>
         </ol>
       ),
@@ -143,6 +143,12 @@ const ko: DocLocale = {
             구매는 결제한 스토어 계정에 남습니다. 기기를 바꾸거나 앱을 다시 설치하면 설정의 ‘구매 복원’으로 다시 적용할 수
             있습니다.
           </li>
+          <li>
+            미성년자가 법정대리인의 동의 없이 결제한 경우, 본인 또는 법정대리인은 법령에 따라 결제를 취소할 수 있습니다.
+          </li>
+          <li>
+            Apple과 Google은 이 약관의 당사자가 아니며, 앱과 서비스에 대한 책임은 회사에 있습니다. 스토어에서 앱을 내려받아 쓰는 데에는 각 스토어의 이용 조건(Apple의 표준 사용권 계약 등)도 함께 적용됩니다.
+          </li>
           <li>법령이 정한 청약철회 등 소비자의 권리는 이 약관으로 제한되지 않습니다.</li>
         </ol>
       ),
@@ -161,7 +167,7 @@ const ko: DocLocale = {
           </ul>
           <p>
             회사는 위 행동이 확인되면 미리 알린 뒤(급한 경우에는 먼저 조치하고 알립니다) 이용을 제한하거나 계정을 지울 수
-            있습니다.
+            있습니다. 이용자는 이 조치에 대해 문의 메일로 이의를 제기할 수 있습니다.
           </p>
         </>
       ),
@@ -200,8 +206,7 @@ const ko: DocLocale = {
             없는 이유로 생긴 손해에 책임지지 않습니다.
           </li>
           <li>
-            무료로 제공하는 서비스와 관련해서는, 회사의 고의 또는 중대한 과실이 없으면 기록의 손실 등으로 생긴 손해에
-            책임지지 않습니다.
+            회사의 가벼운 과실로 생긴 손해에 대해서는, 회사는 통상 생길 수 있는 직접적인 손해의 범위에서만 책임집니다. 회사의 고의 또는 중대한 과실로 생긴 손해에는 이 제한을 적용하지 않습니다.
           </li>
           <li>이 조항은 법령이 허용하는 범위에서만 적용되며, 법령상 제한할 수 없는 회사의 책임을 없애지 않습니다.</li>
         </ol>
@@ -273,7 +278,7 @@ const ja: DocLocale = {
             当社は、関連法令に反しない範囲で規約を変更できます。変更するときは、施行日の7日前（利用者に不利な変更や重要な変更は30日前）から、アプリ内のお知らせまたはこのページでお知らせします。
           </li>
           <li>
-            変更後の規約に同意しない場合は、退会できます。施行日以降も本サービスを使い続けた場合は、変更後の規約に同意したものとみなします。
+            変更後の規約に同意しない場合は、退会できます。当社が変更をお知らせする際に「施行日までに拒否しなければ同意したものとみなす」旨をあわせて明確にお知らせしたにもかかわらず、利用者が施行日までに拒否せず本サービスを使い続けた場合は、変更後の規約に同意したものとみなします。
           </li>
         </ol>
       ),
@@ -299,7 +304,9 @@ const ja: DocLocale = {
           <li>本サービスは、授乳・睡眠・おむつの記録、まとめとグラフ、一緒に育児をする人との記録の共有を提供します。</li>
           <li>当社は、機能を追加・変更・廃止することがあります。利用者に大きな影響がある変更は、事前にお知らせします。</li>
           <li>点検、障害、通信の問題、外部サービス（Google Firebase など）の事情により、本サービスが一時的に止まることがあります。</li>
-          <li>当社が本サービスを終了するときは、終了日の30日前までに、アプリ内のお知らせまたはこのページでお知らせします。</li>
+          <li>
+            当社が本サービスを終了するときは、終了日の30日前までに、アプリ内のお知らせまたはこのページでお知らせします。すでに購入した利用者への対応は、関連法令に従います。
+          </li>
         </ol>
       ),
     },
@@ -323,7 +330,7 @@ const ja: DocLocale = {
           </li>
           <li>赤ちゃんを登録した人は一緒に使う人を外すことができ、一緒に使う人はいつでも自分で共有をやめられます。</li>
           <li>
-            一緒に使う人による記録の追加・修正・削除で生じた問題は、利用者どうしで解決するものとし、当社は責任を負いません。
+            一緒に使う人による記録の追加・修正・削除で生じた問題は、利用者どうしで解決するものとし、当社は故意または過失がない限り責任を負いません。
           </li>
         </ol>
       ),
@@ -360,6 +367,12 @@ const ja: DocLocale = {
           <li>
             購入は、支払いをしたストアのアカウントに残ります。機種変更やアプリの再インストールをしたときは、設定の「購入を復元」でもう一度適用できます。
           </li>
+          <li>
+            未成年者が法定代理人の同意なく購入した場合、本人または法定代理人は法令に従って購入を取り消すことができます。
+          </li>
+          <li>
+            Apple と Google はこの規約の当事者ではなく、本アプリと本サービスに関する責任は当社にあります。ストアから本アプリをダウンロードして使う際には、各ストアの利用条件（Apple の標準使用許諾契約など）もあわせて適用されます。
+          </li>
           <li>法令が定める消費者の権利は、この規約によって制限されません。</li>
         </ol>
       ),
@@ -377,7 +390,7 @@ const ja: DocLocale = {
             <li>法令に違反する内容や、ほかの人の権利を侵害する内容を記録に入れること</li>
           </ul>
           <p>
-            当社は、これらの行為を確認した場合、事前にお知らせしたうえで（緊急の場合は先に対応し、あとでお知らせします）、利用を制限したりアカウントを削除したりすることがあります。
+            当社は、これらの行為を確認した場合、事前にお知らせしたうえで（緊急の場合は先に対応し、あとでお知らせします）、利用を制限したりアカウントを削除したりすることがあります。 利用者は、この対応についてお問い合わせ先のメールで異議を申し立てることができます。
           </p>
         </>
       ),
@@ -413,7 +426,7 @@ const ja: DocLocale = {
             当社は、天災、通信障害、利用者の端末・ネットワークの問題、利用者の過失、外部サービスの障害など、当社が制御できない理由で生じた損害について責任を負いません。
           </li>
           <li>
-            無料で提供するサービスに関しては、当社に故意または重大な過失がない限り、記録の消失などによって生じた損害について責任を負いません。
+            当社の軽過失によって生じた損害については、当社は通常生じうる直接の損害の範囲でのみ責任を負います。当社の故意または重大な過失によって生じた損害には、この制限を適用しません。
           </li>
           <li>この条項は法令が認める範囲でのみ適用され、法令上制限できない当社の責任をなくすものではありません。</li>
         </ol>
@@ -487,8 +500,7 @@ const en: DocLocale = {
             at least 7 days before they take effect (30 days for changes that are important or unfavorable to users).
           </li>
           <li>
-            If you do not agree to the changed terms, you may delete your account. If you keep using the Service after the
-            effective date, you are deemed to have agreed to them.
+            If you do not agree to the changed terms, you may delete your account. If the Company, when announcing a change, also clearly states that not refusing by the effective date is treated as agreement, and you keep using the Service without refusing by that date, you are deemed to have agreed to the changed terms.
           </li>
         </ol>
       ),
@@ -518,7 +530,9 @@ const en: DocLocale = {
             The Service may stop for a while because of maintenance, outages, network problems, or issues with outside
             services (such as Google Firebase).
           </li>
-          <li>If the Company ends the Service, it will announce this in the App or on this page at least 30 days before the end date.</li>
+          <li>
+            If the Company ends the Service, it will announce this in the App or on this page at least 30 days before the end date. What happens for users who have already made a purchase follows the applicable law.
+          </li>
         </ol>
       ),
     },
@@ -546,8 +560,7 @@ const en: DocLocale = {
           </li>
           <li>The person who registered the baby can remove other caregivers, and any caregiver can stop sharing at any time.</li>
           <li>
-            Problems caused by records that a caregiver added, edited, or deleted are to be settled among the users. The
-            Company is not responsible for them.
+            Problems caused by records that a caregiver added, edited, or deleted are to be settled among the users. The Company is not responsible for them unless it acted intentionally or negligently.
           </li>
         </ol>
       ),
@@ -587,6 +600,12 @@ const en: DocLocale = {
             The purchase stays with the store account that paid for it. After switching devices or reinstalling the App, tap
             “Restore purchase” in Settings to apply it again.
           </li>
+          <li>
+            If a minor makes a purchase without the consent of a parent or legal guardian, the minor or the guardian may cancel it as the law provides.
+          </li>
+          <li>
+            Apple and Google are not parties to these terms, and the Company is responsible for the App and the Service. Each store’s own terms (such as Apple’s standard license agreement) also apply to downloading and using the App.
+          </li>
           <li>These terms do not limit consumer rights that the law guarantees.</li>
         </ol>
       ),
@@ -605,7 +624,7 @@ const en: DocLocale = {
           </ul>
           <p>
             If the Company confirms such conduct, it may restrict your use or delete your account after giving notice (in
-            urgent cases, it may act first and notify you afterwards).
+            urgent cases, it may act first and notify you afterwards). You may object to such a measure by emailing the contact address.
           </p>
         </>
       ),
@@ -645,8 +664,7 @@ const en: DocLocale = {
             failures, problems with your device or network, your own fault, or outages of outside services.
           </li>
           <li>
-            For a Service provided free of charge, the Company is not liable for damage such as loss of records unless it
-            acted intentionally or with gross negligence.
+            For damage caused by the Company’s slight negligence, the Company is liable only for direct damage that would ordinarily arise. This limit does not apply to damage caused by the Company’s intent or gross negligence.
           </li>
           <li>
             This section applies only to the extent the law allows and does not remove any liability of the Company that

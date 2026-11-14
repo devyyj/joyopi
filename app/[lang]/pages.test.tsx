@@ -316,7 +316,7 @@ describe('아기록 문서', () => {
     expect(text).not.toMatch(/\[이름\]|\[이메일\]|\[YYYY-MM-DD\]/);
     expect(hasMailLink()).toBe(true);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(text).toContain('최종 수정일: 2026-11-13');
+    expect(text).toContain('최종 수정일: 2026-11-14');
   });
 
   it.each([

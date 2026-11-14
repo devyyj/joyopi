@@ -11,7 +11,7 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 일본어·영어는 한국어판을 옮긴 것이다. ‘’ 안의 메뉴 이름은 앱 화면 문구(agirok src/i18n/{ko,ja,en}.ts)와 같게 쓴다.
 // 원고는 6열 국외 이전 표지만, 모바일 폭(390px)에서 가로 스크롤이 생겨 받는 자별 2열 표로 옮긴다(AGENTS.md 6.11). 내용은 같다.
 const EFFECTIVE_DATE = '2026-11-12';
-const UPDATED_DATE = '2026-11-13';
+const UPDATED_DATE = '2026-11-14';
 /** 일본어·영어판을 처음 올린 날 */
 const TRANSLATED_DATE = '2026-11-13';
 
@@ -87,7 +87,10 @@ const ko: DocLocale = {
               </tr>
               <tr>
                 <td>광고</td>
-                <td>광고 식별자(동의한 경우)</td>
+                <td>
+                  광고 식별자(동의한 경우), IP 주소(접속 시 자동 전송)와 그로 추정한 대략적 위치, 기기 종류·운영체제 버전, 광고
+                  노출·클릭 정보
+                </td>
                 <td>광고 표시 (Google AdMob)</td>
               </tr>
               <tr>
@@ -103,7 +106,10 @@ const ko: DocLocale = {
               앱 사용 이벤트와 오류 정보는 계정·이름·이메일과 연결하지 않고, 아기 이름·육아 기록 내용도 담지 않습니다. 화면
               녹화는 하지 않습니다.
             </li>
-            <li>맞춤형 광고는 동의한 경우에만 표시합니다. 동의하지 않아도 앱을 쓸 수 있습니다.</li>
+            <li>
+              맞춤형 광고는 동의한 경우에만 표시합니다. 동의하지 않아도 앱을 쓸 수 있으며, 이때에도 맞춤형이 아닌 광고를
+              표시하기 위해 IP 주소, 기기 종류·운영체제 버전, 광고 노출·클릭 정보는 Google AdMob에 전송됩니다.
+            </li>
             <li>카드 번호 등 결제 정보는 Apple·Google이 처리하며 회사는 받지 않습니다.</li>
           </ul>
         </>
@@ -201,7 +207,7 @@ const ko: DocLocale = {
             rows={[
               ['받는 자', 'Google LLC'],
               ['이전 국가', '미국 등 Google 데이터센터가 있는 국가'],
-              ['이전 항목', '계정 식별자·이메일·이름(Firebase Authentication), 광고 식별자(AdMob, 동의한 경우)'],
+              ['이전 항목', '계정 식별자·이메일·이름(Firebase Authentication), 광고 식별자(동의한 경우)·IP 주소와 대략적 위치·기기 종류·운영체제 버전·광고 노출·클릭 정보(AdMob)'],
               ['이전 시기·방법', '앱을 쓰는 때에 암호화된 통신망으로 전송'],
               ['이용 목적', '로그인, 광고 표시'],
               ['보유 기간', '탈퇴 또는 위탁 계약 종료 시까지'],
@@ -522,7 +528,10 @@ const ja: DocLocale = {
               </tr>
               <tr>
                 <td>広告</td>
-                <td>広告識別子（同意した場合）</td>
+                <td>
+                  広告識別子（同意した場合）、IP アドレス（接続時に自動で送信）とそこから推定したおおよその位置、端末の機種・OS
+                  バージョン、広告の表示・クリック情報
+                </td>
                 <td>広告の表示（Google AdMob）</td>
               </tr>
               <tr>
@@ -537,7 +546,10 @@ const ja: DocLocale = {
             <li>
               アプリの利用イベントとエラー情報は、アカウント・名前・メールアドレスと結び付けず、赤ちゃんの名前や育児記録の内容も含みません。画面の録画は行いません。
             </li>
-            <li>パーソナライズ広告は同意した場合にのみ表示します。同意しなくてもアプリを使えます。</li>
+            <li>
+              パーソナライズ広告は同意した場合にのみ表示します。同意しなくてもアプリを使えます。その場合も、パーソナライズされていない広告を表示するために、IP
+              アドレス、端末の機種・OS バージョン、広告の表示・クリック情報は Google AdMob に送信されます。
+            </li>
             <li>カード番号などの支払い情報は Apple・Google が取り扱い、開発者は受け取りません。</li>
           </ul>
         </>
@@ -632,7 +644,7 @@ const ja: DocLocale = {
             rows={[
               ['移転先', 'Google LLC'],
               ['移転先の国', 'アメリカなど Google のデータセンターがある国'],
-              ['移転する項目', 'アカウント識別子・メールアドレス・名前（Firebase Authentication）、広告識別子（AdMob、同意した場合）'],
+              ['移転する項目', 'アカウント識別子・メールアドレス・名前（Firebase Authentication）、広告識別子（同意した場合）・IP アドレスとおおよその位置・端末の機種・OS バージョン・広告の表示・クリック情報（AdMob）'],
               ['移転の時期・方法', 'アプリを使うときに暗号化された通信で送信'],
               ['利用目的', 'ログイン、広告の表示'],
               ['保有期間', '退会または委託契約の終了まで'],
@@ -942,7 +954,10 @@ const en: DocLocale = {
               </tr>
               <tr>
                 <td>Advertising</td>
-                <td>Advertising identifier (if you consent)</td>
+                <td>
+                  Advertising identifier (if you consent), IP address (sent automatically when connecting) and the approximate
+                  location estimated from it, device model and OS version, ad impressions and clicks
+                </td>
                 <td>Showing ads (Google AdMob)</td>
               </tr>
               <tr>
@@ -958,7 +973,11 @@ const en: DocLocale = {
               App usage events and error information are not linked to your account, name, or email address, and do not
               contain your baby’s name or the content of your care records. The screen is not recorded.
             </li>
-            <li>Personalized ads are shown only if you consent. You can use the app without consenting.</li>
+            <li>
+              Personalized ads are shown only if you consent. You can use the app without consenting; in that case your IP
+              address, device model and OS version, and ad impressions and clicks are still sent to Google AdMob to show
+              non-personalized ads.
+            </li>
             <li>Payment details such as card numbers are handled by Apple and Google. The developer does not receive them.</li>
           </ul>
         </>
@@ -1061,7 +1080,7 @@ const en: DocLocale = {
             rows={[
               ['Recipient', 'Google LLC'],
               ['Country', 'United States and other countries where Google has data centers'],
-              ['Items', 'Account identifier, email address, and name (Firebase Authentication); advertising identifier (AdMob, if you consent)'],
+              ['Items', 'Account identifier, email address, and name (Firebase Authentication); advertising identifier (if you consent), IP address and approximate location, device model and OS version, and ad impressions and clicks (AdMob)'],
               ['When and how', 'Sent over encrypted connections while you use the app'],
               ['Purpose', 'Sign-in, showing ads'],
               ['Retention', 'Until you delete your account or the service contract ends'],

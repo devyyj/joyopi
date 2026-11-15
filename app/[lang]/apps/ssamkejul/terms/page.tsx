@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { localePath, type Lang } from '@/app/_i18n/config';
+import { type Lang } from '@/app/_i18n/config';
 import { localizedMetadata, resolveLang, type LangParams } from '@/app/_i18n/page';
 import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
@@ -9,8 +9,7 @@ import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 일본어·영어는 한국어판을 옮긴 것이다(원어민 검수 전).
 const DATE = '2026-11-16';
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
-const deleteHref = (lang: Lang) => localePath(lang, '/apps/ssamkejul/delete-account');
-void deleteHref;
+
 
 const ko: DocLocale = {
   lang: 'ko',
@@ -33,15 +32,15 @@ const ko: DocLocale = {
 const ja: DocLocale = {
   lang: 'ja',
   title: "せんせジュール 利用規約",
-  lead: <p>せんせジュール(以下「本サービス」)は、JOYOPI(以下「当社」)が提供するレッスンの予定管理サービスです。</p>,
+  lead: <p>せんせジュール（以下「本サービス」）は、JOYOPI（以下「当社」）が提供するレッスンの予定管理サービスです。</p>,
   sections: [
     { id: "price", heading: "1. 料金", body: <><p>本サービスは現在無料です。今後、一部の機能や一定数以上の生徒の登録を有料にすることがあります。その場合は30日前までにお知らせし、登録済みの生徒は引き続きご利用いただけるようにします。</p></> },
     { id: "account", heading: "2. アカウント", body: <><p>カカオ・LINE・Apple・Googleのアカウントでログインします。アカウントはご本人だけが使ってください。生徒の招待リンクは最初に連携したアカウントでのみ使えます。</p></> },
     { id: "teacher", heading: "3. 先生の責任", body: <><ul><li>生徒の情報を入力する前に生徒に知らせ、必要な同意を得てください。</li><li>レッスンの契約・受講料・返金は先生と生徒の間のことであり、当社は当事者ではありません。</li><li>自動確定・締切の設定は先生が決め、その結果のご案内は先生が行います。</li></ul></> },
-    { id: "prohibited", heading: "4. 禁止事項", body: <><p>他人のアカウントの使用、サービスの妨害(自動化された大量のリクエストなど)、法令違反、他人の権利の侵害、レッスンの予定管理以外の目的(広告・スパムなど)での利用を禁止します。</p></> },
+    { id: "prohibited", heading: "4. 禁止事項", body: <><p>他人のアカウントの使用、サービスの妨害（自動化された大量のリクエストなど）、法令違反、他人の権利の侵害、レッスンの予定管理以外の目的（広告・スパムなど）での利用を禁止します。</p></> },
     { id: "change", heading: "5. サービスの変更・終了", body: <><p>当社は本サービスを変更し、一部を停止することがあります。本サービスを終了する場合は30日前までにお知らせします。</p></> },
     { id: "liability", heading: "6. 責任の制限", body: <><p>当社は本サービスを誠実に運営しますが、通信障害・端末の問題・利用者の誤入力による予定の問題については、故意または重大な過失がない限り責任を負いません。レッスンの内容と質は先生の責任です。</p></> },
-    { id: "leave", heading: "7. 退会", body: <><p>先生はアプリ「設定」›「アカウント削除(退会)」からいつでも退会できます。生徒は「連携を解除」からいつでも連携を解除できます。</p></> },
+    { id: "leave", heading: "7. 退会", body: <><p>先生はアプリ「設定」›「アカウント削除（退会）」からいつでも退会できます。生徒は「連携を解除」からいつでも連携を解除できます。</p></> },
     { id: "law", heading: "8. 準拠法・管轄", body: <><p>大韓民国の法律に準拠し、紛争は同国の民事訴訟法に基づく管轄裁判所で解決します。日本の利用者には、日本の消費者契約法などの強行規定が優先して適用されます。お問い合わせ: {mail}</p></> },
   ],
   effectiveDate: DATE,

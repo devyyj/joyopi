@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { localePath, type Lang } from '@/app/_i18n/config';
+import { type Lang } from '@/app/_i18n/config';
 import { localizedMetadata, resolveLang, type LangParams } from '@/app/_i18n/page';
 import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
@@ -9,8 +9,7 @@ import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 일본어·영어는 한국어판을 옮긴 것이다(원어민 검수 전).
 const DATE = '2026-11-16';
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
-const deleteHref = (lang: Lang) => localePath(lang, '/apps/ssamkejul/delete-account');
-void deleteHref;
+
 
 const ko: DocLocale = {
   lang: 'ko',
@@ -31,10 +30,10 @@ const ja: DocLocale = {
   title: "せんせジュール アカウント・データの削除",
   lead: <p>せんせジュールのアカウントとデータを削除する方法です。</p>,
   sections: [
-    { id: "teacher", heading: "先生", body: <><p>アプリの「設定」›「アカウント削除(退会)」を押して確認すると、アカウントとすべての生徒・予定・記録、生徒との連携と招待リンクがすぐに削除されます。元に戻せません。</p></> },
+    { id: "teacher", heading: "先生", body: <><p>アプリの「設定」›「アカウント削除（退会）」を押して確認すると、アカウントとすべての生徒・予定・記録、生徒との連携と招待リンクがすぐに削除されます。元に戻せません。</p></> },
     { id: "student", heading: "生徒", body: <><p>生徒ページ下の「連携を解除」を押すと、そのレッスンとの連携が削除されます。先生が入力した名前・メモの削除は、先生にお願いするか{mail}までお問い合わせください。</p></> },
-    { id: "email", heading: "アプリを使えない場合", body: <><p>ログインに使ったアカウントの種類(カカオ・LINE・Apple・Google)と先生の名前を書いて{mail}までお送りください。確認後に削除します。</p></> },
-    { id: "kept", heading: "残るもの", body: <><p>匿名の利用記録(名前・ログインIDなし)は1年後に自動で削除されます。</p></> },
+    { id: "email", heading: "アプリを使えない場合", body: <><p>ログインに使ったアカウントの種類（カカオ・LINE・Apple・Google）と先生の名前を書いて{mail}までお送りください。確認後に削除します。</p></> },
+    { id: "kept", heading: "残るもの", body: <><p>匿名の利用記録（名前・ログインIDなし）は1年後に自動で削除されます。</p></> },
   ],
   effectiveDate: DATE,
   updatedDate: DATE,
@@ -47,7 +46,7 @@ const en: DocLocale = {
   sections: [
     { id: "teacher", heading: "Teachers", body: <><p>In the App, go to Settings › Delete account and confirm. Your account and all students, schedules, records, student links and invite links are deleted immediately. This cannot be undone.</p></> },
     { id: "student", heading: "Students", body: <><p>Tap “Unlink” at the bottom of the student page to remove your link to that lesson. To delete your name or memo entered by the teacher, ask your teacher or email {mail}.</p></> },
-    { id: "email", heading: "If you can't use the App", body: <><p>Email {mail} with the type of account you signed in with (Kakao, LINE, Apple, Google) and your teacher’s name, and we will delete your data after verifying it.</p></> },
+    { id: "email", heading: "If you can’t use the App", body: <><p>Email {mail} with the type of account you signed in with (Kakao, LINE, Apple, Google) and your teacher’s name, and we will delete your data after verifying it.</p></> },
     { id: "kept", heading: "What remains", body: <><p>Anonymous usage events (no names or sign-in IDs) are deleted automatically after 1 year.</p></> },
   ],
   effectiveDate: DATE,

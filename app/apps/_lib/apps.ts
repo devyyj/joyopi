@@ -179,6 +179,73 @@ const SOURCES: AppSource[] = [
       },
     },
   },
+  {
+    slug: 'ssamkejul',
+    appStoreUrl: null,
+    googlePlayUrl: null,
+    pages: [
+      { key: 'privacy', path: '/apps/ssamkejul/privacy' },
+      { key: 'support', path: '/apps/ssamkejul/support' },
+      { key: 'deleteAccount', path: '/apps/ssamkejul/delete-account' },
+      { key: 'terms', path: '/apps/ssamkejul/terms' },
+    ],
+    text: {
+      ko: {
+        name: '쌤케줄',
+        altNames: ['せんせジュール', 'Ssamkejul'],
+        description: '쌤, 언제 돼요? 이제 묻지 마세요',
+        features: [
+          '1인 레슨 선생님을 위한 일정 앱입니다.',
+          '수강생은 앱 설치 없이 카톡 링크와 카카오 로그인으로 일정을 보고 신청·변경·취소합니다.',
+          '자동 확정·마감 같은 규칙을 정해 두면 「그때 돼요?」 대화를 하지 않아도 됩니다.',
+          '같은 시간에 두 수강생이 겹치지 않습니다.',
+          '광고가 없고, 지금은 무료입니다.',
+        ],
+        facts: [
+          { label: '기기', value: 'iPhone, Android (선생님), 웹 (수강생)' },
+          { label: '언어', value: '한국어, 日本語' },
+          { label: '가격', value: '지금은 무료' },
+        ],
+        pageLabels: { privacy: '개인정보처리방침', support: '지원', deleteAccount: '계정·데이터 삭제', terms: '이용약관' },
+      },
+      ja: {
+        name: 'せんせジュール',
+        altNames: ['쌤케줄', 'Ssamkejul'],
+        description: 'レッスンの予約・振替、LINEでかんたん',
+        features: [
+          '個人レッスンの先生のためのスケジュールアプリです。',
+          '生徒はアプリのインストール不要。LINEのリンクとLINEログインで予定の確認・予約・振替・キャンセルができます。',
+          '自動確定や締切などのルールを決めておけば、「その日空いてますか?」のやりとりが不要になります。',
+          '同じ時間に2人の生徒が重なることはありません。',
+          '広告はなく、今は無料です。',
+        ],
+        facts: [
+          { label: '端末', value: 'iPhone、Android(先生)、Web(生徒)' },
+          { label: '言語', value: '한국어, 日本語' },
+          { label: '価格', value: '現在無料' },
+        ],
+        pageLabels: { privacy: 'プライバシーポリシー', support: 'サポート', deleteAccount: 'アカウント・データの削除', terms: '利用規約' },
+      },
+      en: {
+        name: 'Ssamkejul',
+        altNames: ['쌤케줄', 'せんせジュール'],
+        description: 'Lesson scheduling for independent teachers — students just open a link',
+        features: [
+          'A scheduling app for independent lesson teachers.',
+          'Students need nothing to install: they open a link, sign in with Kakao or LINE, and book, reschedule or cancel.',
+          'Set rules like auto-confirm and deadlines, and stop the endless “are you free then?” chats.',
+          'Two students can never book the same time.',
+          'No ads, and free for now.',
+        ],
+        facts: [
+          { label: 'Devices', value: 'iPhone, Android (teachers), web (students)' },
+          { label: 'Languages', value: '한국어, 日本語' },
+          { label: 'Price', value: 'Free for now' },
+        ],
+        pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data', terms: 'Terms of Use' },
+      },
+    },
+  },
 ];
 
 const toEntry = (source: AppSource, lang: Lang): AppEntry => {

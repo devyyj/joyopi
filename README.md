@@ -1,6 +1,6 @@
 # 조요피 (joyopi)
 
-조요피(JOYOPI)가 만드는 모바일 앱의 공식 웹사이트(joyopi.com)입니다. Next.js와 Supabase로 만들었습니다.
+조요피(JOYOPI)가 만드는 모바일 앱의 공식 웹사이트(joyopi.com)입니다. Next.js와 Firebase로 만들었습니다.
 
 ## 🚀 주요 기능
 
@@ -12,8 +12,8 @@
 ## 🛠 기술 스택
 
 - **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind CSS
-- **Backend**: Supabase (Realtime)
-- **Database**: PostgreSQL (Supabase) + Drizzle ORM
+- **Realtime**: Firebase Realtime Database (에코 접속자·이벤트)
+- **Database**: Cloud Firestore (에코 로그, 서버 액션에서 Admin SDK로만 접근)
 - **Testing/Lint**: Vitest, ESLint
 
 ## 📦 시작하기
@@ -21,6 +21,13 @@
 ```bash
 # 의존성 설치
 npm install
+
+# 환경 변수 (.env.local): Firestore 서비스 계정
+# FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY (줄바꿈은 
+)
+
+# 보안 규칙 배포 (database.rules.json, firestore.rules)
+npx firebase-tools deploy --only database,firestore:rules --project joyopi
 
 # 개발 서버 실행
 npm run dev

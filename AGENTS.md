@@ -28,7 +28,7 @@
   - `master` 브랜치로의 병합은 `develop`에서 개발 및 검증이 완료된 후에만 수행합니다.
   - **커밋 전 빌드 확인**: 0장의 「검증이 필요한 경우」에 해당하는 변경은 커밋 전에 **`npm run verify`(빌드 포함)를 실행하여 성공을 확인**합니다. 실패하면 커밋하지 않습니다. `master` 반영 전에는 변경 종류와 관계없이 항상 실행합니다.
 - **범위 준수**: 현재 요청과 직접 관련 없는 코드는 수정하지 않는 **최소 수정 원칙**을 고수합니다.
-- **맥락 우선**: 프로젝트 스택(Next.js 15, TS, Tailwind, Supabase, Drizzle)에 최적화된 코드를 작성합니다.
+- **맥락 우선**: 프로젝트 스택(Next.js 16, TS, Tailwind, Firebase — Realtime Database·Firestore)에 최적화된 코드를 작성합니다.
 - **논리-텍스트 정합성**: 비즈니스 로직(DB 스키마, 서버 액션 등) 변경 시, 해당 기능을 설명하는 모든 UI 텍스트(안내문, 모달 메시지, 플레이스홀더 등)를 반드시 전수 조사하여 일치시킵니다.
 
 ## 2. 개발 사이클 (TDD는 필요한 경우에만)
@@ -48,7 +48,7 @@ TDD로 진행할 때의 순서:
     - **자동 수정**: 코드 수정 시 `eslint --fix`가 자동으로 실행됩니다.
 3.  **리팩터링 및 검증 (Refactor/Validate)**: 
     - 코드 품질을 개선하고 중복을 제거합니다. 리팩터링 후에도 테스트가 통과하는지 확인합니다.
-    - **인프라 검증**: Storage 버킷 등 외부 설정이 필요한 경우, `mcp_supabase_execute_sql` 등을 통해 실제 환경에 버킷과 정책이 존재하는지 직접 검증합니다.
+    - **인프라 검증**: Storage 버킷 등 외부 설정이 필요한 경우, Firebase 보안 규칙(`database.rules.json`, `firestore.rules`)을 배포한 뒤 REST·SDK 요청으로 허용·거부가 의도대로인지 직접 검증합니다.
     - **최종 정합성 확인**: `npm run verify`를 실행하여 전체 시스템의 안전성을 확인합니다.
 
 ## 3. 기술적 모범 사례 (Technical Best Practices)
@@ -101,7 +101,7 @@ TDD로 진행할 때의 순서:
 ## 6. 학습된 프로젝트 지침 (Learned Lessons)
 
 ### 6.1. 데이터베이스 연결 (Next.js HMR 대응)
-- Next.js 개발 환경에서 DB 연결 객체가 중첩 생성되어 'max client connections reached' 에러가 발생하는 것을 방지하기 위해, `db/index.ts` 등에서 연결 인스턴스를 `globalThis`에 캐싱하여 재사용해야 합니다.
+- Next.js 개발 환경(HMR)에서 연결 객체가 중첩 생성되지 않도록 Firebase 앱은 `getApps()`로 이미 있는지 확인한 뒤 한 번만 만듭니다(`utils/firebase/admin.ts`, `utils/firebase/client.ts`). 서버에는 아기록 Admin 앱도 있으므로 이름 있는 앱(`joyopi`, `agirok`)으로 구분합니다.
 
 ### 6.2. Next.js 15 이미지 최적화
 - `Image` 컴포넌트의 `fill` 속성 사용 시 부모 요소에 반드시 `relative` 포지션이 있어야 하며, 명시적인 높이(`height`)나 `aspect-ratio`를 가져야 이미지가 0px로 렌더링되는 것을 방지할 수 있습니다.
@@ -143,7 +143,7 @@ TDD로 진행할 때의 순서:
 - **재발 방지**: 공개 문서 페이지의 표는 3열까지만 쓰고, 그보다 많으면 항목별 2열 표(제목 칸 + 값 칸)로 나눕니다. 화면을 바꾼 뒤에는 Playwright(헤드리스, 390px)로 `scrollWidth <= clientWidth`를 확인합니다.
 - **사례 (2026-11-12)**: 아기록 개인정보처리방침(`/apps/agirok/privacy`)의 6열 국외 이전 표가 2px 넘침.
 
-### 6.10. Supabase Realtime 채널 교체 시 웹소켓 종료 경합
+### 6.10. Supabase Realtime 채널 교체 시 웹소켓 종료 경합 (2026-11-15 Firebase 이전으로 해당 코드 없음)
 - **원인**: `supabase.removeChannel()`은 마지막 채널이 지워지면 웹소켓 연결을 끊기 시작하지만, 다 끊길 때까지 기다리지 않습니다. 닫히는 중에 같은 클라이언트로 새 채널을 `subscribe()`하면 재연결이 건너뛰어지고, 이전 연결이 닫히는 순간 새 채널에 오류 정보 없는 `CHANNEL_ERROR`가 전달됩니다.
 - **재발 방지**: 채널을 지운 뒤 새 채널을 만들 때는 `supabase.realtime.isDisconnecting()`이 false가 될 때까지 기다립니다. `CHANNEL_ERROR`의 `err`가 비어 있으면 서버 거절이 아니라 연결 끊김으로 처리(재접속)하고, 이유가 있는 경우만 오류로 기록합니다.
 - **사례 (2026-11-12)**: 메아리(`/echo`) 접속 직후 "채널 오류 발생: 알 수 없는 오류"가 DB에 반복 기록(`reason: init`)되고 5초 뒤에야 재접속됨. `app/echo/hooks/use-echo-socket.ts`에서 수정.

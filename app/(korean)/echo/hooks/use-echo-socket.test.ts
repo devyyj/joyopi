@@ -1,279 +1,234 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useEchoSocket } from './use-echo-socket';
+import { createEchoLog, getEchoLogs } from '@/app/actions/echo';
+import type { EchoRoomHandlers } from '../utils/echo-room';
 
-// Mock server actions
 vi.mock('@/app/actions/echo', () => ({
   createEchoLog: vi.fn().mockResolvedValue({ success: true }),
   getEchoLogs: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }));
 
-// Mock Supabase Realtime channel and client
-interface MockChannel {
-  topic: string;
-  state: string;
-  on: (type: string, filter: unknown, callback: (event: string, payload: Record<string, unknown>) => void) => MockChannel;
-  subscribe: (callback?: (status: string, err: Error | null) => void) => MockChannel;
-  unsubscribe: () => Promise<string>;
-  track: () => Promise<string>;
-  send: () => Promise<string>;
-  presenceState: () => Record<string, unknown>;
-  _isSubscribed: () => boolean;
+// 메아리 방(Realtime Database 어댑터) 대역: 접속할 때마다 handlers와 send/leave 기록을 남긴다
+interface FakeRoom {
+  presenceId: string;
+  role: string;
+  handlers: EchoRoomHandlers;
+  send: ReturnType<typeof vi.fn>;
+  leave: ReturnType<typeof vi.fn>;
 }
+const rooms: FakeRoom[] = [];
 
-const mockChannels: MockChannel[] = [];
-
-const createMockChannel = (topic: string): MockChannel => {
-  let isSubscribed = false;
-  const listeners: Record<string, Array<(event: string, payload: Record<string, unknown>) => void>> = {};
-
-  const channelObj: MockChannel = {
-    topic,
-    state: 'closed',
-    on: vi.fn((type: string, _filter: unknown, callback: (event: string, payload: Record<string, unknown>) => void) => {
-      if (isSubscribed) {
-        throw new Error(`cannot add ${type} callbacks for ${topic} after subscribe()`);
-      }
-      if (!listeners[type]) listeners[type] = [];
-      listeners[type].push(callback);
-      return channelObj;
-    }),
-    subscribe: vi.fn((callback?: (status: string, err: Error | null) => void) => {
-      isSubscribed = true;
-      channelObj.state = 'joined';
-      if (callback) callback('SUBSCRIBED', null);
-      return channelObj;
-    }),
-    unsubscribe: vi.fn(() => {
-      isSubscribed = false;
-      channelObj.state = 'closed';
-      return Promise.resolve('ok');
-    }),
-    track: vi.fn().mockResolvedValue('ok'),
-    send: vi.fn().mockResolvedValue('ok'),
-    presenceState: vi.fn().mockReturnValue({}),
-    _isSubscribed: () => isSubscribed,
-  };
-  return channelObj;
-};
-
-const mockSupabaseClient = {
-  channel: vi.fn((topic: string) => {
-    const existing = mockChannels.find(c => c.topic === topic || c.topic === `realtime:${topic}`);
-    if (existing) {
-      return existing;
-    }
-    const newCh = createMockChannel(`realtime:${topic}`);
-    mockChannels.push(newCh);
-    return newCh;
+vi.mock('../utils/echo-room', () => ({
+  joinEchoRoom: vi.fn((opts: { presenceId: string; role: string }, handlers: EchoRoomHandlers) => {
+    const room: FakeRoom = { ...opts, handlers, send: vi.fn(() => true), leave: vi.fn() };
+    rooms.push(room);
+    return room;
   }),
-  getChannels: vi.fn(() => mockChannels),
-  removeChannel: vi.fn((ch: MockChannel) => {
-    const idx = mockChannels.indexOf(ch);
-    if (idx !== -1) {
-      mockChannels.splice(idx, 1);
-    }
-    return Promise.resolve('ok');
-  }),
-  realtime: {
-    isDisconnecting: vi.fn(() => false),
-  },
-};
-
-vi.mock('@/utils/supabase/client', () => ({
-  createClient: () => mockSupabaseClient,
 }));
 
-describe('useEchoSocket Hook Concurrency & Cleanup Tests', () => {
+const lastRoom = () => rooms[rooms.length - 1];
+
+async function connected(role: 'sender' | 'speaker' | 'landing' = 'sender', presenceId = 'user-1') {
+  const hook = renderHook(() => useEchoSocket({ role, presenceId }));
+  await waitFor(() => expect(rooms).toHaveLength(1));
+  act(() => lastRoom().handlers.onConnectionChange(true));
+  return hook;
+}
+
+describe('useEchoSocket (Firebase Realtime Database)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockChannels.length = 0;
+    rooms.length = 0;
   });
 
-  it('should initialize socket connection without errors', async () => {
-    const { result } = renderHook(() =>
-      useEchoSocket({ role: 'sender', presenceId: 'user-1' })
-    );
+  it('접속하면 메아리 방에 들어가고 연결되면 CONNECTED가 된다', async () => {
+    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'user-1' }));
 
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
+    await waitFor(() => expect(result.current.status).toBe('CONNECTING'));
+    expect(lastRoom()).toMatchObject({ presenceId: 'user-1', role: 'sender' });
 
-    expect(mockSupabaseClient.channel).toHaveBeenCalledWith('echo-room', expect.any(Object));
-    expect(result.current.status).toBe('CONNECTED');
-  });
-
-  it('should re-setup channel when presenceId changes', async () => {
-    const { rerender } = renderHook(
-      ({ presenceId }) => useEchoSocket({ role: 'sender', presenceId }),
-      { initialProps: { presenceId: 'user-1' } }
-    );
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
-
-    await act(async () => {
-      rerender({ presenceId: 'user-2' });
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
-
-    expect(mockSupabaseClient.removeChannel).toHaveBeenCalled();
-  });
-
-  it('should prevent "cannot add presence callbacks after subscribe()" when concurrent setups occur', async () => {
-    const preExistingChannel = createMockChannel('realtime:echo-room');
-    preExistingChannel.subscribe();
-    mockChannels.push(preExistingChannel);
-
-    const { result } = renderHook(() =>
-      useEchoSocket({ role: 'sender', presenceId: 'user-concurrent' })
-    );
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    });
+    act(() => lastRoom().handlers.onConnectionChange(true));
 
     expect(result.current.status).toBe('CONNECTED');
+    expect(result.current.isChannelJoined).toBe(true);
   });
 
-  it('다른 사용자 퇴장은 내 화면에만 기록하고 DB 저장·브로드캐스트는 하지 않는다', async () => {
-    // 퇴장을 관찰한 모든 접속자가 저장·전파하면 같은 퇴장 로그가 접속자 수만큼 중복된다
-    const { createEchoLog } = await import('@/app/actions/echo');
-    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
+  it('presenceId가 바뀌면 이전 방에서 나가고 새 ID로 다시 들어간다', async () => {
+    const { rerender } = renderHook(({ presenceId }) => useEchoSocket({ role: 'sender', presenceId }), {
+      initialProps: { presenceId: 'user-1' },
     });
-    vi.mocked(createEchoLog).mockClear();
+    await waitFor(() => expect(rooms).toHaveLength(1));
 
-    const channel = mockChannels[0];
-    channel.send = vi.fn().mockResolvedValue('ok');
-    const leaveCall = vi.mocked(channel.on).mock.calls.find(
-      ([type, filter]) => type === 'presence' && (filter as { event: string }).event === 'leave'
-    );
-    const onLeave = leaveCall![2] as unknown as (arg: { key: string; leftPresences: unknown[] }) => void;
+    rerender({ presenceId: 'user-2' });
 
-    act(() => {
-      onLeave({ key: 'other-user', leftPresences: [{ role: 'speaker' }] });
-    });
-
-    expect(result.current.logs.some(l => l.message.includes('퇴장') && l.userId === 'other-user')).toBe(true);
-    expect(createEchoLog).not.toHaveBeenCalled();
-    expect(channel.send).not.toHaveBeenCalled();
+    await waitFor(() => expect(rooms).toHaveLength(2));
+    expect(rooms[0].leave).toHaveBeenCalled();
+    expect(rooms[1].presenceId).toBe('user-2');
   });
 
-  it('enabled가 false면 채널에 접속하지 않고, true가 되면 접속한다', async () => {
-    const { result, rerender } = renderHook(
-      ({ enabled }) => useEchoSocket({ role: 'speaker', presenceId: 'sp-1', enabled }),
-      { initialProps: { enabled: false } }
-    );
-    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
-    expect(mockSupabaseClient.channel).not.toHaveBeenCalled();
+  it('언마운트하면 방에서 나간다', async () => {
+    const { unmount } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'user-1' }));
+    await waitFor(() => expect(rooms).toHaveLength(1));
+
+    unmount();
+
+    expect(rooms[0].leave).toHaveBeenCalled();
+  });
+
+  it('presenceId가 비어 있으면 접속하지 않는다', async () => {
+    renderHook(() => useEchoSocket({ role: 'sender', presenceId: '' }));
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+
+    expect(rooms).toHaveLength(0);
+  });
+
+  it('enabled가 false면 접속하지 않고, true가 되면 접속한다', async () => {
+    const { result, rerender } = renderHook(({ enabled }) => useEchoSocket({ role: 'speaker', presenceId: 'sp-1', enabled }), {
+      initialProps: { enabled: false },
+    });
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+
+    expect(rooms).toHaveLength(0);
     expect(result.current.status).toBe('INITIAL');
 
     rerender({ enabled: true });
-    await waitFor(() => expect(result.current.status).toBe('CONNECTED'));
-    expect(mockSupabaseClient.channel).toHaveBeenCalledWith('echo-room', expect.any(Object));
+    await waitFor(() => expect(rooms).toHaveLength(1));
+    act(() => lastRoom().handlers.onConnectionChange(true));
+    expect(result.current.status).toBe('CONNECTED');
   });
 
   it('연결 성공 로그는 내 화면에만 남기고 DB에 저장하지 않는다', async () => {
-    const { createEchoLog } = await import('@/app/actions/echo');
-    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
-    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
-    expect(result.current.logs.some(l => l.message.includes('서버 연결 성공'))).toBe(true);
+    const { result } = await connected();
+
+    expect(result.current.logs.some((l) => l.message.includes('서버 연결 성공'))).toBe(true);
     expect(createEchoLog).not.toHaveBeenCalled();
   });
 
-  it('별도 연결 유지 신호(ECHO_HEARTBEAT)를 보내지 않는다', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
-      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
-      const channel = mockChannels[0];
-      await act(async () => { await vi.advanceTimersByTimeAsync(31_000); });
-      const events = vi.mocked(channel.send).mock.calls.map((args) => (args as unknown as [{ event: string }])[0].event);
-      expect(events).not.toContain('ECHO_HEARTBEAT');
-    } finally {
-      vi.useRealTimers();
-    }
+  it('연결되면 현재 상태를 묻는 ECHO_QUERY를 보낸다 (첫 화면은 보내지 않는다)', async () => {
+    await connected('sender', 'user-1');
+    expect(lastRoom().send).toHaveBeenCalledWith('ECHO_QUERY', { requesterId: 'user-1' });
+
+    rooms.length = 0;
+    await connected('landing', 'user-9');
+    expect(lastRoom().send).not.toHaveBeenCalled();
   });
 
-  it('presence에서 스피커 ID 목록을 제공한다', async () => {
-    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
-    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
-    const channel = mockChannels[0];
-    channel.presenceState = vi.fn().mockReturnValue({
-      'sp-b': [{ role: 'speaker' }],
-      'sp-a': [{ role: 'speaker' }],
-      me: [{ role: 'sender' }],
-    });
-    const syncCall = vi.mocked(channel.on).mock.calls.find(
-      ([type, filter]) => type === 'presence' && (filter as { event: string }).event === 'sync'
-    );
-    act(() => { (syncCall![2] as unknown as () => void)(); });
+  it('별도 연결 유지 신호(ECHO_HEARTBEAT)를 보내지 않는다', async () => {
+    await connected();
+    await act(async () => { await new Promise((r) => setTimeout(r, 50)); });
+
+    const events = lastRoom().send.mock.calls.map((c) => c[0]);
+    expect(events).not.toContain('ECHO_HEARTBEAT');
+  });
+
+  it('presence에서 스피커 ID 목록과 역할별 인원을 제공한다', async () => {
+    const { result } = await connected();
+
+    act(() => lastRoom().handlers.onPresence({
+      'sp-a': { role: 'speaker', joinedAt: 't' },
+      'sp-b': { role: 'speaker', joinedAt: 't' },
+      'se-a': { role: 'sender', joinedAt: 't' },
+      'la-a': { role: 'landing', joinedAt: 't' },
+    }));
+
     expect([...result.current.speakerIds].sort()).toEqual(['sp-a', 'sp-b']);
     expect(result.current.speakerCount).toBe(2);
     expect(result.current.senderCount).toBe(1);
   });
 
-  it('이전 웹소켓이 닫히는 중이면 다 닫힌 뒤에 새 채널을 만든다 (닫힘 순간의 오류 방지)', async () => {
-    let closing = true;
-    mockSupabaseClient.realtime.isDisconnecting.mockImplementation(() => closing);
-    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
+  it('다른 사용자 퇴장은 내 화면에만 기록하고 DB 저장·브로드캐스트는 하지 않는다', async () => {
+    const { result } = await connected();
+    lastRoom().send.mockClear();
 
-    await act(async () => { await new Promise(r => setTimeout(r, 150)); });
-    expect(mockSupabaseClient.channel).not.toHaveBeenCalled();
+    act(() => lastRoom().handlers.onLeave('other-user', { role: 'speaker', joinedAt: 't' }));
+    act(() => lastRoom().handlers.onLeave('user-1', { role: 'sender', joinedAt: 't' }));
 
-    closing = false;
-    await waitFor(() => expect(result.current.status).toBe('CONNECTED'));
-    expect(mockSupabaseClient.channel).toHaveBeenCalledTimes(1);
-    mockSupabaseClient.realtime.isDisconnecting.mockImplementation(() => false);
+    const leaves = result.current.logs.filter((l) => l.message.includes('퇴장'));
+    expect(leaves).toHaveLength(1);
+    expect(leaves[0]).toMatchObject({ userId: 'other-user' });
+    expect(leaves[0].message).toContain('스피커');
+    expect(createEchoLog).not.toHaveBeenCalled();
+    expect(lastRoom().send).not.toHaveBeenCalled();
   });
 
-  it('오류 정보 없는 CHANNEL_ERROR는 연결 끊김으로 보고 화면에만 안내한 뒤 1초 후 재접속한다', async () => {
-    const { createEchoLog } = await import('@/app/actions/echo');
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
-      await act(async () => { await vi.advanceTimersByTimeAsync(100); });
-      const channel = mockChannels[0];
-      const subscribeCb = vi.mocked(channel.subscribe).mock.calls[0][0]!;
-      vi.mocked(createEchoLog).mockClear();
-      vi.mocked(mockSupabaseClient.channel).mockClear();
+  it('LOG_EVENT는 로그에 더하고, 나머지 이벤트는 onBroadcast로 넘긴다', async () => {
+    const onBroadcast = vi.fn();
+    const { result } = renderHook(() => useEchoSocket({ role: 'speaker', presenceId: 'sp-1', onBroadcast }));
+    await waitFor(() => expect(rooms).toHaveLength(1));
 
-      await act(async () => { subscribeCb('CHANNEL_ERROR', null); });
+    act(() => lastRoom().handlers.onEvent('LOG_EVENT', {
+      id: 'log-1', timestamp: '2026-11-15T01:00:00.000Z', message: '남이 남긴 로그', eventType: 'request', userId: 'other',
+    }));
+    act(() => lastRoom().handlers.onEvent('ECHO_REQUEST', { senderId: 'other', seconds: 60 }));
 
-      expect(result.current.logs.some(l => l.message.includes('알 수 없는 오류'))).toBe(false);
-      expect(result.current.logs.some(l => l.message.includes('연결이 잠시 끊겼습니다'))).toBe(true);
-      expect(createEchoLog).not.toHaveBeenCalled();
-
-      await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
-      expect(mockSupabaseClient.channel).toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(result.current.logs.find((l) => l.id === 'log-1')).toMatchObject({ message: '남이 남긴 로그', userId: 'other' });
+    expect(onBroadcast).toHaveBeenCalledTimes(1);
+    expect(onBroadcast).toHaveBeenCalledWith('ECHO_REQUEST', { senderId: 'other', seconds: 60 });
   });
 
-  it('서버가 이유를 알려 준 CHANNEL_ERROR는 오류로 DB에 남긴다', async () => {
-    const { createEchoLog } = await import('@/app/actions/echo');
-    renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'me' }));
-    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
-    const subscribeCb = vi.mocked(mockChannels[0].subscribe).mock.calls[0][0]!;
-    vi.mocked(createEchoLog).mockClear();
+  it('addLog는 DB에 저장하고 LOG_EVENT로 다른 접속자에게 알리고 내 화면에도 남긴다', async () => {
+    const { result } = await connected('sender', 'user-1');
 
-    await act(async () => { subscribeCb('CHANNEL_ERROR', new Error('Unauthorized: too many connections')); });
+    await act(async () => { await result.current.addLog('메아리를 보냈습니다.', 'request', undefined, { seconds: 60 }); });
 
+    expect(createEchoLog).toHaveBeenCalledWith({ role: 'sender', eventType: 'request', message: '메아리를 보냈습니다.', userId: 'user-1', payload: { seconds: 60 } });
+    expect(lastRoom().send).toHaveBeenCalledWith('LOG_EVENT', expect.objectContaining({ message: '메아리를 보냈습니다.', eventType: 'request', userId: 'user-1' }));
+    expect(result.current.logs.some((l) => l.message === '메아리를 보냈습니다.')).toBe(true);
+  });
+
+  it('sendBroadcast는 방의 send 결과를 그대로 돌려준다', async () => {
+    const { result } = await connected();
+
+    expect(result.current.sendBroadcast('ECHO_STOP', { triggeredBy: 'user-1' })).toBe(true);
+    lastRoom().send.mockReturnValueOnce(false);
+    expect(result.current.sendBroadcast('ECHO_STOP', { triggeredBy: 'user-1' })).toBe(false);
+    expect(lastRoom().send).toHaveBeenCalledWith('ECHO_STOP', { triggeredBy: 'user-1' });
+  });
+
+  it('방에 들어가기 전에는 sendBroadcast가 false다', () => {
+    const { result } = renderHook(() => useEchoSocket({ role: 'sender', presenceId: 'user-1', enabled: false }));
+
+    expect(result.current.sendBroadcast('ECHO_STOP', {})).toBe(false);
+  });
+
+  it('연결이 끊기면 화면에만 안내하고 DISCONNECTED가 된다 (재연결은 SDK가 한다)', async () => {
+    const { result } = await connected();
+
+    act(() => lastRoom().handlers.onConnectionChange(false));
+
+    expect(result.current.status).toBe('DISCONNECTED');
+    expect(result.current.isChannelJoined).toBe(false);
+    expect(result.current.logs.some((l) => l.message.includes('연결이 잠시 끊겼습니다'))).toBe(true);
+    expect(createEchoLog).not.toHaveBeenCalled();
+
+    act(() => lastRoom().handlers.onConnectionChange(true));
+    expect(result.current.status).toBe('CONNECTED');
+  });
+
+  it('서버가 거절한 오류는 ERROR로 바꾸고 이유와 함께 DB에 남긴다', async () => {
+    const { result } = await connected();
+
+    act(() => lastRoom().handlers.onError(new Error('PERMISSION_DENIED')));
+
+    expect(result.current.status).toBe('ERROR');
     expect(createEchoLog).toHaveBeenCalledWith(expect.objectContaining({
       eventType: 'error',
-      message: expect.stringContaining('too many connections'),
+      message: expect.stringContaining('PERMISSION_DENIED'),
     }));
   });
 
   it('첫 화면(landing)에서는 이전 로그를 불러오지 않는다', async () => {
-    const { getEchoLogs } = await import('@/app/actions/echo');
-    renderHook(() => useEchoSocket({ role: 'landing', presenceId: 'me' }));
-    await act(async () => { await new Promise(r => setTimeout(r, 50)); });
+    renderHook(() => useEchoSocket({ role: 'landing', presenceId: 'user-1' }));
+    await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
+
     expect(getEchoLogs).not.toHaveBeenCalled();
+  });
+
+  it('샌더·스피커는 접속할 때 이전 로그를 불러온다', async () => {
+    vi.mocked(getEchoLogs).mockResolvedValueOnce({ success: true, data: [{ id: 'old', timestamp: new Date(), message: '이전 로그', type: 'info', userId: 'x' }] });
+    const { result } = renderHook(() => useEchoSocket({ role: 'speaker', presenceId: 'sp-1' }));
+
+    await waitFor(() => expect(result.current.logs.some((l) => l.message === '이전 로그')).toBe(true));
   });
 });

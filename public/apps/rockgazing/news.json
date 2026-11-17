@@ -1,0 +1,18 @@
+[
+  {
+    "id": "update-1.1.0",
+    "date": "2026-11-17",
+    "kind": "update",
+    "version": "1.1.0",
+    "title": {
+      "ko": "소리가 생겼어요",
+      "en": "Now with sound",
+      "ja": "音が聞こえるようになりました"
+    },
+    "body": {
+      "ko": "- 화면 속 바람·비·새·풀벌레 소리가 계절과 날씨를 따라 들려요\n- 소리 크기는 휴대폰 볼륨을 따르고, 설정에서 끌 수 있어요\n- 설정에 「새 소식」과 「문의·의견 보내기」를 더했어요",
+      "en": "- Hear the wind, rain, birds and insects on screen, following the season and weather\n- Volume follows your phone, and you can turn sound off in Settings\n- Added What's New and Send feedback to Settings",
+      "ja": "- 画面の中の風・雨・鳥・虫の音が、季節と天気に合わせて聞こえます\n- 音量は端末の音量に合わせます。設定でオフにできます\n- 設定に「お知らせ」と「ご意見・お問い合わせ」を追加しました"
+    }
+  }
+]

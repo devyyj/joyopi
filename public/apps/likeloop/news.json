@@ -1,0 +1,18 @@
+[
+  {
+    "id": "update-1.0.0",
+    "date": "2026-11-18",
+    "kind": "update",
+    "version": "1.0.0",
+    "title": {
+      "ko": "LikeLoop를 시작했어요",
+      "ja": "LikeLoopをはじめました",
+      "en": "LikeLoop is here"
+    },
+    "body": {
+      "ko": "- 좋아? 싫어? 답하면 남들과 바로 비교돼요\n- 친구에게 링크를 보내 취향 궁합을 맞춰 보세요\n- 답은 팔지 않아요. 답마다 공개 범위를 고를 수 있어요",
+      "ja": "- 好き?嫌い?答えるとすぐにみんなと比べられます\n- 友だちにリンクを送って好みの相性を見てみよう\n- 答えは売りません。答えごとに公開範囲を選べます",
+      "en": "- Answer like or dislike and see how you compare right away\n- Send a link to check your taste match with friends\n- We never sell your answers, and you choose who sees each one"
+    }
+  }
+]

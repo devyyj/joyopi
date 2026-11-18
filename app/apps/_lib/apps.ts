@@ -246,6 +246,73 @@ const SOURCES: AppSource[] = [
       },
     },
   },
+  {
+    slug: 'likeloop',
+    appStoreUrl: null,
+    googlePlayUrl: null,
+    pages: [
+      { key: 'privacy', path: '/apps/likeloop/privacy' },
+      { key: 'support', path: '/apps/likeloop/support' },
+      { key: 'deleteAccount', path: '/apps/likeloop/delete-account' },
+      { key: 'terms', path: '/apps/likeloop/terms' },
+    ],
+    text: {
+      ko: {
+        name: 'LikeLoop',
+        altNames: [],
+        description: '좋아? 싫어? 답하면 바로 비교되는 취향 궁합',
+        features: [
+          '좋아·싫어 질문에 답하면 다른 사람들의 답과 바로 비교됩니다.',
+          '친구에게 링크를 보내면 친구는 설치 없이 웹에서 답하고 미리보기 궁합을 봅니다.',
+          '과·동아리·팀과 그룹을 만들어 우리 취향 지도를 봅니다.',
+          '답마다 공개 범위(나만·통계만·궁합까지)를 고를 수 있고, 답을 팔지 않습니다.',
+          '광고가 없고 무료입니다.',
+        ],
+        facts: [
+          { label: '기기', value: 'iPhone, Android' },
+          { label: '언어', value: '한국어, English, 日本語' },
+          { label: '가격', value: '무료' },
+        ],
+        pageLabels: { privacy: '개인정보처리방침', support: '지원', deleteAccount: '계정·데이터 삭제', terms: '이용약관' },
+      },
+      ja: {
+        name: 'LikeLoop',
+        altNames: [],
+        description: '好き?嫌い?答えるとすぐ比べられる好みの相性',
+        features: [
+          '好き・嫌いの質問に答えると、ほかの人の答えとすぐに比べられます。',
+          '友だちにリンクを送れば、友だちはインストールなしでWebで答えてプレビュー相性を見られます。',
+          'クラス・サークル・チームでグループを作り、みんなの好みマップを見られます。',
+          '答えごとに公開範囲（自分だけ・統計のみ・相性まで）を選べ、答えを販売することはありません。',
+          '広告はなく、無料です。',
+        ],
+        facts: [
+          { label: '端末', value: 'iPhone、Android' },
+          { label: '言語', value: '한국어, English, 日本語' },
+          { label: '価格', value: '無料' },
+        ],
+        pageLabels: { privacy: 'プライバシーポリシー', support: 'サポート', deleteAccount: 'アカウント・データの削除', terms: '利用規約' },
+      },
+      en: {
+        name: 'LikeLoop',
+        altNames: [],
+        description: 'Like it or not? Answer and compare tastes instantly',
+        features: [
+          'Answer like-or-dislike questions and see right away how you compare with everyone else.',
+          'Send a link to a friend: they answer on the web without installing anything and see a preview match.',
+          'Make a group for your class, club or team and see your shared taste map.',
+          'Choose who sees each answer (Only me, Stats only, Matches too). We never sell your answers.',
+          'No ads, and free.',
+        ],
+        facts: [
+          { label: 'Devices', value: 'iPhone, Android' },
+          { label: 'Languages', value: '한국어, English, 日本語' },
+          { label: 'Price', value: 'Free' },
+        ],
+        pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data', terms: 'Terms of Use' },
+      },
+    },
+  },
 ];
 
 const toEntry = (source: AppSource, lang: Lang): AppEntry => {

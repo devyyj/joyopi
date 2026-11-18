@@ -31,5 +31,10 @@ export const config = {
     '/apps/agirok/support',
     '/apps/agirok/delete-account',
     '/apps/agirok/terms',
+  '/apps/likeloop',
+  '/apps/likeloop/privacy',
+  '/apps/likeloop/support',
+  '/apps/likeloop/delete-account',
+  '/apps/likeloop/terms',
   ],
 };

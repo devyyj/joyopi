@@ -18,7 +18,7 @@ const ko: DocLocale = {
   sections: [
     { id: 'data', heading: '1. 처리하는 정보와 목적', body: <><table><thead><tr><th>누구</th><th>항목</th><th>목적</th></tr></thead><tbody>
       <tr><td>모든 이용자</td><td>앱이 자동으로 만든 무작위 계정 ID(익명 계정)</td><td>가입 없이 기록 저장</td></tr>
-      <tr><td>모든 이용자</td><td>이름(별명), 나이대(선택), 주간 목표, 언어, 공개 범위 기본값, 알림 설정</td><td>화면 표시, 궁합·그룹에서 친구에게 이름 표시, 나이대별 비교</td></tr>
+      <tr><td>모든 이용자</td><td>이름(별명), 나이대(선택), 성별(선택), 주간 목표, 언어, 공개 범위 기본값, 알림 설정</td><td>화면 표시, 궁합·그룹에서 친구에게 이름 표시, 나이대·성별별 익명 통계(고른 사람에게만 보여 줌)</td></tr>
       <tr><td>모든 이용자</td><td>질문에 대한 답(5단계 또는 ‘잘 모름’), 답한 시각과 이전 답, 답마다 고른 공개 범위</td><td>다른 사람과의 비교, 리포트·성향·변화 기록, 궁합 계산</td></tr>
       <tr><td>계정을 연결한 이용자</td><td>Apple·Google 계정 식별자, 제공되는 경우 이메일</td><td>기기를 바꿔도 기록 유지</td></tr>
       <tr><td>궁합·그룹 이용자</td><td>초대 코드, 연결된 친구, 궁합 결과(같이 답한 질문 수, 점수, 둘 다 좋아·싫어한 질문, 크게 갈린 답), 그룹 이름과 멤버</td><td>궁합·그룹 기능</td></tr>
@@ -57,7 +57,7 @@ const ja: DocLocale = {
   sections: [
     { id: 'data', heading: '1. 取り扱う情報と目的', body: <><table><thead><tr><th>対象</th><th>項目</th><th>目的</th></tr></thead><tbody>
       <tr><td>すべての利用者</td><td>本アプリが自動で作るランダムなアカウントID（匿名アカウント）</td><td>登録なしで記録を保存</td></tr>
-      <tr><td>すべての利用者</td><td>名前（ニックネーム）、年代（任意）、週の目標、言語、公開範囲の初期設定、通知設定</td><td>画面表示、相性・グループで友だちに名前を表示、年代別の比較</td></tr>
+      <tr><td>すべての利用者</td><td>名前（ニックネーム）、年代（任意）、性別（任意）、週の目標、言語、公開範囲の初期設定、通知設定</td><td>画面表示、相性・グループで友だちに名前を表示、年代・性別ごとの匿名統計（選んだ人にのみ表示）</td></tr>
       <tr><td>すべての利用者</td><td>質問への答え（5段階または「わからない」）、答えた日時と以前の答え、答えごとの公開範囲</td><td>ほかの人との比較、レポート・傾向・変化の記録、相性の計算</td></tr>
       <tr><td>アカウントを連携した利用者</td><td>Apple・Googleアカウントの識別子、提供される場合はメールアドレス</td><td>機種変更後も記録を引き継ぐ</td></tr>
       <tr><td>相性・グループの利用者</td><td>招待コード、つながった友だち、相性の結果（一緒に答えた質問の数、スコア、ふたりとも好き・嫌いな質問、大きく分かれた答え）、グループ名とメンバー</td><td>相性・グループ機能</td></tr>
@@ -96,7 +96,7 @@ const en: DocLocale = {
   sections: [
     { id: 'data', heading: '1. Information we handle and why', body: <><table><thead><tr><th>Who</th><th>Information</th><th>Purpose</th></tr></thead><tbody>
       <tr><td>Everyone</td><td>A random account ID the App creates automatically (anonymous account)</td><td>Saving your records without sign-up</td></tr>
-      <tr><td>Everyone</td><td>Name (nickname), age group (optional), weekly goal, language, default visibility, notification settings</td><td>Display, showing your name to friends in matches and groups, comparison by age group</td></tr>
+      <tr><td>Everyone</td><td>Name (nickname), age group (optional), gender (optional), weekly goal, language, default visibility, notification settings</td><td>Display, showing your name to friends in matches and groups, anonymous statistics by age group and gender (shown only to people who chose them)</td></tr>
       <tr><td>Everyone</td><td>Your answers (5 levels or “not sure”), when you answered and your previous answers, the visibility you chose for each answer</td><td>Comparing with others, reports, traits and change history, match calculation</td></tr>
       <tr><td>People who link an account</td><td>Apple or Google account identifier; email if provided</td><td>Keeping your records when you change devices</td></tr>
       <tr><td>Match and group users</td><td>Invite codes, connected friends, match results (number of shared questions, score, questions you both like or dislike, biggest differences), group names and members</td><td>Match and group features</td></tr>

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "update-1.0.1",
+    "date": "2026-11-21",
+    "kind": "update",
+    "version": "1.0.1",
+    "title": {
+      "ko": "의견 보내기와 새 소식이 생겼어요",
+      "ja": "ご意見の送信とお知らせができました",
+      "en": "Send feedback and What's New"
+    },
+    "body": {
+      "ko": "- 설정에서 바로 의견을 보낼 수 있어요\n- 함께 쓰는 가족이 스스로 공유를 그만둘 수 있어요\n- 밤 화면에서 시각 선택 글자가 잘 보이고, 수면 시간 계산을 고쳤어요",
+      "ja": "- 設定からすぐにご意見を送れます\n- 一緒に使う家族が自分で共有をやめられます\n- 夜の画面で時刻の文字が見やすくなり、睡眠時間の計算を直しました",
+      "en": "- Send feedback right from Settings\n- Caregivers can stop sharing on their own\n- Time pickers are readable at night, and sleep durations are fixed"
+    }
+  }
+]

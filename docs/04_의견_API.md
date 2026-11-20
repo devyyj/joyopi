@@ -48,7 +48,9 @@
 | 이름 | 값 |
 | --- | --- |
 | `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | 기존 joyopi 서버 계정(메아리와 같이 씀) |
-| `SLACK_FEEDBACK_WEBHOOK_URL` | Slack Incoming Webhook 주소(비밀값). 없으면 저장만 되고 알림은 안 간다 |
+| `SLACK_FEEDBACK_WEBHOOK_URL` | Slack Incoming Webhook 주소(비밀값, Production·Preview에 등록 2026-11-21). 없으면 저장만 되고 알림은 안 간다 |
+
+Slack 쪽 구성(2026-11-21): 워크스페이스 `joyopi`의 비공개 채널 `#app-feedback`, Slack 앱 `joyopi feedback`(ID `A0CLJ1CDQ48`, 권한 `incoming-webhook`만). 주소가 새면 api.slack.com › joyopi feedback › Incoming Webhooks에서 지우고 새로 만든 뒤 Vercel 값을 바꾼다.
 
 ## 의견 보기
 

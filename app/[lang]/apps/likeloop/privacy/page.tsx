@@ -7,7 +7,7 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 // LikeLoop 개인정보처리방침. 원고 기준: likeloop/docs/legal/privacy-policy.md — 여기서 먼저 고치지 않는다.
 // 일본어·영어는 한국어판을 옮긴 것이다(원어민 검수 전).
-const DATE = '2026-11-18';
+const DATE = '2026-11-21';
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 const deleteHref = (lang: Lang) => localePath(lang, '/apps/likeloop/delete-account');
 
@@ -25,6 +25,7 @@ const ko: DocLocale = {
       <tr><td>차단·신고한 이용자</td><td>차단한 사람, 신고 대상과 사유</td><td>괴롭힘·악용 방지</td></tr>
       <tr><td>알림을 켠 이용자</td><td>기기 푸시 토큰, 기기 종류</td><td>친구·그룹 소식, 매일 질문 알림(기본 꺼짐)</td></tr>
       <tr><td>모든 이용자(자동)</td><td>익명 사용 기록(기능 사용 이벤트, 무작위 기기 ID, 기기 종류, 언어, 앱 버전), IP 주소와 그로 추정한 대략적 위치</td><td>서비스 개선(사람 프로필을 만들지 않으며 이름·답·계정 ID는 보내지 않음)</td></tr>
+      <tr><td>의견을 보낸 이용자</td><td>의견 내용과 고른 분류, 답장 받을 이메일(선택), 기기 정보(앱 버전·OS·기기 모델·언어), 무작위 기기 ID</td><td>의견 확인과 답장, 서비스 개선, 같은 기기의 과도한 전송 막기(답·계정 정보는 함께 보내지 않음)</td></tr>
       <tr><td>초대 웹 이용자(설치 없이)</td><td>무작위 계정 ID, 이름, 답한 질문</td><td>미리보기 궁합</td></tr>
     </tbody></table>
       <ul><li>답은 공개 범위에 따라 쓰입니다. ‘나만’은 본인 화면에만, ‘통계만’은 개인을 알아볼 수 없는 집계 통계에도, ‘궁합까지’(기본)는 친구·그룹 궁합 계산에도 쓰입니다.</li>
@@ -33,12 +34,16 @@ const ko: DocLocale = {
       <li>계정과 답·궁합·그룹 정보: 이용자가 계정을 삭제할 때까지. 삭제하면 바로 지우고, 집계 통계에서도 그 사람의 몫을 뺍니다(앱 「내 정보」›「계정 삭제」).</li>
       <li>계정을 연결하지 않은 채 앱을 지우면 그 익명 계정에 다시 들어갈 수 없습니다. 앱을 지우기 전에 앱에서 계정을 삭제해 주세요. 이미 지웠다면 {mail}로 이름과 초대 코드를 알려 주시면 찾을 수 있는 범위에서 지웁니다.</li>
       <li>신고 기록: 처리 후 1년.</li>
-      <li>익명 사용 기록: 1년.</li></ul></> },
+      <li>익명 사용 기록: 1년.</li>
+      <li>보낸 의견과 답장 받을 이메일: 받은 날부터 1년.</li></ul></> },
     { id: 'transfer', heading: '3. 처리 위탁과 국외 이전', body: <><table><thead><tr><th>받는 자</th><th>하는 일</th><th>위치</th></tr></thead><tbody>
       <tr><td>Google LLC (Firebase)</td><td>로그인, 데이터베이스·서버(서울 리전), 초대 웹 호스팅, Android 푸시</td><td>대한민국(데이터베이스), 미국</td></tr>
       <tr><td>PostHog Inc.</td><td>익명 사용 기록</td><td>독일(EU)</td></tr>
       <tr><td>650 Industries, Inc. (Expo)</td><td>푸시 알림 전달</td><td>미국</td></tr>
       <tr><td>Apple Inc.</td><td>Apple 로그인, iOS 푸시</td><td>미국</td></tr>
+      <tr><td>Vercel Inc.</td><td>의견을 받는 joyopi.com 서버</td><td>미국</td></tr>
+      <tr><td>Google LLC (Firebase)</td><td>받은 의견 저장(서울 리전)</td><td>대한민국</td></tr>
+      <tr><td>Slack Technologies, LLC</td><td>새 의견 알림(운영자에게)</td><td>미국</td></tr>
     </tbody></table><p>국외 이전은 이용자가 서비스를 쓸 때 네트워크로 이루어집니다. 이전을 원하지 않으면 앱을 쓰지 않거나 계정을 삭제할 수 있습니다.</p></> },
     { id: 'rights', heading: '4. 이용자의 권리', body: <><p>언제든 자기 정보를 보거나 고치거나 지우도록 요청할 수 있습니다. 이름·공개 범위·알림은 앱에서 바로 고치고, 「내 답 내보내기」로 답을 받을 수 있고, 「계정 삭제」로 모두 지울 수 있습니다. 자세한 방법은 <Link href={deleteHref('ko')}>계정·데이터 삭제 안내</Link>를 보세요. 문의: {mail}</p></> },
     { id: 'children', heading: '5. 만 14세 미만 아동', body: <><p>만 14세 미만은 앱을 쓸 수 없습니다. 시작할 때 만 14세 이상인지 확인하며, 만 14세 미만의 정보가 처리된 것을 알게 되면 바로 지웁니다.</p></> },
@@ -64,6 +69,7 @@ const ja: DocLocale = {
       <tr><td>ブロック・通報した利用者</td><td>ブロックした相手、通報の対象と理由</td><td>嫌がらせ・不正利用の防止</td></tr>
       <tr><td>通知をオンにした利用者</td><td>端末のプッシュ通知トークン、端末の種類</td><td>友だち・グループのお知らせ、毎日の質問のお知らせ（初期設定はオフ）</td></tr>
       <tr><td>すべての利用者（自動）</td><td>匿名の利用記録（機能の利用イベント、ランダムな端末ID、端末の種類、言語、アプリのバージョン）、IPアドレスとそこから推定したおおよその地域</td><td>サービス改善（個人のプロフィールは作らず、名前・答え・アカウントIDは送りません）</td></tr>
+      <tr><td>ご意見を送った利用者</td><td>ご意見の内容と選んだ分類、返信用メールアドレス（任意）、端末情報（アプリのバージョン・OS・端末のモデル・言語）、ランダムな端末ID</td><td>ご意見の確認と返信、サービス改善、同じ端末からの過度な送信の防止（答え・アカウント情報は送りません）</td></tr>
       <tr><td>招待Webの利用者（インストールなし）</td><td>ランダムなアカウントID、名前、答えた質問</td><td>プレビュー相性</td></tr>
     </tbody></table>
       <ul><li>答えは公開範囲に応じて使います。「自分だけ」は本人の画面だけ、「統計のみ」は個人を特定できない集計統計にも、「相性まで」（初期設定）は友だち・グループの相性計算にも使います。</li>
@@ -72,12 +78,16 @@ const ja: DocLocale = {
       <li>アカウントと答え・相性・グループの情報: 利用者がアカウントを削除するまで。削除するとすぐに消し、集計統計からもその人の分を除きます（アプリ「マイページ · 設定」›「アカウント削除」）。</li>
       <li>アカウントを連携しないままアプリを削除すると、その匿名アカウントには戻れません。アプリを削除する前に、アプリでアカウントを削除してください。すでに削除した場合は、名前と招待コードを{mail}にお知らせいただければ、確認できる範囲で削除します。</li>
       <li>通報の記録: 対応後1年。</li>
-      <li>匿名の利用記録: 1年。</li></ul></> },
+      <li>匿名の利用記録: 1年。</li>
+      <li>送られたご意見と返信用メールアドレス: 受け取った日から1年。</li></ul></> },
     { id: 'transfer', heading: '3. 取扱いの委託と国外移転', body: <><table><thead><tr><th>委託先</th><th>内容</th><th>所在地</th></tr></thead><tbody>
       <tr><td>Google LLC （Firebase）</td><td>ログイン、データベース・サーバー（ソウルリージョン）、招待Webのホスティング、Androidのプッシュ通知</td><td>大韓民国（データベース）、米国</td></tr>
       <tr><td>PostHog Inc.</td><td>匿名の利用記録</td><td>ドイツ（EU）</td></tr>
       <tr><td>650 Industries, Inc. （Expo）</td><td>プッシュ通知の配信</td><td>米国</td></tr>
       <tr><td>Apple Inc.</td><td>Appleでサインイン、iOSのプッシュ通知</td><td>米国</td></tr>
+      <tr><td>Vercel Inc.</td><td>ご意見を受け取るjoyopi.comのサーバー</td><td>米国</td></tr>
+      <tr><td>Google LLC （Firebase）</td><td>受け取ったご意見の保存（ソウルリージョン）</td><td>大韓民国</td></tr>
+      <tr><td>Slack Technologies, LLC</td><td>新しいご意見の通知（運営者へ）</td><td>米国</td></tr>
     </tbody></table><p>上記の委託先には、外国（大韓民国・米国・ドイツ）にある事業者が含まれます。各国の個人情報の保護に関する制度は、個人情報保護委員会のウェブサイトで確認できます。各委託先は、個人情報の保護のために必要な体制を整備しています。</p></> },
     { id: 'rights', heading: '4. 利用者の権利', body: <><p>ご自身の情報の開示・訂正・削除をいつでも求めることができます。名前・公開範囲・通知はアプリですぐに変更でき、「答えをエクスポート」で答えを受け取り、「アカウント削除」ですべて消せます。詳しくは<Link href={deleteHref('ja')}>アカウント・データの削除</Link>をご覧ください。お問い合わせ: {mail}</p></> },
     { id: 'children', heading: '5. 14歳未満の方', body: <><p>14歳未満の方は本アプリを利用できません。開始時に14歳以上であることを確認し、14歳未満の方の情報を取り扱っていることがわかった場合はすぐに削除します。</p></> },
@@ -103,6 +113,7 @@ const en: DocLocale = {
       <tr><td>People who block or report</td><td>People you blocked; report target and reason</td><td>Preventing harassment and abuse</td></tr>
       <tr><td>People with notifications on</td><td>Device push token and device type</td><td>Friend and group updates, daily question reminders (off by default)</td></tr>
       <tr><td>Everyone (automatic)</td><td>Anonymous usage events (feature use, random device ID, device type, language, app version), IP address and approximate location derived from it</td><td>Improving the service (no person profiles; names, answers and account IDs are never sent)</td></tr>
+      <tr><td>People who send feedback</td><td>Your message and the category you chose, an email for a reply (optional), device info (app version, OS, device model, language), a random device ID</td><td>Reading and replying to feedback, improving the service, limiting excessive sending from one device (answers and account details are not sent)</td></tr>
       <tr><td>Invite web users (no install)</td><td>Random account ID, name, answered questions</td><td>Preview match</td></tr>
     </tbody></table>
       <ul><li>Each answer is used according to its visibility: “Only me” stays on your screen, “Stats only” also counts toward anonymous aggregate statistics, and “Matches too” (default) is also used for friend and group matches.</li>
@@ -111,12 +122,16 @@ const en: DocLocale = {
       <li>Your account, answers, matches and groups: until you delete your account. We delete them right away and remove your share from aggregate statistics (Profile · Settings › Delete account in the App).</li>
       <li>If you delete the App without linking an account, you cannot get back into that anonymous account. Please delete your account in the App before removing the App. If you already removed it, email {mail} with your name and invite code and we will delete what we can find.</li>
       <li>Report records: 1 year after they are handled.</li>
-      <li>Anonymous usage events: 1 year.</li></ul></> },
+      <li>Anonymous usage events: 1 year.</li>
+      <li>Feedback you send and the reply email: 1 year from when we receive it.</li></ul></> },
     { id: 'transfer', heading: '3. Service providers and international transfers', body: <><table><thead><tr><th>Provider</th><th>Purpose</th><th>Location</th></tr></thead><tbody>
       <tr><td>Google LLC (Firebase)</td><td>Sign-in, database and server functions (Seoul region), invite web hosting, Android push</td><td>South Korea (database), USA</td></tr>
       <tr><td>PostHog Inc.</td><td>Anonymous usage events</td><td>Germany (EU)</td></tr>
       <tr><td>650 Industries, Inc. (Expo)</td><td>Push notification delivery</td><td>USA</td></tr>
       <tr><td>Apple Inc.</td><td>Sign in with Apple, iOS push</td><td>USA</td></tr>
+      <tr><td>Vercel Inc.</td><td>The joyopi.com server that receives feedback</td><td>USA</td></tr>
+      <tr><td>Google LLC (Firebase)</td><td>Storing feedback (Seoul region)</td><td>South Korea</td></tr>
+      <tr><td>Slack Technologies, LLC</td><td>Notifying the operator of new feedback</td><td>USA</td></tr>
     </tbody></table><p>Transfers happen over the network when you use the service. If you do not want your information transferred, you can stop using the App or delete your account.</p></> },
     { id: 'rights', heading: '4. Your rights', body: <><p>You can ask to access, correct or delete your information at any time. You can change your name, visibility and notifications in the App, download your answers with “Export my answers”, and delete everything with “Delete account”. See <Link href={deleteHref('en')}>Delete account & data</Link> for details. Contact: {mail}</p></> },
     { id: 'children', heading: '5. Children', body: <><p>People under 14 may not use the App. We ask you to confirm you are 14 or older when you start, and we delete information from anyone under 14 as soon as we learn of it.</p></> },

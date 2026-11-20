@@ -6,9 +6,10 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 돌보기(Rockgazing / 돌멍타임 / 石の子守り) 개인정보 처리방침.
 // 내용 기준: docs/03_앱_스토어_페이지.md 4-1. 앱 기능이 바뀌면 그 표부터 고치고 여기와 날짜를 고친다.
 // 2026-11-13: 1.0.0 동작(분석·오류 수집 PostHog, 실제 날씨 WeatherKit, Apple 구매 기록·Google Block Store)에 맞춤. 앱 출시에 맞춰 공개한다.
+// 2026-11-21: 설정 › 의견 보내기(business/apps/common.md 4장, POST /api/feedback): 의견·답장 이메일(선택)·기기 정보·의견용 무작위 값·IP(해시로 횟수만), 1년 보관, 위탁(Vercel·Firebase 서울·Slack)과 국외 이전.
 // 2026-11-13: PostHog가 받는 IP 주소와 그로 추정한 국가·도시, 실제 전송 항목(해시한 기기 값·이벤트 4개·가린 오류 메시지·앱 버전·OS 종류), 상품 이름(앱 화면 문구)을 반영.
 const EFFECTIVE_DATE = '2026-11-13';
-const UPDATED_DATE = '2026-11-13';
+const UPDATED_DATE = '2026-11-21';
 
 
 const APPLE_PRIVACY = 'https://www.apple.com/legal/privacy/';
@@ -28,7 +29,7 @@ const ko: DocLocale = {
   notice: (
     <p>
       앱에는 회원가입·로그인·광고·추적이 없습니다. 개발자가 받는 정보는 앱을 고치고 오류를 바로잡기 위한 사용 통계와 오류
-      정보뿐이며, 이름·돌 이름·날씨와 정확한 위치는 받지 않습니다. 통계를 위해 앱이 통신할 때 전달되는 IP 주소로 국가·도시
+      정보, 그리고 사용자가 설정 › 의견 보내기로 직접 보낸 의견뿐이며, 이름·돌 이름·날씨와 정확한 위치는 받지 않습니다. 통계를 위해 앱이 통신할 때 전달되는 IP 주소로 국가·도시
       수준의 대략적인 위치만 추정합니다.
     </p>
   ),
@@ -87,11 +88,51 @@ const ko: DocLocale = {
             </tbody>
           </table>
           <ul>
-            <li>이름·이메일·연락처·광고 식별자·돌에 지어 준 이름·위치 서비스로 얻은 위치·날씨는 보내지 않습니다.</li>
+            <li>분석으로는 이름·이메일·연락처·광고 식별자·돌에 지어 준 이름·위치 서비스로 얻은 위치·날씨를 보내지 않습니다.</li>
             <li>
               사람별 프로필을 만들지 않고, 다른 회사의 앱·웹사이트 정보와 연결하지 않으며, 광고에 쓰지 않습니다(추적 없음).
             </li>
           </ul>
+          <p>
+            사용자가 설정 › 의견 보내기에서 「보내기」를 누를 때만 아래 정보를 joyopi.com 서버로 보냅니다. 보내지 않으면 아무것도 가지 않습니다.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>항목</th>
+                <th>목적</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>의견</td>
+                <td>의견 내용과 고른 분류(불편해요·이런 기능 원해요·기타, 선택)</td>
+                <td>의견 확인과 앱 개선</td>
+              </tr>
+              <tr>
+                <td>답장 받을 이메일(선택)</td>
+                <td>사용자가 적었을 때만</td>
+                <td>답장</td>
+              </tr>
+              <tr>
+                <td>기기 정보</td>
+                <td>앱 버전·빌드 번호, 운영체제 종류와 버전, 기기 모델, 앱 언어</td>
+                <td>문제 재현과 수정</td>
+              </tr>
+              <tr>
+                <td>의견용 기기 무작위 값</td>
+                <td>앱이 의견 보내기에만 쓰려고 기기에서 만든 무작위 값(분석용 값과 다름)</td>
+                <td>같은 기기의 과도한 전송 막기</td>
+              </tr>
+              <tr>
+                <td>IP 주소</td>
+                <td>서버가 요청을 받을 때 자동으로 전달됨. 원문은 저장하지 않고 변환(해시)한 값으로 전송 횟수만 셉니다</td>
+                <td>과도한 전송 막기</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>돌 이름·만난 돌·사용 기록은 의견과 함께 보내지 않습니다.</p>
         </>
       ),
     },
@@ -202,6 +243,7 @@ const ko: DocLocale = {
             들어간 것은 사용자의 Google 계정에서 기기 백업을 지우면 지워집니다.
           </li>
           <li>결제 기록은 Apple·Google이 각자의 방침에 따라 보관합니다.</li>
+          <li>보낸 의견과 답장 받을 이메일(1번 의견 표): 받은 날부터 <strong>1년</strong> 보관한 뒤 지웁니다. 더 일찍 지우기를 원하면 아래 11번 연락처로 알려 주세요.</li>
         </ul>
       ),
     },
@@ -225,6 +267,18 @@ const ko: DocLocale = {
               <tr>
                 <td>PostHog Inc.</td>
                 <td>앱 사용 통계와 오류 정보의 저장·분석(1번)</td>
+              </tr>
+              <tr>
+                <td>Vercel Inc.</td>
+                <td>의견을 받는 joyopi.com 서버 운영</td>
+              </tr>
+              <tr>
+                <td>Google LLC (Firebase)</td>
+                <td>받은 의견 저장(Cloud Firestore, 서울 리전)</td>
+              </tr>
+              <tr>
+                <td>Slack Technologies, LLC</td>
+                <td>새 의견을 개발자에게 알림</td>
               </tr>
             </tbody>
           </table>
@@ -267,6 +321,12 @@ const ko: DocLocale = {
               </tr>
             </tbody>
           </table>
+          <p>
+            의견 보내기(1번 의견 표): 보낸 정보는 Vercel Inc.(미국)의 서버를 거쳐 Google LLC의 Cloud Firestore 서울 리전(대한민국)에
+            저장되고, 알림을 위해 의견 내용·분류·답장 이메일·기기 정보가 Slack Technologies, LLC(미국)로 갑니다. 사용자가
+            「보내기」를 누를 때 암호화된 통신망으로 전송되며, 의견 확인과 답장에 쓰고 1년 뒤 지웁니다. 원하지 않으면 의견
+            보내기를 쓰지 않고 메일({CONTACT_EMAIL})로 문의할 수 있습니다.
+          </p>
           <p>국외 이전을 원하지 않을 때는 8번을 보세요.</p>
         </>
       ),
@@ -351,7 +411,7 @@ const en: DocLocale = {
   notice: (
     <p>
       There is no sign-up, login, advertising, or tracking. The only information the developer receives is usage
-      statistics and error reports used to improve the app and fix bugs. The developer never receives your name, your
+      statistics and error reports used to improve the app and fix bugs, plus any feedback you choose to send from Settings › Send feedback. The developer never receives your name, your
       stone’s name, your weather, or your precise location. For statistics, only an approximate country- and city-level
       location is estimated from the IP address that is passed along when the app communicates.
     </p>
@@ -422,6 +482,46 @@ const en: DocLocale = {
               and it is not used for advertising (no tracking).
             </li>
           </ul>
+          <p>
+            Only when you tap “Send” in Settings › Send feedback, the app sends the following to the joyopi.com server. Nothing is sent if you do not send feedback.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Items</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Feedback</td>
+                <td>Your message and the category you chose (Something’s off, I’d like a feature, Other; optional)</td>
+                <td>Reading feedback and improving the app</td>
+              </tr>
+              <tr>
+                <td>Reply email (optional)</td>
+                <td>Only if you enter one</td>
+                <td>Replying to you</td>
+              </tr>
+              <tr>
+                <td>Device information</td>
+                <td>App version and build number, OS type and version, device model, app language</td>
+                <td>Reproducing and fixing problems</td>
+              </tr>
+              <tr>
+                <td>Random device value for feedback</td>
+                <td>A random value the app creates on the device only for feedback (different from the analytics value)</td>
+                <td>Limiting excessive sending from one device</td>
+              </tr>
+              <tr>
+                <td>IP address</td>
+                <td>Passed along automatically when the server receives the request. It is not stored as is; only a hashed value is used to count sends</td>
+                <td>Limiting excessive sending</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Your stone’s name, the stones you have met, and your usage history are not sent with feedback.</p>
         </>
       ),
     },
@@ -545,6 +645,7 @@ const en: DocLocale = {
             Google account.
           </li>
           <li>Purchase records are kept by Apple and Google under their own policies.</li>
+          <li>Feedback you send and the reply email (feedback table in section 1): kept for <strong>one year</strong> from when we receive it, then deleted. To have it deleted sooner, contact us (section 11).</li>
         </ul>
       ),
     },
@@ -568,6 +669,18 @@ const en: DocLocale = {
               <tr>
                 <td>PostHog Inc.</td>
                 <td>Storing and analyzing usage statistics and error information (section 1)</td>
+              </tr>
+              <tr>
+                <td>Vercel Inc.</td>
+                <td>Running the joyopi.com server that receives feedback</td>
+              </tr>
+              <tr>
+                <td>Google LLC (Firebase)</td>
+                <td>Storing feedback (Cloud Firestore, Seoul region)</td>
+              </tr>
+              <tr>
+                <td>Slack Technologies, LLC</td>
+                <td>Notifying the developer of new feedback</td>
               </tr>
             </tbody>
           </table>
@@ -611,6 +724,13 @@ const en: DocLocale = {
               </tr>
             </tbody>
           </table>
+          <p>
+            Feedback (feedback table in section 1): what you send passes through Vercel Inc.’s servers (USA) and is stored in
+            Google LLC’s Cloud Firestore Seoul region (South Korea); for notification, the message, category, reply email and
+            device information go to Slack Technologies, LLC (USA). It is sent over an encrypted connection when you tap “Send”,
+            used to read and reply to your feedback, and deleted after one year. If you do not want this, you can email
+            {CONTACT_EMAIL} instead of using Send feedback.
+          </p>
           <p>If you do not want this transfer, see section 8.</p>
         </>
       ),
@@ -698,7 +818,7 @@ const ja: DocLocale = {
   ),
   notice: (
     <p>
-      本アプリには会員登録・ログイン・広告・トラッキングはありません。開発者が受け取るのは、アプリの改善と不具合の修正のための利用統計とエラー情報だけで、氏名・石の名前・天気と正確な位置情報は受け取りません。統計のため、アプリが通信するときに伝わる IP アドレスから国・都市レベルのおおよその位置だけを推定します。
+      本アプリには会員登録・ログイン・広告・トラッキングはありません。開発者が受け取るのは、アプリの改善と不具合の修正のための利用統計とエラー情報、そして利用者が設定 › ご意見を送る から自分で送ったご意見だけで、氏名・石の名前・天気と正確な位置情報は受け取りません。統計のため、アプリが通信するときに伝わる IP アドレスから国・都市レベルのおおよその位置だけを推定します。
     </p>
   ),
   sections: [
@@ -750,11 +870,51 @@ const ja: DocLocale = {
             </tbody>
           </table>
           <ul>
-            <li>氏名・メールアドレス・連絡先・広告識別子・石につけた名前・位置情報サービスで得た位置情報・天気は送信しません。</li>
+            <li>分析では、氏名・メールアドレス・連絡先・広告識別子・石につけた名前・位置情報サービスで得た位置情報・天気は送信しません。</li>
             <li>
               個人ごとのプロフィールは作らず、他社のアプリやウェブサイトの情報と結びつけず、広告にも使いません（トラッキングなし）。
             </li>
           </ul>
+          <p>
+            利用者が 設定 › ご意見を送る で「送る」を押したときだけ、以下の情報を joyopi.com のサーバーに送ります。送らなければ何も送信されません。
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>区分</th>
+                <th>項目</th>
+                <th>目的</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ご意見</td>
+                <td>ご意見の内容と選んだ分類（不便です・こんな機能がほしい・その他、任意）</td>
+                <td>ご意見の確認とアプリの改善</td>
+              </tr>
+              <tr>
+                <td>返信用メールアドレス（任意）</td>
+                <td>入力した場合のみ</td>
+                <td>返信</td>
+              </tr>
+              <tr>
+                <td>端末情報</td>
+                <td>アプリのバージョン・ビルド番号、OS の種類とバージョン、端末のモデル、アプリの言語</td>
+                <td>問題の再現と修正</td>
+              </tr>
+              <tr>
+                <td>ご意見用の端末のランダム値</td>
+                <td>ご意見の送信にだけ使うため端末で作るランダムな値（分析用の値とは別）</td>
+                <td>同じ端末からの過度な送信の防止</td>
+              </tr>
+              <tr>
+                <td>IP アドレス</td>
+                <td>サーバーがリクエストを受け取るときに自動で伝わります。そのままは保存せず、変換（ハッシュ化）した値で送信回数だけを数えます</td>
+                <td>過度な送信の防止</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>石の名前・出会った石・利用記録はご意見と一緒に送りません。</p>
         </>
       ),
     },
@@ -865,6 +1025,7 @@ const ja: DocLocale = {
             アカウントで端末のバックアップを削除すると削除されます。
           </li>
           <li>購入記録は Apple・Google が各社のポリシーに従って保管します。</li>
+          <li>送られたご意見と返信用メールアドレス（1項のご意見の表）：受け取った日から<strong>1年間</strong>保管した後、削除します。より早い削除をご希望の場合は11項の連絡先までお知らせください。</li>
         </ul>
       ),
     },
@@ -887,6 +1048,18 @@ const ja: DocLocale = {
               <tr>
                 <td>PostHog Inc.</td>
                 <td>利用統計とエラー情報の保存・分析（1項）</td>
+              </tr>
+              <tr>
+                <td>Vercel Inc.</td>
+                <td>ご意見を受け取る joyopi.com のサーバーの運用</td>
+              </tr>
+              <tr>
+                <td>Google LLC（Firebase）</td>
+                <td>受け取ったご意見の保存（Cloud Firestore、ソウルリージョン）</td>
+              </tr>
+              <tr>
+                <td>Slack Technologies, LLC</td>
+                <td>新しいご意見を開発者に通知</td>
               </tr>
             </tbody>
           </table>
@@ -929,6 +1102,12 @@ const ja: DocLocale = {
               </tr>
             </tbody>
           </table>
+          <p>
+            ご意見（1項のご意見の表）：送った情報は Vercel Inc.（米国）のサーバーを経て Google LLC の Cloud Firestore
+            ソウルリージョン（大韓民国）に保存され、通知のためにご意見の内容・分類・返信用メールアドレス・端末情報が Slack
+            Technologies, LLC（米国）に送られます。「送る」を押したときに暗号化された通信で送信され、ご意見の確認と返信に使い、1年後に削除します。
+            望まない場合は、ご意見を送るを使わずにメール（{CONTACT_EMAIL}）でお問い合わせいただけます。
+          </p>
           <p>国外移転を望まない場合は8項をご覧ください。</p>
         </>
       ),

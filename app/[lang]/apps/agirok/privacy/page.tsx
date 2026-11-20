@@ -11,7 +11,7 @@ import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 // 일본어·영어는 한국어판을 옮긴 것이다. ‘’ 안의 메뉴 이름은 앱 화면 문구(agirok src/i18n/{ko,ja,en}.ts)와 같게 쓴다.
 // 원고는 6열 국외 이전 표지만, 모바일 폭(390px)에서 가로 스크롤이 생겨 받는 자별 2열 표로 옮긴다(AGENTS.md 6.11). 내용은 같다.
 const EFFECTIVE_DATE = '2026-11-12';
-const UPDATED_DATE = '2026-11-14';
+const UPDATED_DATE = '2026-11-21';
 /** 일본어·영어판을 처음 올린 날 */
 const TRANSLATED_DATE = '2026-11-13';
 
@@ -98,6 +98,11 @@ const ko: DocLocale = {
                 <td>광고 제거 구매 여부</td>
                 <td>구매한 가족 계정에서 광고 숨기기</td>
               </tr>
+              <tr>
+                <td>의견(보낸 경우)</td>
+                <td>의견 내용과 고른 분류, 답장 받을 이메일(선택), 기기 정보(앱 버전·운영체제·기기 모델·언어), 앱이 만든 무작위 기기 식별자</td>
+                <td>의견 확인과 답장, 앱 개선, 같은 기기의 과도한 전송 막기</td>
+              </tr>
             </tbody>
           </table>
           <ul>
@@ -111,6 +116,11 @@ const ko: DocLocale = {
               표시하기 위해 IP 주소, 기기 종류·운영체제 버전, 광고 노출·클릭 정보는 Google AdMob에 전송됩니다.
             </li>
             <li>카드 번호 등 결제 정보는 Apple·Google이 처리하며 회사는 받지 않습니다.</li>
+            <li>설정 › ‘의견 보내기’로 보낸 의견에는 계정 정보·아기 정보·육아 기록을 함께 보내지 않습니다.</li>
+            <li>
+              앱은 켜질 때와 ‘새 소식’을 열 때 joyopi.com에서 앱 설정·새 소식 파일을 읽습니다. 이때 IP 주소가 전달되며 계정
+              정보는 보내지 않습니다.
+            </li>
           </ul>
         </>
       ),
@@ -130,6 +140,9 @@ const ko: DocLocale = {
           <li>
             앱 사용 이벤트·오류 정보·IP 주소와 대략적 위치: 수집일로부터 <strong>1년</strong> 보관한 뒤 지웁니다(PostHog, 독일).
             계정과 연결하지 않으므로 탈퇴해도 바로 지워지지 않고 이 기간이 지나면 지워집니다.
+          </li>
+          <li>
+            보낸 의견과 답장 받을 이메일: 받은 날부터 <strong>1년</strong> 보관한 뒤 지웁니다(Google Firebase, 서울 리전).
           </li>
           <li>기록은 Google Firebase(Cloud Firestore, 서울 리전)에 암호화된 연결로 저장합니다.</li>
           <li>
@@ -190,7 +203,11 @@ const ko: DocLocale = {
               </tr>
               <tr>
                 <td>Vercel Inc.</td>
-                <td>탈퇴 요청 처리(로그인 계정 삭제)</td>
+                <td>탈퇴 요청 처리(로그인 계정 삭제), 의견을 받는 joyopi.com 서버</td>
+              </tr>
+              <tr>
+                <td>Slack Technologies, LLC</td>
+                <td>새 의견 알림(운영자에게)</td>
               </tr>
             </tbody>
           </table>
@@ -240,10 +257,20 @@ const ko: DocLocale = {
             rows={[
               ['받는 자', 'Vercel Inc.'],
               ['이전 국가', '미국'],
-              ['이전 항목', '계정 식별자·이메일이 담긴 로그인 토큰'],
-              ['이전 시기·방법', '탈퇴할 때 암호화된 통신망으로 전송'],
-              ['이용 목적', '로그인 계정 삭제'],
-              ['보유 기간', '저장하지 않음(요청을 처리하면 바로 버림)'],
+              ['이전 항목', '계정 식별자·이메일이 담긴 로그인 토큰, 보낸 의견(1장 ‘의견’ 항목)'],
+              ['이전 시기·방법', '탈퇴하거나 의견을 보낼 때 암호화된 통신망으로 전송'],
+              ['이용 목적', '로그인 계정 삭제, 의견 받기'],
+              ['보유 기간', '저장하지 않음(요청을 처리하면 바로 버림. 의견은 서울 리전에 저장)'],
+            ]}
+          />
+          <KeyValueTable
+            rows={[
+              ['받는 자', 'Slack Technologies, LLC'],
+              ['이전 국가', '미국'],
+              ['이전 항목', '의견 내용, 분류, 답장 받을 이메일(선택), 기기 정보'],
+              ['이전 시기·방법', '의견을 보낼 때 암호화된 통신망으로 전송'],
+              ['이용 목적', '운영자에게 새 의견 알림'],
+              ['보유 기간', '1년'],
             ]}
           />
           <ul>
@@ -404,7 +431,7 @@ const ko: DocLocale = {
             </li>
             <li>앱 사용 통계·오류 정보는 EU(독일)의 PostHog에 저장합니다.</li>
             <li>
-              로그인·광고·탈퇴를 위해 미국 등으로 가는 정보(Google LLC, Apple Inc., Vercel Inc., 6장 표)는 각 회사가 제공하는
+              로그인·광고·탈퇴·의견 받기를 위해 미국 등으로 가는 정보(Google LLC, Apple Inc., Vercel Inc., Slack Technologies, LLC, 6장 표)는 각 회사가 제공하는
               표준계약조항(EU 집행위원회가 승인한 표준 계약 문구) 등 GDPR이 인정하는 안전장치에 따라 이전됩니다. 안전장치의
               사본이나 내용은 문의 메일로 요청할 수 있습니다.
             </li>
@@ -414,7 +441,7 @@ const ko: DocLocale = {
           <ul>
             <li>
               외국에 있는 제3자에게 개인정보가 가는 경우, 받는 자와 이전 국가는 6장 표와 같습니다(Google LLC: 미국 등, Apple
-              Inc.: 미국, Vercel Inc.: 미국, PostHog Inc.: 독일). 회사는 대한민국에 있으며 계정·기록은 대한민국에 저장합니다.
+              Inc.: 미국, Vercel Inc.: 미국, Slack Technologies, LLC: 미국, PostHog Inc.: 독일). 회사는 대한민국에 있으며 계정·기록은 대한민국에 저장합니다.
             </li>
             <li>
               이전 국가의 개인정보 보호 제도와 받는 자가 취하는 보호 조치에 관한 정보는 문의 메일로 요청하면 제공합니다.
@@ -539,6 +566,11 @@ const ja: DocLocale = {
                 <td>「広告を非表示」の購入の有無</td>
                 <td>購入した家族のアカウントで広告を非表示にする</td>
               </tr>
+              <tr>
+                <td>ご意見（送った場合）</td>
+                <td>ご意見の内容と選んだ分類、返信先メールアドレス（任意）、端末情報（アプリのバージョン・OS・機種・言語）、アプリが作ったランダムな端末識別子</td>
+                <td>ご意見の確認と返信、アプリの改善、同じ端末からの過度な送信の防止</td>
+              </tr>
             </tbody>
           </table>
           <ul>
@@ -551,6 +583,11 @@ const ja: DocLocale = {
               アドレス、端末の機種・OS バージョン、広告の表示・クリック情報は Google AdMob に送信されます。
             </li>
             <li>カード番号などの支払い情報は Apple・Google が取り扱い、開発者は受け取りません。</li>
+            <li>設定 › 「ご意見を送る」で送ったご意見には、アカウント情報・赤ちゃんの情報・育児記録を含めません。</li>
+            <li>
+              アプリは起動時と「お知らせ」を開いたときに joyopi.com からアプリ設定・お知らせのファイルを読み込みます。このとき IP
+              アドレスが送られますが、アカウント情報は送りません。
+            </li>
           </ul>
         </>
       ),
@@ -569,6 +606,9 @@ const ja: DocLocale = {
           <li>
             アプリの利用イベント・エラー情報・IP アドレスとおおよその位置：収集日から<strong>1年間</strong>
             保管したあと削除します（PostHog、ドイツ）。アカウントと結び付けていないため、退会してもすぐには削除されず、この期間が過ぎると削除されます。
+          </li>
+          <li>
+            送ったご意見と返信先メールアドレス：受け取った日から<strong>1年間</strong>保管したあと削除します（Google Firebase、ソウルリージョン）。
           </li>
           <li>記録は Google Firebase（Cloud Firestore、ソウルリージョン）に暗号化された接続で保存します。</li>
           <li>
@@ -627,7 +667,11 @@ const ja: DocLocale = {
               </tr>
               <tr>
                 <td>Vercel Inc.</td>
-                <td>退会リクエストの処理（ログインアカウントの削除）</td>
+                <td>退会リクエストの処理（ログインアカウントの削除）、ご意見を受け取る joyopi.com のサーバー</td>
+              </tr>
+              <tr>
+                <td>Slack Technologies, LLC</td>
+                <td>新しいご意見の通知（運営者へ）</td>
               </tr>
             </tbody>
           </table>
@@ -677,10 +721,20 @@ const ja: DocLocale = {
             rows={[
               ['移転先', 'Vercel Inc.'],
               ['移転先の国', 'アメリカ'],
-              ['移転する項目', 'アカウント識別子・メールアドレスを含むログイントークン'],
-              ['移転の時期・方法', '退会するときに暗号化された通信で送信'],
-              ['利用目的', 'ログインアカウントの削除'],
-              ['保有期間', '保存しません（リクエストを処理するとすぐに破棄）'],
+              ['移転する項目', 'アカウント識別子・メールアドレスを含むログイントークン、送ったご意見（第1項「ご意見」）'],
+              ['移転の時期・方法', '退会するとき、またはご意見を送るときに暗号化された通信で送信'],
+              ['利用目的', 'ログインアカウントの削除、ご意見の受け取り'],
+              ['保有期間', '保存しません（リクエストを処理するとすぐに破棄。ご意見はソウルリージョンに保存）'],
+            ]}
+          />
+          <KeyValueTable
+            rows={[
+              ['移転先', 'Slack Technologies, LLC'],
+              ['移転先の国', 'アメリカ'],
+              ['移転する項目', 'ご意見の内容、分類、返信先メールアドレス（任意）、端末情報'],
+              ['移転の時期・方法', 'ご意見を送るときに暗号化された通信で送信'],
+              ['利用目的', '運営者への新しいご意見の通知'],
+              ['保有期間', '1年'],
             ]}
           />
           <ul>
@@ -831,7 +885,7 @@ const ja: DocLocale = {
             </li>
             <li>アプリの利用統計・エラー情報は、EU（ドイツ）の PostHog に保存します。</li>
             <li>
-              ログイン・広告・退会のためにアメリカなどへ移転する情報（Google LLC、Apple Inc.、Vercel Inc.、第6項の表）は、各社が提供する標準契約条項（欧州委員会が承認した標準の契約文言）など、GDPR
+              ログイン・広告・退会・ご意見の受け取りのためにアメリカなどへ移転する情報（Google LLC、Apple Inc.、Vercel Inc.、Slack Technologies, LLC、第6項の表）は、各社が提供する標準契約条項（欧州委員会が承認した標準の契約文言）など、GDPR
               が認める保護措置に従って移転されます。保護措置の写しや内容は、お問い合わせメールでリクエストできます。
             </li>
           </ul>
@@ -840,7 +894,7 @@ const ja: DocLocale = {
           <ul>
             <li>
               外国にある第三者に個人情報が移転する場合の移転先と移転先の国は、第6項の表のとおりです（Google
-              LLC：アメリカなど、Apple Inc.：アメリカ、Vercel Inc.：アメリカ、PostHog Inc.：ドイツ）。開発者は大韓民国にあり、アカウントと記録は大韓民国に保存します。
+              LLC：アメリカなど、Apple Inc.：アメリカ、Vercel Inc.：アメリカ、Slack Technologies, LLC：アメリカ、PostHog Inc.：ドイツ）。開発者は大韓民国にあり、アカウントと記録は大韓民国に保存します。
             </li>
             <li>
               移転先の国の個人情報の保護に関する制度と、移転先が講じる保護のための措置に関する情報は、お問い合わせメールでリクエストいただければ提供します。
@@ -965,6 +1019,11 @@ const en: DocLocale = {
                 <td>Whether “Remove ads” has been purchased</td>
                 <td>Hiding ads for the family that purchased it</td>
               </tr>
+              <tr>
+                <td>Feedback (if you send it)</td>
+                <td>Your message and the category you chose, an email for a reply (optional), device info (app version, OS, device model, language), a random device ID created by the app</td>
+                <td>Reading and replying to feedback, improving the app, limiting excessive sending from one device</td>
+              </tr>
             </tbody>
           </table>
           <ul>
@@ -979,6 +1038,11 @@ const en: DocLocale = {
               non-personalized ads.
             </li>
             <li>Payment details such as card numbers are handled by Apple and Google. The developer does not receive them.</li>
+            <li>Feedback sent from Settings › “Send feedback” does not include account details, baby details or records.</li>
+            <li>
+              When it starts and when you open “What&apos;s New”, the app reads the app settings and news files from joyopi.com. Your IP
+              address is sent at that time, but no account details are.
+            </li>
           </ul>
         </>
       ),
@@ -1000,6 +1064,9 @@ const en: DocLocale = {
             App usage events, error information, IP address and approximate location: kept for <strong>1 year</strong> from
             collection and then deleted (PostHog, Germany). Because they are not linked to your account, they are not deleted
             right away when you delete your account; they are deleted when this period ends.
+          </li>
+          <li>
+            Feedback and the reply email address: kept for <strong>1 year</strong> from the day we receive them, then deleted (Google Firebase, Seoul region).
           </li>
           <li>Records are stored in Google Firebase (Cloud Firestore, Seoul region) over encrypted connections.</li>
           <li>
@@ -1063,7 +1130,11 @@ const en: DocLocale = {
               </tr>
               <tr>
                 <td>Vercel Inc.</td>
-                <td>Processing account deletion requests (deleting the sign-in account)</td>
+                <td>Processing account deletion requests (deleting the sign-in account), the joyopi.com server that receives feedback</td>
+              </tr>
+              <tr>
+                <td>Slack Technologies, LLC</td>
+                <td>Notifying the operator of new feedback</td>
               </tr>
             </tbody>
           </table>
@@ -1113,10 +1184,20 @@ const en: DocLocale = {
             rows={[
               ['Recipient', 'Vercel Inc.'],
               ['Country', 'United States'],
-              ['Items', 'Sign-in token containing your account identifier and email address'],
-              ['When and how', 'Sent over encrypted connections when you delete your account'],
-              ['Purpose', 'Deleting the sign-in account'],
-              ['Retention', 'Not stored (discarded as soon as the request is processed)'],
+              ['Items', 'Sign-in token containing your account identifier and email address, feedback you send (the “Feedback” row in section 1)'],
+              ['When and how', 'Sent over encrypted connections when you delete your account or send feedback'],
+              ['Purpose', 'Deleting the sign-in account, receiving feedback'],
+              ['Retention', 'Not stored (discarded as soon as the request is processed; feedback is stored in the Seoul region)'],
+            ]}
+          />
+          <KeyValueTable
+            rows={[
+              ['Recipient', 'Slack Technologies, LLC'],
+              ['Country', 'United States'],
+              ['Items', 'Feedback message, category, reply email (optional), device info'],
+              ['When and how', 'Sent over encrypted connections when you send feedback'],
+              ['Purpose', 'Notifying the operator of new feedback'],
+              ['Retention', '1 year'],
             ]}
           />
           <ul>
@@ -1285,7 +1366,7 @@ const en: DocLocale = {
             </li>
             <li>App usage statistics and error information are stored with PostHog in the EU (Germany).</li>
             <li>
-              Information sent to the United States and other countries for sign-in, ads and account deletion (Google LLC, Apple Inc., Vercel Inc.; see the
+              Information sent to the United States and other countries for sign-in, ads, account deletion and feedback (Google LLC, Apple Inc., Vercel Inc., Slack Technologies, LLC; see the
               tables in section 6) is transferred under safeguards recognized by the GDPR, such as the standard contractual
               clauses (standard contract terms approved by the European Commission) offered by each company. You can request a
               copy or details of these safeguards by email.
@@ -1296,7 +1377,7 @@ const en: DocLocale = {
           <ul>
             <li>
               When personal information goes to a third party in a foreign country, the recipients and countries are as listed
-              in the tables in section 6 (Google LLC: United States and others; Apple Inc.: United States; Vercel Inc.: United States; PostHog Inc.:
+              in the tables in section 6 (Google LLC: United States and others; Apple Inc.: United States; Vercel Inc.: United States; Slack Technologies, LLC: United States; PostHog Inc.:
               Germany). The developer is located in the Republic of Korea, and accounts and records are stored there.
             </li>
             <li>

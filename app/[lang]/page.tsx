@@ -10,7 +10,7 @@ import { getHomeNews } from '@/app/_data/home-news';
 import FeedbackButton from '@/app/components/feedback/feedback-dialog';
 import { feedbackTargets } from '@/app/components/feedback/targets';
 import { YOUTUBE_CHANNEL_URL } from '@/utils/youtube/feed';
-import { FALLBACK_COURSES, INFLEARN_PROFILE_URL } from '@/utils/inflearn/profile';
+import { fallbackCourses, inflearnProfileUrl } from '@/utils/inflearn/profile';
 
 // 유튜브 최근 영상을 1시간마다 새로 반영한다(인프런 숫자는 app/_data/external.ts에서 하루 한 번).
 export const revalidate = 3600;
@@ -67,8 +67,8 @@ export default async function Home({ params }: LangParams) {
   const t = dict.home;
   // 받을 수 있는 앱(App Store)을 먼저
   const apps = [...getApps(lang)].sort((a, b) => Number(!a.appStoreUrl) - Number(!b.appStoreUrl));
-  const [youtube, inflearn] = await Promise.all([getYoutubeHighlights(), getInflearnProfile()]);
-  const courses = inflearn?.courses ?? FALLBACK_COURSES;
+  const [youtube, inflearn] = await Promise.all([getYoutubeHighlights(), getInflearnProfile(lang)]);
+  const courses = inflearn?.courses ?? fallbackCourses(lang);
   const news = getHomeNews(lang);
 
   return (
@@ -170,7 +170,7 @@ export default async function Home({ params }: LangParams) {
                 {inflearn ? <p className="mt-0.5 text-[15px]">{t.courseStats(inflearn.stats.students, inflearn.stats.rating, inflearn.stats.reviews)}</p> : null}
               </div>
             </div>
-            <a href={INFLEARN_PROFILE_URL} className={`${pill} bg-[#1B1B1B] text-[#F5F2EA]`}>
+            <a href={inflearnProfileUrl(lang)} className={`${pill} bg-[#1B1B1B] text-[#F5F2EA]`}>
               {t.instructorPage}
             </a>
           </div>

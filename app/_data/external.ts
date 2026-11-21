@@ -3,7 +3,7 @@
 // 홈은 그 칸을 기본 모양(채널 버튼만, 숫자 없이 기본 강의 목록)으로 보여 준다.
 import { unstable_cache } from 'next/cache';
 import { loadYoutubeHighlights, type YoutubeHighlights } from '@/utils/youtube/feed';
-import { loadInflearnProfile, type InflearnProfile } from '@/utils/inflearn/profile';
+import { loadInflearnProfile, type InflearnLang, type InflearnProfile } from '@/utils/inflearn/profile';
 
 export const YOUTUBE_REVALIDATE = 60 * 60;
 export const INFLEARN_REVALIDATE = 60 * 60 * 24;
@@ -11,7 +11,8 @@ export const INFLEARN_REVALIDATE = 60 * 60 * 24;
 const cachedYoutube = unstable_cache(() => loadYoutubeHighlights(), ['youtube-highlights'], {
   revalidate: YOUTUBE_REVALIDATE,
 });
-const cachedInflearn = unstable_cache(() => loadInflearnProfile(), ['inflearn-profile'], {
+// 언어마다 따로 캐시한다(인자가 캐시 키에 들어간다)
+const cachedInflearn = unstable_cache((lang: InflearnLang) => loadInflearnProfile(lang), ['inflearn-profile'], {
   revalidate: INFLEARN_REVALIDATE,
 });
 
@@ -24,9 +25,9 @@ export async function getYoutubeHighlights(): Promise<YoutubeHighlights | null> 
   }
 }
 
-export async function getInflearnProfile(): Promise<InflearnProfile | null> {
+export async function getInflearnProfile(lang: InflearnLang): Promise<InflearnProfile | null> {
   try {
-    return await cachedInflearn();
+    return await cachedInflearn(lang);
   } catch (e) {
     console.error('[home] 인프런 강의 정보를 읽지 못했습니다', e);
     return null;

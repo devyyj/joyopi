@@ -4,6 +4,7 @@
 
 - 코드: `app/api/feedback/route.ts`(라우트), `utils/feedback/`(검사·횟수 제한·Slack 메시지, 테스트 포함)
 - 받은 의견: Firestore `feedback` 컬렉션(joyopi 프로젝트) + Slack 채널 알림
+- 웹(joyopi.com)에서도 보낸다(2026-11-22): 헤더와 홈의 「의견 보내기」 창(`app/components/feedback/`). 앱 대신 브라우저마다 만든 익명 ID(`web-…`, localStorage)를 `deviceId`로, `meta`는 `os: web`·`lang`만 보낸다. 수집 항목은 `/policies`에 적었다
 
 ## 요청
 
@@ -22,7 +23,7 @@
 
 | 필드 | 필수 | 값 |
 | --- | --- | --- |
-| `app` | 예 | `agirok` · `rockgazing` · `ssamkejul` · `likeloop` · `kkotjam` |
+| `app` | 예 | `agirok` · `rockgazing` · `ssamkejul` · `likeloop` · `kkotjam` · `joyopi`(joyopi.com 웹의 「사이트 전체」) |
 | `kind` | 아니오 | 칩: `bug`(불편해요) · `idea`(이런 기능 원해요) · `other`(기타). 안 골랐으면 빼거나 `null` |
 | `message` | 예 | 앞뒤 공백을 뺀 1~2000자 |
 | `email` | 아니오 | 답장 받을 주소. 빈 문자열이면 없음 |

@@ -20,7 +20,7 @@ export default function SiteNav({ items, labels }: SiteNavProps) {
 
   return (
     <>
-      <nav aria-label={labels.mainMenu} className="hidden md:flex items-center gap-1">
+      <nav aria-label={labels.mainMenu} className="hidden lg:flex items-center gap-1.5">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
           return (
@@ -29,7 +29,7 @@ export default function SiteNav({ items, labels }: SiteNavProps) {
               href={item.href}
               hrefLang={item.hrefLang}
               aria-current={active ? 'page' : undefined}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors hover:text-primary ${active ? 'text-primary' : 'text-foreground'}`}
+              className={`inline-flex min-h-11 items-center rounded-full px-4 text-[15px] transition-colors ${active ? 'bg-foreground text-background' : 'bg-card text-foreground hover:bg-secondary'}`}
             >
               {item.label}
             </Link>
@@ -42,7 +42,7 @@ export default function SiteNav({ items, labels }: SiteNavProps) {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? labels.closeMenu : labels.openMenu}
         aria-expanded={isOpen}
-        className="md:hidden order-last flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-card text-foreground hover:border-primary cursor-pointer"
+        className="lg:hidden order-last flex items-center justify-center w-11 h-11 rounded-full bg-card text-foreground hover:bg-secondary cursor-pointer"
       >
         {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
       </button>
@@ -50,7 +50,7 @@ export default function SiteNav({ items, labels }: SiteNavProps) {
       {isOpen && (
         <nav
           aria-label={labels.mobileMenu}
-          className="md:hidden absolute left-0 right-0 top-14 border-b border-border bg-secondary shadow-lg"
+          className="lg:hidden absolute left-0 right-0 top-16 border-b border-border bg-background shadow-lg"
         >
           <ul className="max-w-5xl mx-auto px-4 py-2">
             {items.map((item) => {

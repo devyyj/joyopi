@@ -5,12 +5,16 @@
 import { localePath, type Lang } from '@/app/_i18n/config';
 import { getDictionary } from '@/app/_i18n/dictionary';
 import { getApps } from '@/app/apps/_lib/apps';
+import { YOUTUBE_CHANNEL_URL } from '@/utils/youtube/feed';
+import { INFLEARN_PROFILE_URL } from '@/utils/inflearn/profile';
 
 export interface SiteLink {
   label: string;
   href: string;
   /** 링크한 페이지가 한국어로만 있으면 'ko' (hrefLang) */
   hrefLang?: Lang;
+  /** 사이트 밖(유튜브·인프런) */
+  external?: boolean;
 }
 
 export const getNavItems = (lang: Lang): SiteLink[] => {
@@ -18,11 +22,18 @@ export const getNavItems = (lang: Lang): SiteLink[] => {
   const ko = lang === 'ko' ? undefined : 'ko';
   return [
     { label: t.apps, href: localePath(lang, '/apps') },
-    { label: t.about, href: '/about', hrefLang: ko },
+    { label: t.youtube, href: YOUTUBE_CHANNEL_URL, external: true },
+    { label: t.courses, href: INFLEARN_PROFILE_URL, external: true },
     { label: t.news, href: '/news', hrefLang: ko },
     { label: t.support, href: '/support', hrefLang: ko },
   ];
 };
+
+/** 푸터 메뉴: 대표 메뉴 + 소개 */
+export const getFooterNavItems = (lang: Lang): SiteLink[] => [
+  ...getNavItems(lang),
+  { label: getDictionary(lang).nav.about, href: '/about', hrefLang: lang === 'ko' ? undefined : 'ko' },
+];
 
 export const getPolicyLinks = (lang: Lang): SiteLink[] => [
   { label: getDictionary(lang).footer.policies, href: '/policies', hrefLang: lang === 'ko' ? undefined : 'ko' },

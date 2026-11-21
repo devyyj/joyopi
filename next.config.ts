@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 홈 「유튜브」 칸의 영상 썸네일
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' }],
+  },
   experimental: {
     // 루트 레이아웃이 둘(app/[lang], app/(korean))이라 404는 app/global-not-found.tsx가 맡는다.
     globalNotFound: true,

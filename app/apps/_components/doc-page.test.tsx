@@ -31,7 +31,8 @@ describe('DocPage (앱 문서 공통 틀)', () => {
     expect(screen.getByText('모으지 않습니다.')).toBeInTheDocument();
     expect(screen.getByText(/시행일/).textContent).toContain('2026-11-12');
     expect(screen.getByText(/최종 수정일/).textContent).toContain('2026-11-13');
-    expect(screen.getAllByRole('link', { name: 'hello@joyopi.com' })[0]).toHaveAttribute(
+    // 메일 앱이 열리므로 새 창 표시(접근 이름 끝 안내)
+    expect(screen.getAllByRole('link', { name: 'hello@joyopi.com(새 창에서 열려요)' })[0]).toHaveAttribute(
       'href',
       'mailto:hello@joyopi.com',
     );

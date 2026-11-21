@@ -50,8 +50,9 @@ const renderPage = async (Page: AsyncPage, lang: Lang) => render(await Page(para
 const meta = (fn: (props: LangParams) => Promise<Metadata>, lang: Lang) => fn(params(lang));
 
 const hrefs = () => screen.getAllByRole('link').map((a) => a.getAttribute('href'));
+// 메일 링크는 메일 앱이 열리므로 새 창 표시가 붙는다(business/apps/common.md 9장)
 const hasMailLink = () =>
-  screen.getAllByRole('link', { name: 'hello@joyopi.com' }).every((a) => a.getAttribute('href') === 'mailto:hello@joyopi.com');
+  screen.getAllByRole('link', { name: /^hello@joyopi\.com[（(].+[)）]$/ }).every((a) => a.getAttribute('href') === 'mailto:hello@joyopi.com');
 
 describe('언어별 루트 레이아웃', () => {
   it('ko·ja·en 세 언어만 미리 만들고 그 밖의 언어는 404', () => {
@@ -119,6 +120,11 @@ describe('홈', () => {
       ]),
     );
     expect(container.textContent).toContain('곧 나와요');
+    // 스토어·유튜브·인프런처럼 사이트 밖으로 나가는 버튼은 새 창 + 접근 이름 끝 안내
+    const store = screen.getAllByRole('link', { name: '받으러 가기(새 창에서 열려요)' });
+    expect(store.length).toBe(2);
+    expect(store.every((a) => a.getAttribute('target') === '_blank')).toBe(true);
+    expect(screen.getByRole('link', { name: '채널 보기(새 창에서 열려요)' })).toHaveAttribute('target', '_blank');
     expect(container.textContent).toContain('다듬는 중');
     // 유튜브: 채널·최근 영상·쇼츠
     expect(hrefs()).toEqual(
@@ -191,7 +197,7 @@ describe('앱 (제품)', () => {
     // App Store에 공개된 앱은 그 언어의 나라 스토어로 보낸다
     expect(container.textContent).not.toContain('출시 준비 중');
     expect(hrefs()).toContain('https://apps.apple.com/kr/app/id6833780121');
-    expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(3);
+    expect(container.textContent).toContain('내 돌에게 이름을 지어 줍니다.');
     expect(hrefs()).toEqual(expect.arrayContaining(['/ko/apps/rockgazing/privacy', '/ko/apps/rockgazing/support']));
   });
 
@@ -206,7 +212,7 @@ describe('앱 (제품)', () => {
 
     const ja = await renderPage(AgirokPage, 'ja');
     expect(screen.getByRole('heading', { level: 1, name: 'ベビろく' })).toBeInTheDocument();
-    expect(ja.container.textContent).toContain('リリース準備中');
+    expect(ja.container.textContent).toContain('もうすぐ');
     ja.unmount();
 
     await renderPage(AgirokPage, 'en');

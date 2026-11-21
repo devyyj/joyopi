@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import type { SiteLink } from './site-links';
+import { NewWindowIcon } from './external-link';
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
 /** 헤더의 대표 메뉴. 넓은 화면에서는 가로로 늘어놓고, 좁은 화면에서는 버튼으로 펼친다. */
 interface SiteNavProps {
   items: SiteLink[];
-  labels: { mainMenu: string; mobileMenu: string; openMenu: string; closeMenu: string };
+  labels: { mainMenu: string; mobileMenu: string; openMenu: string; closeMenu: string; newWindow: string };
 }
 
 export default function SiteNav({ items, labels }: SiteNavProps) {
@@ -28,10 +29,18 @@ export default function SiteNav({ items, labels }: SiteNavProps) {
               key={item.href}
               href={item.href}
               hrefLang={item.hrefLang}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener noreferrer' : undefined}
               aria-current={active ? 'page' : undefined}
               className={`inline-flex min-h-11 items-center rounded-full px-4 text-[15px] transition-colors ${active ? 'bg-foreground text-background' : 'bg-card text-foreground hover:bg-secondary'}`}
             >
               {item.label}
+              {item.external ? (
+                <>
+                  <NewWindowIcon className="ml-1.5 h-[0.8em] w-[0.8em]" />
+                  <span className="sr-only">{labels.newWindow}</span>
+                </>
+              ) : null}
             </Link>
           );
         })}
@@ -60,11 +69,19 @@ export default function SiteNav({ items, labels }: SiteNavProps) {
                   <Link
                     href={item.href}
                     hrefLang={item.hrefLang}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noopener noreferrer' : undefined}
                     onClick={() => setIsOpen(false)}
                     aria-current={active ? 'page' : undefined}
-                    className={`block py-3 text-sm font-bold border-b border-border last:border-b-0 ${active ? 'text-primary' : 'text-foreground'}`}
+                    className={`flex items-center py-3 text-sm font-bold border-b border-border last:border-b-0 ${active ? 'text-primary' : 'text-foreground'}`}
                   >
                     {item.label}
+                    {item.external ? (
+                      <>
+                        <NewWindowIcon className="ml-1.5 h-[0.8em] w-[0.8em]" />
+                        <span className="sr-only">{labels.newWindow}</span>
+                      </>
+                    ) : null}
                   </Link>
                 </li>
               );

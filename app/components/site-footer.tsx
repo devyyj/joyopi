@@ -4,6 +4,7 @@ import type { Lang } from '@/app/_i18n/config';
 import { getDictionary } from '@/app/_i18n/dictionary';
 import { getFooterNavItems, getPolicyLinks } from './site-links';
 import BrandLogo from './brand/brand-logo';
+import { NewWindowIcon } from './external-link';
 
 /** 모든 페이지 아래에 붙는 공통 푸터: 대표 메뉴, 약관·정책, 사업자 정보(그 언어로). */
 export default function SiteFooter({ lang }: { lang: Lang }) {
@@ -15,8 +16,20 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
           <ul className="mt-4 space-y-2 text-xs">
             {getFooterNavItems(lang).map((item) => (
               <li key={item.href}>
-                <Link href={item.href} hrefLang={item.hrefLang} className="text-foreground hover:text-primary">
+                <Link
+                  href={item.href}
+                  hrefLang={item.hrefLang}
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noopener noreferrer' : undefined}
+                  className="inline-flex items-center gap-1 text-foreground hover:text-primary"
+                >
                   {item.label}
+                  {item.external ? (
+                    <>
+                      <NewWindowIcon className="h-[0.85em] w-[0.85em]" />
+                      <span className="sr-only">{getDictionary(lang).nav.newWindow}</span>
+                    </>
+                  ) : null}
                 </Link>
               </li>
             ))}

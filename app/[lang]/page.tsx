@@ -5,9 +5,12 @@ import { Play } from 'lucide-react';
 import { getDictionary } from '@/app/_i18n/dictionary';
 import { localizedMetadata, resolveLang, type LangParams } from '@/app/_i18n/page';
 import { getApps, type AppEntry } from '@/app/apps/_lib/apps';
+import { appTheme } from '@/app/apps/_lib/app-theme';
 import { getInflearnProfile, getYoutubeHighlights } from '@/app/_data/external';
 import { getHomeNews } from '@/app/_data/home-news';
 import FeedbackButton from '@/app/components/feedback/feedback-dialog';
+import ExternalLink, { NewWindowIcon } from '@/app/components/external-link';
+import type { Lang } from '@/app/_i18n/config';
 import { feedbackTargets } from '@/app/components/feedback/targets';
 import { YOUTUBE_CHANNEL_URL } from '@/utils/youtube/feed';
 import { fallbackCourses, inflearnProfileUrl } from '@/utils/inflearn/profile';
@@ -21,22 +24,14 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
   return localizedMetadata(lang, '/', { title, description });
 }
 
-/** 앱마다 타일 색. 앱 아이콘과 어울리게 고른다 */
-const APP_TILE: Record<string, { tile: string; text: string; sub: string; badge: string; button: string }> = {
-  rockgazing: { tile: 'bg-[#2C3550]', text: 'text-[#F5F2EA]', sub: 'text-[#DDD6C8]', badge: 'bg-white/15', button: 'bg-[#F5F2EA] text-[#1B1B1B]' },
-  ssamkejul: { tile: 'bg-[#FFE3CF]', text: 'text-[#1B1B1B]', sub: 'text-[#3E3933]', badge: 'bg-white', button: 'bg-[#1B1B1B] text-[#F5F2EA]' },
-  agirok: { tile: 'bg-[#E3EEF8]', text: 'text-[#1B1B1B]', sub: 'text-[#3E3933]', badge: 'bg-white', button: 'bg-[#1B1B1B] text-[#F5F2EA]' },
-  likeloop: { tile: 'bg-[#EEE6FA]', text: 'text-[#1B1B1B]', sub: 'text-[#3E3933]', badge: 'bg-white', button: 'bg-[#1B1B1B] text-[#F5F2EA]' },
-};
-
 const pill = 'inline-flex min-h-11 items-center rounded-full px-[18px] text-[15px]';
 
-function AppTile({ app, t }: { app: AppEntry; t: ReturnType<typeof getDictionary>['home'] }) {
-  const c = APP_TILE[app.slug] ?? APP_TILE.agirok;
+function AppTile({ app, t, lang }: { app: AppEntry; t: ReturnType<typeof getDictionary>['home']; lang: Lang }) {
+  const c = appTheme(app.slug);
   const badge = app.appStoreUrl ? t.badgeStore : app.upcoming === 'polishing' ? t.badgePolishing : t.badgeSoon;
   return (
     <article className={`flex min-h-[290px] flex-col gap-2.5 rounded-[32px] p-6 ${c.tile} ${c.text}`}>
-      <span className={`self-start rounded-full px-3 py-1.5 text-[13px] ${c.badge}`}>{badge}</span>
+      <span className={`self-start rounded-full px-3 py-1.5 text-[13px] ${c.chip}`}>{badge}</span>
       <div className="flex flex-1 items-center justify-center py-2">
         <Image src={app.icon} alt="" width={88} height={88} className="h-[88px] w-[88px] rounded-[22px] shadow-[0_6px_16px_rgba(27,27,27,.18)]" />
       </div>
@@ -47,9 +42,9 @@ function AppTile({ app, t }: { app: AppEntry; t: ReturnType<typeof getDictionary
       </h2>
       <p className={`text-[15px] leading-relaxed ${c.sub}`}>{app.description}</p>
       {app.appStoreUrl ? (
-        <a href={app.appStoreUrl} className={`${pill} self-start ${c.button}`}>
+        <ExternalLink href={app.appStoreUrl} lang={lang} className={`${pill} self-start ${c.button}`}>
           {t.getApp}
-        </a>
+        </ExternalLink>
       ) : (
         <Link href={app.href} className="inline-flex min-h-11 items-center self-start text-[15px] underline-offset-4 hover:underline">
           {t.details} →
@@ -70,6 +65,7 @@ export default async function Home({ params }: LangParams) {
   const [youtube, inflearn] = await Promise.all([getYoutubeHighlights(), getInflearnProfile(lang)]);
   const courses = inflearn?.courses ?? fallbackCourses(lang);
   const news = getHomeNews(lang);
+  const newWindow = dict.nav.newWindow;
 
   return (
     <div className="mx-auto w-full max-w-[1160px] px-4 pb-12 pt-4">
@@ -104,7 +100,7 @@ export default async function Home({ params }: LangParams) {
 
         {/* 앱 */}
         {apps.map((app) => (
-          <AppTile key={app.slug} app={app} t={t} />
+          <AppTile key={app.slug} app={app} t={t} lang={lang} />
         ))}
 
         {/* 유튜브 */}
@@ -119,17 +115,20 @@ export default async function Home({ params }: LangParams) {
                 <p className="mt-0.5 text-[15px]">{t.youtubeLead}</p>
               </div>
             </div>
-            <a href={YOUTUBE_CHANNEL_URL} className={`${pill} bg-[#1B1B1B] text-[#F5F2EA]`}>
+            <ExternalLink href={YOUTUBE_CHANNEL_URL} lang={lang} className={`${pill} bg-[#1B1B1B] text-[#F5F2EA]`}>
               {t.channel}
-            </a>
+            </ExternalLink>
           </div>
           {youtube?.latest ? (
-            <a href={youtube.latest.url} className="block rounded-[22px] bg-[#FFF4EC] p-2.5 hover:bg-white">
+            <a href={youtube.latest.url} target="_blank" rel="noopener noreferrer" className="block rounded-[22px] bg-[#FFF4EC] p-2.5 hover:bg-white">
               <span className="relative block aspect-video overflow-hidden rounded-[14px] bg-[#3A2A20]">
                 <Image src={youtube.latest.thumbnail} alt="" fill sizes="(min-width: 1024px) 520px, 100vw" className="object-cover" />
               </span>
               <span className="flex justify-between gap-3 px-1.5 pb-1 pt-3">
-                <span className="text-base leading-snug">{youtube.latest.title}</span>
+                <span className="text-base leading-snug">
+                  {youtube.latest.title} <NewWindowIcon className="ml-0.5 h-[0.85em] w-[0.85em] align-[-0.05em]" />
+                  <span className="sr-only">{newWindow}</span>
+                </span>
                 <span className="shrink-0 text-[13px] text-[#6A4A36]">{t.published(youtube.latest.published)}</span>
               </span>
             </a>
@@ -140,11 +139,14 @@ export default async function Home({ params }: LangParams) {
               <ul className="grid grid-cols-3 gap-2.5">
                 {youtube.shorts.map((v) => (
                   <li key={v.id}>
-                    <a href={v.url} className="group block">
+                    <a href={v.url} target="_blank" rel="noopener noreferrer" className="group block">
                       <span className="relative block aspect-[9/14] overflow-hidden rounded-2xl bg-[#3A2A20]">
                         <Image src={v.thumbnail} alt="" fill sizes="(min-width: 1024px) 170px, 33vw" className="object-cover transition-transform group-hover:scale-105" />
                       </span>
-                      <span className="mt-1.5 line-clamp-2 block text-[13px] leading-snug">{v.title}</span>
+                      <span className="mt-1.5 line-clamp-2 block text-[13px] leading-snug">
+                        {v.title} <NewWindowIcon className="h-[0.85em] w-[0.85em] align-[-0.05em]" />
+                        <span className="sr-only">{newWindow}</span>
+                      </span>
                     </a>
                   </li>
                 ))}
@@ -170,20 +172,23 @@ export default async function Home({ params }: LangParams) {
                 {inflearn ? <p className="mt-0.5 text-[15px]">{t.courseStats(inflearn.stats.students, inflearn.stats.rating, inflearn.stats.reviews)}</p> : null}
               </div>
             </div>
-            <a href={inflearnProfileUrl(lang)} className={`${pill} bg-[#1B1B1B] text-[#F5F2EA]`}>
+            <ExternalLink href={inflearnProfileUrl(lang)} lang={lang} className={`${pill} bg-[#1B1B1B] text-[#F5F2EA]`}>
               {t.instructorPage}
-            </a>
+            </ExternalLink>
           </div>
           <ul className="flex flex-col gap-2.5">
             {courses.map((c) => (
               <li key={c.slug}>
-                <a href={c.url} className="block rounded-[20px] bg-white px-[18px] py-4 hover:bg-[#FBFAF6]">
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className="block rounded-[20px] bg-white px-[18px] py-4 hover:bg-[#FBFAF6]">
                   {t.levels[c.level] ? (
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-[13px] ${c.level === 'BASIC' ? 'bg-[#CFE8DC]' : 'bg-[#FFE3CF]'}`}>
                       {t.levels[c.level]}
                     </span>
                   ) : null}
-                  <span className="mt-2 block text-[17px] leading-snug">{c.title}</span>
+                  <span className="mt-2 block text-[17px] leading-snug">
+                    {c.title} <NewWindowIcon className="ml-0.5 h-[0.85em] w-[0.85em] align-[-0.05em]" />
+                    <span className="sr-only">{newWindow}</span>
+                  </span>
                 </a>
               </li>
             ))}
@@ -225,9 +230,9 @@ export default async function Home({ params }: LangParams) {
             <FeedbackButton lang={lang} apps={feedbackTargets(apps)} className="inline-flex min-h-12 cursor-pointer items-center rounded-full bg-[#1B1B1B] px-6 text-base text-[#F5F2EA]">
               {dict.feedback.title}
             </FeedbackButton>
-            <a href="mailto:hello@joyopi.com" className="inline-flex min-h-12 items-center px-4 text-[15px] underline-offset-4 hover:underline">
+            <ExternalLink href="mailto:hello@joyopi.com" lang={lang} className="min-h-12 px-4 text-[15px] underline-offset-4 hover:underline">
               hello@joyopi.com
-            </a>
+            </ExternalLink>
           </div>
         </section>
       </div>

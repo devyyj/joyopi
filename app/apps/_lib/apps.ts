@@ -27,6 +27,8 @@ export interface AppEntry {
   upcoming: 'soon' | 'polishing' | null;
   /** 앱 아이콘(public 경로) */
   icon: string;
+  /** 소개 페이지에 보여 줄 앱 화면(public 경로). 없으면 빈 배열 */
+  screens: string[];
   /** 소개 페이지 주소(언어 포함) */
   href: string;
   links: AppLink[];
@@ -58,6 +60,8 @@ interface AppSource {
   /** 앱 아이콘. 언어마다 다르면 그 언어 것을 따로 둔다 */
   icon: string;
   iconByLang?: Partial<Record<Lang, string>>;
+  /** 앱 화면. 그 언어 화면이 없으면 한국어 화면을 쓴다 */
+  screens?: Partial<Record<Lang, string[]>>;
   googlePlayUrl: string | null;
   /** 앱 문서 페이지(언어 없는 경로). 첫 번째가 개인정보 처리방침 */
   pages: { key: string; path: string }[];
@@ -201,6 +205,11 @@ const SOURCES: AppSource[] = [
     slug: 'ssamkejul',
     icon: '/apps/ssamkejul/icon.png',
     iconByLang: { ja: '/apps/ssamkejul/icon-ja.png' },
+    // 홍보 영상용으로 찍어 둔 실제 화면(business/promo/assets/ssamkejul/piano)
+    screens: {
+      ko: ['/apps/ssamkejul/screens/ko-week.jpg', '/apps/ssamkejul/screens/ko-home.jpg', '/apps/ssamkejul/screens/ko-students.jpg'],
+      ja: ['/apps/ssamkejul/screens/ja-week.jpg', '/apps/ssamkejul/screens/ja-home.jpg', '/apps/ssamkejul/screens/ja-students.jpg'],
+    },
     // 한국·일본에서만 판다. 영어 페이지는 한국 스토어로 보낸다
     appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'kr' } },
     googlePlayUrl: null,
@@ -357,6 +366,7 @@ const toEntry = (source: AppSource, lang: Lang): AppEntry => {
     googlePlayUrl: source.googlePlayUrl,
     upcoming: source.appStore ? null : (source.upcoming ?? 'soon'),
     icon: source.iconByLang?.[lang] ?? source.icon,
+    screens: source.screens?.[lang] ?? source.screens?.ko ?? [],
     href: localePath(lang, `/apps/${source.slug}`),
     links,
     privacy: links[0],

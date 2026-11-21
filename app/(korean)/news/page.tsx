@@ -1,27 +1,22 @@
 import type { Metadata } from 'next';
-import PageShell from '@/app/components/page-shell';
-import { getNews } from './_lib/news';
+import { getApps } from '@/app/apps/_lib/apps';
+import { getAllNews } from './_lib/all-news';
+import NewsList from './news-list';
 
 export const metadata: Metadata = {
   title: '소식 — 조요피',
   description: '조요피의 앱 출시·업데이트 소식',
 };
 
+// 소식 — 앱 새 소식(앱 안 「새 소식」과 같은 글)과 사이트 소식을 한곳에. 앱별로 골라 볼 수 있다.
 export default function NewsPage() {
-  const news = getNews();
+  const sources = [
+    ...getApps('ko').map((a) => ({ id: a.slug, name: a.name, icon: a.icon })),
+    { id: 'site', name: '사이트', icon: null },
+  ];
   return (
-    <PageShell title="소식" lead="앱 출시와 업데이트, 사이트 변경을 알립니다.">
-      <ul className="space-y-4">
-        {news.map((item) => (
-          <li key={item.date + item.title} className="rounded-2xl border border-border bg-card p-5">
-            <time dateTime={item.date} className="text-xs text-muted">
-              {item.date}
-            </time>
-            <h2 className="mt-1 text-base font-bold">{item.title}</h2>
-            <p className="mt-2 text-sm leading-relaxed">{item.body}</p>
-          </li>
-        ))}
-      </ul>
-    </PageShell>
+    <div className="mx-auto flex w-full max-w-[1160px] flex-col gap-4 px-4 pb-14 pt-2">
+      <NewsList items={getAllNews()} sources={sources} />
+    </div>
   );
 }

@@ -1457,5 +1457,5 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
 
 export default async function AgirokPrivacyPage({ params }: LangParams) {
   const lang = await resolveLang(params);
-  return <DocPage doc={DOCS[lang]} />;
+  return <DocPage doc={DOCS[lang]} slug="agirok" path={`/${lang}/apps/agirok/privacy`} />;
 }

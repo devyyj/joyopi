@@ -7,6 +7,7 @@ import type { Lang } from '@/app/_i18n/config';
 import { getDictionary } from '@/app/_i18n/dictionary';
 import type { FeedbackApp, FeedbackKind } from '@/utils/feedback/handle-feedback';
 import { getDeviceId, sendFeedback, type SendResult } from './feedback-client';
+import { NewWindowIcon } from '../external-link';
 
 export interface FeedbackTarget {
   app: FeedbackApp;
@@ -181,8 +182,10 @@ export default function FeedbackButton({ lang, apps, className, children }: Feed
               </button>
               <p className="mt-3 text-center text-[13px] text-[#5E584F]">
                 {t.mailLead}{' '}
-                <a href={mailHref} className="text-[#1B1B1B] underline underline-offset-2">
+                <a href={mailHref} className="inline-flex items-center gap-1 text-[#1B1B1B] underline underline-offset-2">
                   {t.mailLink}
+                  <NewWindowIcon className="h-[0.85em] w-[0.85em]" />
+                  <span className="sr-only">{getDictionary(lang).nav.newWindow}</span>
                 </a>
               </p>
             </form>

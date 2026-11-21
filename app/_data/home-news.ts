@@ -10,7 +10,35 @@ import likeloop from '@/public/apps/likeloop/news.json';
 interface AppNewsItem {
   id: string;
   date: string;
+  kind?: string;
   title: Partial<Record<Lang, string>>;
+  body?: Partial<Record<Lang, string>>;
+}
+
+export interface AppNews {
+  id: string;
+  date: string;
+  /** update | notice 등(news.json의 kind) */
+  kind: string;
+  title: string;
+  /** 줄마다 「- 」로 시작하는 목록 */
+  lines: string[];
+}
+
+/** 그 앱의 새 소식(최신 먼저). 그 언어 글이 없으면 한국어 */
+export function getAppNews(slug: string, lang: Lang): AppNews[] {
+  return [...(APP_NEWS[slug] ?? [])]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map((n) => ({
+      id: n.id,
+      date: n.date,
+      kind: n.kind ?? 'update',
+      title: n.title[lang] ?? n.title.ko ?? '',
+      lines: (n.body?.[lang] ?? n.body?.ko ?? '')
+        .split('\n')
+        .map((l) => l.replace(/^-\s*/, '').trim())
+        .filter(Boolean),
+    }));
 }
 
 const APP_NEWS: Record<string, AppNewsItem[]> = { rockgazing, agirok, ssamkejul, likeloop };

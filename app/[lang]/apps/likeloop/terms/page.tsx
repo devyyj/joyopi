@@ -79,5 +79,5 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
 
 export default async function LikeLoopTermsPage({ params }: LangParams) {
   const lang = await resolveLang(params);
-  return <DocPage doc={DOCS[lang]} />;
+  return <DocPage doc={DOCS[lang]} slug="likeloop" path={`/${lang}/apps/likeloop/terms`} />;
 }

@@ -75,5 +75,5 @@ export async function generateMetadata({ params }: LangParams): Promise<Metadata
 
 export default async function SsamkejulTermsPage({ params }: LangParams) {
   const lang = await resolveLang(params);
-  return <DocPage doc={DOCS[lang]} />;
+  return <DocPage doc={DOCS[lang]} slug="ssamkejul" path={`/${lang}/apps/ssamkejul/terms`} />;
 }

@@ -18,7 +18,10 @@ describe('SiteNav (대표 메뉴)', () => {
     render(<SiteNav />);
     const nav = screen.getByRole('navigation', { name: '주 메뉴' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['앱', '유튜브', '강의', '소식', '지원']);
+    // 사이트 밖(유튜브·인프런)은 새 창으로 열고, 접근 이름 끝에 「(새 창에서 열려요)」(business/apps/common.md 9장)
+    expect(links.map((a) => a.textContent)).toEqual(['앱', '유튜브(새 창에서 열려요)', '강의(새 창에서 열려요)', '소식', '지원']);
+    expect(links.map((a) => a.getAttribute('target'))).toEqual([null, '_blank', '_blank', null, null]);
+    expect(links[1]).toHaveAttribute('rel', 'noopener noreferrer');
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
       '/ko/apps',
       'https://www.youtube.com/@joyopi',
@@ -72,7 +75,13 @@ describe('SiteNav (대표 메뉴)', () => {
     render(<SiteNavBase items={getNavItems('ja')} labels={getDictionary('ja').nav} />);
     const nav = screen.getByRole('navigation', { name: 'メインメニュー' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['アプリ', 'YouTube', '講座', 'お知らせ', 'サポート']);
+    expect(links.map((a) => a.textContent)).toEqual([
+      'アプリ',
+      'YouTube（新しいウィンドウで開きます）',
+      '講座（新しいウィンドウで開きます）',
+      'お知らせ',
+      'サポート',
+    ]);
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
       '/ja/apps',
       'https://www.youtube.com/@joyopi',

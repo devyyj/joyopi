@@ -58,6 +58,17 @@ describe('handleFeedback', () => {
     expect(rec.meta).toEqual({ lang: 'ja' });
   });
 
+  it('joyopi.com 웹의 「의견 보내기」는 app: joyopi(사이트)로 받는다', async () => {
+    const d = deps();
+    const res = await handleFeedback(
+      { app: 'joyopi', kind: 'idea', message: '유튜브 영상을 더 보여 주세요', deviceId: 'web-1234abcd', meta: { os: 'web', lang: 'ko' } },
+      null,
+      d,
+    );
+    expect(res.status).toBe(200);
+    expect((d.save as ReturnType<typeof vi.fn>).mock.calls[0][0].app).toBe('joyopi');
+  });
+
   it('형식이 틀리면 400이고 저장·알림을 하지 않는다', async () => {
     const cases: [unknown, string][] = [
       [null, 'invalid-body'],

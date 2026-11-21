@@ -14,12 +14,18 @@ describe('SiteNav (대표 메뉴)', () => {
     mockPathname.mockReturnValue('/');
   });
 
-  it('대표 메뉴를 앱·소개·소식·지원 순서로 보여 준다 (문의 게시판 없음)', () => {
+  it('대표 메뉴를 앱·유튜브·강의·소식·지원 순서로 보여 준다 (문의 게시판 없음, 소개는 푸터)', () => {
     render(<SiteNav />);
     const nav = screen.getByRole('navigation', { name: '주 메뉴' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['앱', '소개', '소식', '지원']);
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/ko/apps', '/about', '/news', '/support']);
+    expect(links.map((a) => a.textContent)).toEqual(['앱', '유튜브', '강의', '소식', '지원']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual([
+      '/ko/apps',
+      'https://www.youtube.com/@joyopi',
+      'https://www.inflearn.com/users/1167019/@joyopi',
+      '/news',
+      '/support',
+    ]);
   });
 
   it('에코는 메뉴에 없다 (주소를 아는 사람만 들어간다)', () => {
@@ -34,7 +40,7 @@ describe('SiteNav (대표 메뉴)', () => {
     render(<SiteNav />);
     const nav = screen.getByRole('navigation', { name: '주 메뉴' });
     expect(within(nav).getByRole('link', { name: '앱' })).toHaveAttribute('aria-current', 'page');
-    expect(within(nav).getByRole('link', { name: '소개' })).not.toHaveAttribute('aria-current');
+    expect(within(nav).getByRole('link', { name: '소식' })).not.toHaveAttribute('aria-current');
   });
 
   it('모바일 메뉴 버튼으로 펼치고, 메뉴를 고르면 닫힌다', () => {
@@ -45,7 +51,8 @@ describe('SiteNav (대표 메뉴)', () => {
     const mobile = screen.getByRole('navigation', { name: '모바일 메뉴' });
     expect(within(mobile).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
       '/ko/apps',
-      '/about',
+      'https://www.youtube.com/@joyopi',
+      'https://www.inflearn.com/users/1167019/@joyopi',
       '/news',
       '/support',
     ]);
@@ -65,9 +72,15 @@ describe('SiteNav (대표 메뉴)', () => {
     render(<SiteNavBase items={getNavItems('ja')} labels={getDictionary('ja').nav} />);
     const nav = screen.getByRole('navigation', { name: 'メインメニュー' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((a) => a.textContent)).toEqual(['アプリ', 'JOYOPIについて', 'お知らせ', 'サポート']);
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/ja/apps', '/about', '/news', '/support']);
-    expect(links[2]).toHaveAttribute('hreflang', 'ko');
+    expect(links.map((a) => a.textContent)).toEqual(['アプリ', 'YouTube', '講座', 'お知らせ', 'サポート']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual([
+      '/ja/apps',
+      'https://www.youtube.com/@joyopi',
+      'https://www.inflearn.com/users/1167019/@joyopi',
+      '/news',
+      '/support',
+    ]);
+    expect(links[3]).toHaveAttribute('hreflang', 'ko');
     expect(screen.getByRole('button', { name: 'メニューを開く' })).toBeInTheDocument();
   });
 });

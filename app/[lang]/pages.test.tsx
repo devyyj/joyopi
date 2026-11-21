@@ -23,7 +23,26 @@ import EchoLayout, { metadata as echoMeta } from '@/app/(korean)/echo/layout';
 import KoreanRootLayout from '@/app/(korean)/layout';
 
 // 루트 레이아웃이 쓰는 next/font는 Next 빌드 밖(vitest)에서 돌지 않아 가짜로 둔다
-vi.mock('next/font/google', () => ({ Geist: () => ({ variable: 'font-sans' }), Geist_Mono: () => ({ variable: 'font-mono' }) }));
+vi.mock('next/font/google', () => {
+  const font = () => ({ variable: 'font-x' });
+  return { Geist: font, Geist_Mono: font, Jua: font, M_PLUS_Rounded_1c: font, JetBrains_Mono: font };
+});
+
+// 홈의 바깥 데이터(유튜브·인프런)는 네트워크·Next 캐시 없이 가짜 값으로
+const external = vi.hoisted(() => ({
+  youtube: {
+    latest: { id: 'video01aaaa', title: '동시성 문제 기본 개념 8분 컷!', published: '2026-11-15', url: 'https://www.youtube.com/watch?v=video01aaaa', thumbnail: 'https://i.ytimg.com/vi/video01aaaa/hqdefault.jpg' },
+    shorts: [{ id: 'short01aaaa', title: '동시성 문제 해결 방법 - 분산 환경', published: '2026-11-15', url: 'https://www.youtube.com/shorts/short01aaaa', thumbnail: 'https://i.ytimg.com/vi/short01aaaa/hqdefault.jpg' }],
+  } as unknown,
+  inflearn: {
+    stats: { students: 195, reviews: 22, rating: '5.0' },
+    courses: [{ slug: 'distributed-transact-1', title: '코드로 끝내는 분산 트랜잭션 (feat. AI Agent)', level: 'ADVANCED', url: 'https://www.inflearn.com/course/distributed-transact-1' }],
+  } as unknown,
+}));
+vi.mock('@/app/_data/external', () => ({
+  getYoutubeHighlights: async () => external.youtube,
+  getInflearnProfile: async () => external.inflearn,
+}));
 
 const params = (lang: string): LangParams => ({ params: Promise.resolve({ lang }) });
 type AsyncPage = (props: LangParams) => Promise<ReactElement>;
@@ -80,37 +99,78 @@ describe('hreflang 대체 주소', () => {
 });
 
 describe('홈', () => {
-  it('한국어: 사람 소개 한 줄, 두 앱(소개 페이지 링크), 최근 소식, 문의 안내', async () => {
+  it('한국어: 사람 소개, 앱 4개(스토어·소개 링크), 유튜브·인프런, 새 소식, 의견 보내기·메일', async () => {
     const { container } = await renderPage(Home, 'ko');
     // 조요피는 회사가 아니라 사람(온라인 활동명)으로 소개한다
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('조요피입니다');
+    const h1 = screen.getByRole('heading', { level: 1 }).textContent;
+    expect(h1).toContain('조요피');
+    expect(h1).toContain('오늘도 뭔가 만드는 중');
     expect(container.textContent).not.toMatch(/개발사|회사/);
-    expect(screen.getByRole('heading', { name: '돌멍타임' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '아기록' })).toBeInTheDocument();
+    for (const name of ['돌멍타임', '쌤케줄', '아기록', 'LikeLoop']) {
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+    }
+    // 출시한 앱은 App Store로, 아직인 앱은 상태 배지와 소개 페이지로
     expect(hrefs()).toEqual(
-      expect.arrayContaining(['/ko/apps/rockgazing', '/ko/apps/agirok', '/ko/apps', '/news', '/support']),
+      expect.arrayContaining([
+        'https://apps.apple.com/kr/app/id6833780121',
+        'https://apps.apple.com/kr/app/id6835451326',
+        '/ko/apps/agirok',
+        '/ko/apps/likeloop',
+      ]),
     );
-    // 문의는 메일로만 받는다 (공개 게시판 없음)
-    expect(hrefs()).not.toContain('/board');
+    expect(container.textContent).toContain('곧 나와요');
+    expect(container.textContent).toContain('다듬는 중');
+    // 유튜브: 채널·최근 영상·쇼츠
+    expect(hrefs()).toEqual(
+      expect.arrayContaining(['https://www.youtube.com/@joyopi', 'https://www.youtube.com/watch?v=video01aaaa', 'https://www.youtube.com/shorts/short01aaaa']),
+    );
+    expect(container.textContent).toContain('동시성 문제 기본 개념 8분 컷!');
+    // 인프런: 하루 한 번 가져온 숫자와 강의
+    expect(container.textContent).toContain('수강생 195명 · 평점 5.0 · 수강평 22개');
+    expect(hrefs()).toEqual(expect.arrayContaining(['https://www.inflearn.com/users/1167019/@joyopi', 'https://www.inflearn.com/course/distributed-transact-1']));
+    // 새 소식: 앱 새 소식(앱 이름 붙여)과 사이트 소식
+    expect(container.textContent).toContain('쌤케줄 · 1.0.1 업데이트');
+    expect(hrefs()).toContain('/news');
+    // 의견 보내기는 로그인 없이 창으로, 긴 문의는 메일
+    expect(screen.getByRole('button', { name: '의견 보내기' })).toBeInTheDocument();
     expect(hasMailLink()).toBe(true);
+    expect(hrefs()).not.toContain('/board');
     expect(container.innerHTML).not.toContain('/echo');
   });
 
-  it('일본어·영어: 그 언어 문구와 스토어 이름, 그 언어 앱 주소', async () => {
+  it('바깥 데이터를 못 읽으면: 유튜브는 채널 버튼만, 인프런은 숫자 없이 기본 강의 목록', async () => {
+    const saved = { ...external };
+    external.youtube = null;
+    external.inflearn = null;
+    try {
+      const { container } = await renderPage(Home, 'ko');
+      expect(hrefs()).toContain('https://www.youtube.com/@joyopi');
+      expect(container.textContent).toContain('최근 영상은 채널에서 볼 수 있어요.');
+      expect(container.textContent).not.toContain('수강생');
+      expect(container.textContent).toContain('가장 쉬운 동시성 문제 - Race Condition');
+    } finally {
+      external.youtube = saved.youtube;
+      external.inflearn = saved.inflearn;
+    }
+  });
+
+  it('일본어·영어: 그 언어 문구와 스토어 이름·나라, 영상·강의는 한국어라고 알린다', async () => {
     const ja = await renderPage(Home, 'ja');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('JOYOPIです');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('今日も何かつくってます');
     expect(screen.getByRole('heading', { name: '石の子守り' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'ベビろく' })).toBeInTheDocument();
-    expect(hrefs()).toEqual(expect.arrayContaining(['/ja/apps', '/ja/apps/agirok/delete-account']));
-    // 소식은 한국어뿐이라 알린다
-    expect(ja.container.textContent).toContain('韓国語のみ');
+    expect(screen.getByRole('heading', { name: 'せんせジュール' })).toBeInTheDocument();
+    expect(hrefs()).toEqual(expect.arrayContaining(['https://apps.apple.com/jp/app/id6833780121', '/ja/apps/agirok']));
+    expect(ja.container.textContent).toContain('動画と講座は韓国語です');
+    expect(ja.container.textContent).toContain('受講生 195人');
     ja.unmount();
 
-    await renderPage(Home, 'en');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain("I'm JOYOPI");
+    const en = await renderPage(Home, 'en');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Always making something');
     expect(screen.getByRole('heading', { name: 'Rockgazing' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Agirok' })).toBeInTheDocument();
-    expect(hrefs()).toEqual(expect.arrayContaining(['/en/apps', '/en/apps/rockgazing/privacy']));
+    expect(hrefs()).toEqual(expect.arrayContaining(['https://apps.apple.com/us/app/id6833780121', '/en/apps/agirok']));
+    expect(en.container.textContent).toContain('Videos and courses are in Korean');
+    // 사이트 소식은 한국어로만 쓰므로 영어 홈에는 앱 새 소식만
+    expect(en.container.textContent).not.toContain('joyopi.com을 새로 꾸몄습니다');
   });
 });
 

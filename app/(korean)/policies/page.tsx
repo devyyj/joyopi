@@ -32,6 +32,19 @@ export default function PoliciesPage() {
         </ul>
       </PageSection>
 
+      <PageSection heading="joyopi.com 「의견 보내기」">
+        <p>이 사이트의 「의견 보내기」로 의견을 보내면 아래 정보를 받습니다. 로그인은 필요 없습니다.</p>
+        <ul>
+          <li>받는 정보: 의견 내용, 고른 대상(사이트 또는 앱)과 분류, 답장 받을 이메일(적은 경우), 화면 언어, 브라우저에 저장한 무작위 ID(같은 브라우저의 과도한 전송을 막는 데만 씀)</li>
+          <li>목적: 의견 확인과 답장, 사이트·앱 개선</li>
+          <li>보유 기간: 받은 날부터 1년 보관한 뒤 지웁니다.</li>
+          <li>
+            처리를 맡기는 곳: Vercel Inc.(의견을 받는 서버, 미국), Google Firebase(저장, 서울 리전), Slack Technologies, LLC(운영자에게 새 의견 알림, 미국)
+          </li>
+          <li>전송 횟수를 세기 위해 IP 주소를 쓰지만, 원래 값은 남기지 않고 바꾼 값(해시)으로만 셉니다.</li>
+        </ul>
+      </PageSection>
+
       <PageSection heading="문의">
         <p>
           정책에 대한 문의는 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>로 보내 주세요.

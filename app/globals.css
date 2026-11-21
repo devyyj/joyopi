@@ -27,7 +27,9 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-brand: var(--font-jetbrains), ui-monospace, monospace;
   --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+  --font-display: var(--font-jua), var(--font-mplus-rounded), -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
   --radius-md: 6px;
 }
 
@@ -69,4 +71,16 @@ body[data-hide-header="true"] footer[data-site-footer] {
   ::selection {
     background-color: rgba(240, 106, 31, 0.35);
   }
+}
+
+/* 홈 제목 끝의 브랜드 커서 `_`: 1초 주기로 깜빡인다(로고 시작 화면과 같음). 동작 줄이기를 켜면 멈춘다 */
+@keyframes cursor-blink {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: cursor-blink 1s step-end infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink { animation: none; }
 }

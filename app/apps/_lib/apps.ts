@@ -23,6 +23,10 @@ export interface AppEntry {
   /** 스토어 주소. 출시 전(또는 판매 중지)에는 null → 「출시 준비 중」으로 표시 */
   appStoreUrl: string | null;
   googlePlayUrl: string | null;
+  /** 아직 받을 수 없는 앱의 상태(홈 배지): 심사·출시 준비는 soon, 판매 중지·다듬는 중은 polishing */
+  upcoming: 'soon' | 'polishing' | null;
+  /** 앱 아이콘(public 경로) */
+  icon: string;
   /** 소개 페이지 주소(언어 포함) */
   href: string;
   links: AppLink[];
@@ -50,6 +54,10 @@ interface AppSource {
   slug: string;
   /** App Store에서 지금 받을 수 있을 때만 채운다. 심사 중·판매 중지면 null */
   appStore: AppStoreListing | null;
+  upcoming?: 'soon' | 'polishing';
+  /** 앱 아이콘. 언어마다 다르면 그 언어 것을 따로 둔다 */
+  icon: string;
+  iconByLang?: Partial<Record<Lang, string>>;
   googlePlayUrl: string | null;
   /** 앱 문서 페이지(언어 없는 경로). 첫 번째가 개인정보 처리방침 */
   pages: { key: string; path: string }[];
@@ -59,6 +67,7 @@ interface AppSource {
 const SOURCES: AppSource[] = [
   {
     slug: 'rockgazing',
+    icon: '/apps/rockgazing/icon.png',
     appStore: { id: '6833780121', country: { ko: 'kr', ja: 'jp', en: 'us' } },
     googlePlayUrl: null,
     pages: [
@@ -121,6 +130,8 @@ const SOURCES: AppSource[] = [
   },
   {
     slug: 'agirok',
+    upcoming: 'soon',
+    icon: '/apps/agirok/icon.png',
     appStore: null,
     googlePlayUrl: null,
     pages: [
@@ -188,6 +199,8 @@ const SOURCES: AppSource[] = [
   },
   {
     slug: 'ssamkejul',
+    icon: '/apps/ssamkejul/icon.png',
+    iconByLang: { ja: '/apps/ssamkejul/icon-ja.png' },
     // 한국·일본에서만 판다. 영어 페이지는 한국 스토어로 보낸다
     appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'kr' } },
     googlePlayUrl: null,
@@ -256,6 +269,8 @@ const SOURCES: AppSource[] = [
   },
   {
     slug: 'likeloop',
+    upcoming: 'polishing',
+    icon: '/apps/likeloop/icon.png',
     appStore: null,
     googlePlayUrl: null,
     pages: [
@@ -340,6 +355,8 @@ const toEntry = (source: AppSource, lang: Lang): AppEntry => {
       ? `https://apps.apple.com/${source.appStore.country[lang]}/app/id${source.appStore.id}`
       : null,
     googlePlayUrl: source.googlePlayUrl,
+    upcoming: source.appStore ? null : (source.upcoming ?? 'soon'),
+    icon: source.iconByLang?.[lang] ?? source.icon,
     href: localePath(lang, `/apps/${source.slug}`),
     links,
     privacy: links[0],

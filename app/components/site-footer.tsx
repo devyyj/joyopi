@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BusinessInfo from '@/app/apps/_components/business-info';
 import type { Lang } from '@/app/_i18n/config';
 import { getDictionary } from '@/app/_i18n/dictionary';
-import { getNavItems, getPolicyLinks } from './site-links';
+import { getFooterNavItems, getPolicyLinks } from './site-links';
 import BrandLogo from './brand/brand-logo';
 
 /** 모든 페이지 아래에 붙는 공통 푸터: 대표 메뉴, 약관·정책, 사업자 정보(그 언어로). */
@@ -13,7 +13,7 @@ export default function SiteFooter({ lang }: { lang: Lang }) {
         <div>
           <BrandLogo className="h-4 w-auto" />
           <ul className="mt-4 space-y-2 text-xs">
-            {getNavItems(lang).map((item) => (
+            {getFooterNavItems(lang).map((item) => (
               <li key={item.href}>
                 <Link href={item.href} hrefLang={item.hrefLang} className="text-foreground hover:text-primary">
                   {item.label}

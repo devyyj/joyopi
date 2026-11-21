@@ -5,14 +5,14 @@
     "kind": "update",
     "version": "1.0.1",
     "title": {
-      "ko": "의견 보내기와 새 소식이 생겼어요",
-      "ja": "ご意見の送信とお知らせができました",
-      "en": "Send feedback and What's New"
+      "ko": "아기록을 시작했어요",
+      "ja": "ベビろくをはじめました",
+      "en": "Agirok is here"
     },
     "body": {
-      "ko": "- 설정에서 바로 의견을 보낼 수 있어요\n- 함께 쓰는 가족이 스스로 공유를 그만둘 수 있어요\n- 밤 화면에서 시각 선택 글자가 잘 보이고, 수면 시간 계산을 고쳤어요",
-      "ja": "- 設定からすぐにご意見を送れます\n- 一緒に使う家族が自分で共有をやめられます\n- 夜の画面で時刻の文字が見やすくなり、睡眠時間の計算を直しました",
-      "en": "- Send feedback right from Settings\n- Caregivers can stop sharing on their own\n- Time pickers are readable at night, and sleep durations are fixed"
+      "ko": "- 수유·수면·기저귀를 한 번 탭으로 기록해요\n- 가족과 함께 쓰면 기록이 실시간으로 맞춰져요\n- 설정에서 바로 의견을 보낼 수 있어요",
+      "ja": "- 授乳・睡眠・おむつをワンタップで記録できます\n- 家族と一緒に使うと、記録がリアルタイムで共有されます\n- 設定からすぐにご意見を送れます",
+      "en": "- Log feeds, sleep and diapers in a single tap\n- Share with your family and records sync in real time\n- Send feedback right from Settings"
     }
   }
 ]

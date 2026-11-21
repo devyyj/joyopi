@@ -36,7 +36,7 @@ const external = vi.hoisted(() => ({
   } as unknown,
   inflearn: {
     stats: { students: 195, reviews: 22, rating: '5.0' },
-    courses: [{ slug: 'distributed-transact-1', title: '코드로 끝내는 분산 트랜잭션 (feat. AI Agent)', level: 'ADVANCED', url: 'https://www.inflearn.com/course/distributed-transact-1' }],
+    courses: [{ slug: 'distributed-transact-1', title: '코드로 끝내는 분산 트랜잭션 (feat. AI Agent)', level: 'ADVANCED', url: 'https://www.inflearn.com/ko/course/distributed-transact-1' }],
   } as unknown,
 }));
 vi.mock('@/app/_data/external', () => ({
@@ -127,7 +127,7 @@ describe('홈', () => {
     expect(container.textContent).toContain('동시성 문제 기본 개념 8분 컷!');
     // 인프런: 하루 한 번 가져온 숫자와 강의
     expect(container.textContent).toContain('수강생 195명 · 평점 5.0 · 수강평 22개');
-    expect(hrefs()).toEqual(expect.arrayContaining(['https://www.inflearn.com/users/1167019/@joyopi', 'https://www.inflearn.com/course/distributed-transact-1']));
+    expect(hrefs()).toEqual(expect.arrayContaining(['https://www.inflearn.com/ko/users/1167019/@joyopi', 'https://www.inflearn.com/ko/course/distributed-transact-1']));
     // 새 소식: 앱 새 소식(앱 이름 붙여)과 사이트 소식
     expect(container.textContent).toContain('쌤케줄 · 1.0.1 업데이트');
     expect(hrefs()).toContain('/news');

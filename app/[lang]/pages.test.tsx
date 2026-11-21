@@ -128,7 +128,9 @@ describe('앱 (제품)', () => {
     expect((await meta(rockgazingMeta, 'ko')).title).toBe('돌멍타임 — 조요피');
     expect(screen.getByRole('heading', { level: 1, name: '돌멍타임' })).toBeInTheDocument();
     expect(container.textContent).toContain('Rockgazing');
-    expect(container.textContent).toContain('출시 준비 중');
+    // App Store에 공개된 앱은 그 언어의 나라 스토어로 보낸다
+    expect(container.textContent).not.toContain('출시 준비 중');
+    expect(hrefs()).toContain('https://apps.apple.com/kr/app/id6833780121');
     expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(3);
     expect(hrefs()).toEqual(expect.arrayContaining(['/ko/apps/rockgazing/privacy', '/ko/apps/rockgazing/support']));
   });
@@ -318,7 +320,7 @@ describe('아기록 문서', () => {
     expect(text).not.toMatch(/\[이름\]|\[이메일\]|\[YYYY-MM-DD\]/);
     expect(hasMailLink()).toBe(true);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(text).toContain('최종 수정일: 2026-11-14');
+    expect(text).toContain('최종 수정일: 2026-11-21');
   });
 
   it.each([

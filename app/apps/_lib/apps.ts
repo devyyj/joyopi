@@ -20,7 +20,7 @@ export interface AppEntry {
   features: string[];
   /** 지원 기기·언어 등 */
   facts: { label: string; value: string }[];
-  /** 스토어 주소. 출시 전에는 null → 「출시 준비 중」으로 표시 */
+  /** 스토어 주소. 출시 전(또는 판매 중지)에는 null → 「출시 준비 중」으로 표시 */
   appStoreUrl: string | null;
   googlePlayUrl: string | null;
   /** 소개 페이지 주소(언어 포함) */
@@ -40,9 +40,16 @@ interface AppText {
   pageLabels: Record<string, string>;
 }
 
+/** App Store에 공개된 앱. 페이지 언어마다 보낼 나라 스토어를 정한다(팔지 않는 나라로 보내면 빈 화면이 나온다). */
+interface AppStoreListing {
+  id: string;
+  country: Record<Lang, string>;
+}
+
 interface AppSource {
   slug: string;
-  appStoreUrl: string | null;
+  /** App Store에서 지금 받을 수 있을 때만 채운다. 심사 중·판매 중지면 null */
+  appStore: AppStoreListing | null;
   googlePlayUrl: string | null;
   /** 앱 문서 페이지(언어 없는 경로). 첫 번째가 개인정보 처리방침 */
   pages: { key: string; path: string }[];
@@ -52,7 +59,7 @@ interface AppSource {
 const SOURCES: AppSource[] = [
   {
     slug: 'rockgazing',
-    appStoreUrl: null,
+    appStore: { id: '6833780121', country: { ko: 'kr', ja: 'jp', en: 'us' } },
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/rockgazing/privacy' },
@@ -114,7 +121,7 @@ const SOURCES: AppSource[] = [
   },
   {
     slug: 'agirok',
-    appStoreUrl: null,
+    appStore: null,
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/agirok/privacy' },
@@ -181,7 +188,8 @@ const SOURCES: AppSource[] = [
   },
   {
     slug: 'ssamkejul',
-    appStoreUrl: null,
+    // 한국·일본에서만 판다. 영어 페이지는 한국 스토어로 보낸다
+    appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'kr' } },
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/ssamkejul/privacy' },
@@ -202,7 +210,7 @@ const SOURCES: AppSource[] = [
           '광고가 없고, 지금은 무료입니다.',
         ],
         facts: [
-          { label: '기기', value: 'iPhone, Android (선생님), 웹 (수강생)' },
+          { label: '기기', value: 'iPhone, iPad (선생님, Android 준비 중), 웹 (수강생)' },
           { label: '언어', value: '한국어, 日本語' },
           { label: '가격', value: '지금은 무료' },
         ],
@@ -220,7 +228,7 @@ const SOURCES: AppSource[] = [
           '広告はなく、今は無料です。',
         ],
         facts: [
-          { label: '端末', value: 'iPhone、Android(先生)、Web(生徒)' },
+          { label: '端末', value: 'iPhone、iPad(先生。Android は準備中)、Web(生徒)' },
           { label: '言語', value: '한국어, 日本語' },
           { label: '価格', value: '現在無料' },
         ],
@@ -238,7 +246,7 @@ const SOURCES: AppSource[] = [
           'No ads, and free for now.',
         ],
         facts: [
-          { label: 'Devices', value: 'iPhone, Android (teachers), web (students)' },
+          { label: 'Devices', value: 'iPhone, iPad (teachers; Android coming soon), web (students)' },
           { label: 'Languages', value: '한국어, 日本語' },
           { label: 'Price', value: 'Free for now' },
         ],
@@ -248,7 +256,7 @@ const SOURCES: AppSource[] = [
   },
   {
     slug: 'likeloop',
-    appStoreUrl: null,
+    appStore: null,
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/likeloop/privacy' },
@@ -328,7 +336,9 @@ const toEntry = (source: AppSource, lang: Lang): AppEntry => {
     description: text.description,
     features: text.features,
     facts: text.facts,
-    appStoreUrl: source.appStoreUrl,
+    appStoreUrl: source.appStore
+      ? `https://apps.apple.com/${source.appStore.country[lang]}/app/id${source.appStore.id}`
+      : null,
     googlePlayUrl: source.googlePlayUrl,
     href: localePath(lang, `/apps/${source.slug}`),
     links,

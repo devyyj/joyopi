@@ -10,6 +10,7 @@ import { getInflearnProfile, getYoutubeHighlights } from '@/app/_data/external';
 import { getHomeNews } from '@/app/_data/home-news';
 import FeedbackButton from '@/app/components/feedback/feedback-dialog';
 import ExternalLink, { NewWindowIcon } from '@/app/components/external-link';
+import VisitorLine from '@/app/components/visitor-line';
 import type { Lang } from '@/app/_i18n/config';
 import { feedbackTargets } from '@/app/components/feedback/targets';
 import { YOUTUBE_CHANNEL_URL } from '@/utils/youtube/feed';
@@ -83,6 +84,7 @@ export default async function Home({ params }: LangParams) {
               <span aria-hidden="true" className="cursor-blink ml-[0.12em] inline-block h-[0.12em] w-[0.5em] bg-[#E8590C]" />
             </h1>
             <p className="mt-4 max-w-[520px] text-[17px] leading-relaxed text-[#DDD6C8]">{t.intro}</p>
+            <VisitorLine />
           </div>
           <ul aria-label={t.statsAria} className="grid flex-[1_1_300px] grid-cols-3 gap-2.5">
             {[

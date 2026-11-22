@@ -1,0 +1,35 @@
+#!/bin/sh
+# 푸시 전 검사(business ops/release-checks.md 9장, 2026-11-23): package.json에 있는 lint·typecheck·test를 돌리고, 하나라도 실패하면 푸시하지 않는다.
+# 켜는 법: npm install(prepare 스크립트가 git config core.hooksPath .githooks를 한다). 문서(*.md, docs/)만 바뀐 푸시는 건너뛴다.
+# 급할 때 건너뛰기: git push --no-verify (건너뛴 커밋은 빌드 전에 preflight가 다시 검사한다)
+set -u
+
+zero=0000000000000000000000000000000000000000
+changed=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue # 브랜치 지우기
+  if [ "$remote_sha" = "$zero" ]; then
+    files="(새 브랜치)" # 처음 올리는 브랜치는 항상 검사한다
+  else
+    files=$(git diff --name-only "$remote_sha" "$local_sha" 2>/dev/null || echo "(비교 실패)")
+  fi
+  changed="$changed
+$files"
+done
+
+code=$(printf '%s\n' "$changed" | grep -v '^$' | grep -vE '(\.md$|^docs/)' | head -1)
+if [ -z "$code" ]; then
+  echo "pre-push: 문서만 바뀌어 검사를 건너뜁니다"
+  exit 0
+fi
+
+for s in lint typecheck test; do
+  if node -e "process.exit(require('./package.json').scripts?.['$s'] ? 0 : 1)" 2>/dev/null; then
+    echo "pre-push: npm run $s"
+    if ! npm run -s "$s"; then
+      echo "pre-push: npm run $s 실패 — 푸시하지 않습니다(고친 뒤 다시 푸시)" >&2
+      exit 1
+    fi
+  fi
+done
+echo "pre-push: 통과"

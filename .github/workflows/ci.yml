@@ -1,0 +1,32 @@
+# 푸시마다 자동 검사(business ops/release-checks.md 9장). 실패한 커밋으로는 빌드하지 않는다.
+# 비용: GitHub Actions 포함량을 모든 저장소가 함께 쓴다(Linux 한 번 약 $0.01~0.03). 문서만 바뀌면 돌지 않는다.
+name: CI
+
+on:
+  push:
+    branches: [develop, master]
+    paths-ignore: ['**/*.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**/*.md', 'docs/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run test

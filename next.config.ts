@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' }],
   },
+  // 아기록 E2E: Android 에뮬레이터가 이 PC의 next dev(초대 링크 페이지)를 10.0.2.2로 연다(개발 서버에만 쓰인다)
+  allowedDevOrigins: ['10.0.2.2'],
   experimental: {
     // 루트 레이아웃이 둘(app/[lang], app/(korean))이라 404는 app/global-not-found.tsx가 맡는다.
     globalNotFound: true,

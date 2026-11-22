@@ -43,6 +43,7 @@
 - 횟수 제한: 한 시간에 기기당 5번, IP당 20번(`utils/feedback/rate.ts`). 횟수는 `feedback_rate` 컬렉션에 해시 ID로 세어 IP 원문은 남지 않는다.
 - Slack 알림이 실패해도 저장됐으면 200을 준다(서버 로그에 `[feedback] Slack 알림 실패`).
 - 웹뷰 앱을 위해 CORS를 모든 출처에 연다(쿠키·인증 없음).
+- **앱의 「신고하기」도 이 API로 온다**(2026-11-22, 모든 앱 공통 `business/apps/common.md` 12장): 각 앱 서버가 `kind: other`, 메시지 첫 줄 `[신고] <앱 이름>`, `deviceId: <앱 약칭>-report-<신고한 사람 ID>`, `meta.os: server`로 보낸다. 신고 원본은 그 앱의 서버(LikeLoop은 Firestore `reports`). 지금 보내는 앱: LikeLoop(`ll-report-…`).
 
 ## 환경 변수 (Vercel)
 

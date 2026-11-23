@@ -45,6 +45,7 @@ export const LEGACY_PATHS = [
   '/apps/likeloop/terms',
   '/apps/mudang/privacy',
   '/apps/mudang/support',
+  '/apps/mudang/terms',
 ] as const;
 
 export const isLegacyPath = (pathname: string): boolean => (LEGACY_PATHS as readonly string[]).includes(pathname);

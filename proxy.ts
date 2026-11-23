@@ -38,5 +38,6 @@ export const config = {
   '/apps/likeloop/terms',
   '/apps/mudang/privacy',
   '/apps/mudang/support',
+  '/apps/mudang/terms',
   ],
 };

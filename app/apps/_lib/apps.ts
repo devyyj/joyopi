@@ -279,8 +279,8 @@ const SOURCES: AppSource[] = [
   {
     slug: 'likeloop',
     icon: '/apps/likeloop/icon.png',
-    // 2026-11-23 1.0.2로 판매 재개, 처음엔 한국만(business ops/release-checks.md 11장)
-    appStore: { id: '6836375163', country: { ko: 'kr', ja: 'kr', en: 'kr' } },
+    // 2026-11-23 1.0.2로 판매 재개, 중국 본토를 뺀 모든 나라
+    appStore: { id: '6836375163', country: { ko: 'kr', ja: 'jp', en: 'us' } },
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/likeloop/privacy' },

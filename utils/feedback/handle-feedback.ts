@@ -11,7 +11,6 @@ export const FEEDBACK_APPS = {
   rockgazing: '돌보기',
   ssamkejul: '쌤케줄',
   likeloop: 'LikeLoop',
-  kkotjam: '꽃잠',
   /** joyopi.com 웹의 「의견 보내기」에서 「사이트 전체」를 고른 의견 */
   joyopi: '사이트(joyopi.com)',
 } as const;

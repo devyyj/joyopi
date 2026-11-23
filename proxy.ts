@@ -36,5 +36,7 @@ export const config = {
   '/apps/likeloop/support',
   '/apps/likeloop/delete-account',
   '/apps/likeloop/terms',
+  '/apps/mudang/privacy',
+  '/apps/mudang/support',
   ],
 };

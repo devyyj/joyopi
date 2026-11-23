@@ -1,13 +1,9 @@
-# 푸시마다 자동 검사(business ops/release-checks.md 9장). 실패한 커밋으로는 빌드하지 않는다.
-# 비용: GitHub Actions 포함량을 모든 저장소가 함께 쓴다(Linux 한 번 약 $0.01~0.03). 문서만 바뀌면 돌지 않는다.
+# 깨끗한 환경 검사(수동). 평소 검사는 푸시 전 훅(business ops/release-checks.md 9장)
 name: CI
 
 on:
-  push:
-    branches: [develop, master]
-    paths-ignore: ['**/*.md', 'docs/**']
-  pull_request:
-    paths-ignore: ['**/*.md', 'docs/**']
+  # 자동 실행은 끔(2026-11-23 사용자 결정): 검사는 푸시 전에 이 PC에서 .githooks/pre-push가 한다.
+  # 깨끗한 환경에서 확인하고 싶을 때만 GitHub › Actions › CI › Run workflow로 돌린다(포함량을 쓴다)
   workflow_dispatch:
 
 concurrency:

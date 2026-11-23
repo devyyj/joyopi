@@ -115,17 +115,16 @@ describe('홈', () => {
       expect.arrayContaining([
         'https://apps.apple.com/kr/app/id6833780121',
         'https://apps.apple.com/kr/app/id6835451326',
+        'https://apps.apple.com/kr/app/id6836375163',
         '/ko/apps/agirok',
-        '/ko/apps/likeloop',
       ]),
     );
     expect(container.textContent).toContain('곧 나와요');
     // 스토어·유튜브·인프런처럼 사이트 밖으로 나가는 버튼은 새 창 + 접근 이름 끝 안내
     const store = screen.getAllByRole('link', { name: '받으러 가기(새 창에서 열려요)' });
-    expect(store.length).toBe(2);
+    expect(store.length).toBe(3);
     expect(store.every((a) => a.getAttribute('target') === '_blank')).toBe(true);
     expect(screen.getByRole('link', { name: '채널 보기(새 창에서 열려요)' })).toHaveAttribute('target', '_blank');
-    expect(container.textContent).toContain('다듬는 중');
     // 유튜브: 채널·최근 영상·쇼츠
     expect(hrefs()).toEqual(
       expect.arrayContaining(['https://www.youtube.com/@joyopi', 'https://www.youtube.com/watch?v=video01aaaa', 'https://www.youtube.com/shorts/short01aaaa']),

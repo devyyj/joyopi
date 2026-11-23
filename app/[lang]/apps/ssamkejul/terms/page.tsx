@@ -49,24 +49,24 @@ const ja: DocLocale = {
 
 const en: DocLocale = {
   lang: 'en',
-  title: "Ssamkejul Terms of Use",
-  lead: <p>Ssamkejul (the “Service”) is a lesson-scheduling service provided by JOYOPI (“we”).</p>,
+  title: "Teachedule Terms of Use",
+  lead: <p>Teachedule (Korean name 쌤케줄 “Ssamkejul”, Japanese name せんせジュール; the “Service”) is a lesson-scheduling service provided by JOYOPI (“we”).</p>,
   sections: [
     { id: "price", heading: "1. Price", body: <><p>The Service is free for now. We may later charge for some features or for registering more than a certain number of students; we will give 30 days’ notice and keep already-registered students usable.</p></> },
-    { id: "account", heading: "2. Accounts", body: <><p>You sign in with a Kakao, LINE, Apple or Google account, which only you may use. A student invite link works only for the first account that links it.</p></> },
+    { id: "account", heading: "2. Accounts", body: <><p>You sign in with a Kakao, LINE, Apple or Google account (in English, the App offers Apple and Google), which only you may use. A student invite link works only for the first account that links it.</p></> },
     { id: "teacher", heading: "3. Teacher responsibilities", body: <><ul><li>Tell your students and obtain any required consent before entering their information.</li><li>Lesson contracts, fees and refunds are between teacher and student; we are not a party to them.</li><li>Teachers choose auto-confirmation and deadline settings and are responsible for communicating their results.</li></ul></> },
     { id: "prohibited", heading: "4. Prohibited use", body: <><p>Do not use others’ accounts, disrupt the Service (e.g. automated mass requests), break the law, infringe others’ rights, or use the Service for anything other than managing lesson schedules (e.g. ads or spam).</p></> },
-    { id: "change", heading: "5. Changes to the Service", body: <><p>We may change or suspend parts of the Service. We will give 30 days’ notice before ending it.</p></> },
-    { id: "liability", heading: "6. Limitation of liability", body: <><p>We operate the Service with care, but unless we act intentionally or with gross negligence we are not liable for schedule problems caused by network outages, device issues or incorrect input. The content and quality of lessons are the teacher’s responsibility.</p></> },
+    { id: "change", heading: "5. Changes to the Service", body: <><p>We may change or suspend parts of the Service. We will give 30 days’ notice before ending it and help teachers move their schedule records.</p></> },
+    { id: "liability", heading: "6. Limitation of liability", body: <><p>We operate the Service with care, but unless we act intentionally or with gross negligence we are not liable for schedule problems caused by network outages, device issues or incorrect input. The content and quality of lessons are the teacher’s responsibility.</p><p>Nothing in these terms limits rights you have under mandatory consumer protection law where you live.</p></> },
     { id: "leave", heading: "7. Leaving", body: <><p>Teachers can delete their account at any time in Settings › Delete account. Students can unlink at any time with “Unlink”.</p></> },
-    { id: "law", heading: "8. Governing law", body: <><p>These terms are governed by the laws of the Republic of Korea, and disputes are resolved in the competent court under its Civil Procedure Act. Mandatory consumer protection laws of your country still apply. Contact: {mail}</p></> },
+    { id: "law", heading: "8. Governing law", body: <><p>These terms are governed by the laws of the Republic of Korea, and disputes are resolved in the competent court under its Civil Procedure Act. For users in Japan, mandatory provisions such as the Consumer Contract Act take priority. For users in the EU, the UK and other regions, the mandatory consumer protection laws of your country of residence also continue to apply. Contact: {mail}</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-23',
 };
 
 const DOCS: Record<Lang, DocLocale> = { ko, ja, en };
-const TITLES: Record<Lang, string> = {"ko": "쌤케줄 이용약관", "ja": "せんせジュール 利用規約", "en": "Ssamkejul Terms of Use"};
+const TITLES: Record<Lang, string> = {"ko": "쌤케줄 이용약관", "ja": "せんせジュール 利用規約", "en": "Teachedule Terms of Use"};
 
 export async function generateMetadata({ params }: LangParams): Promise<Metadata> {
   const lang = await resolveLang(params);

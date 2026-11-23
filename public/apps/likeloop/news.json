@@ -1,5 +1,21 @@
 [
   {
+    "id": "update-1.0.2",
+    "date": "2026-11-23",
+    "kind": "update",
+    "version": "1.0.2",
+    "title": {
+      "ko": "1.0.2 업데이트",
+      "ja": "1.0.2 アップデート",
+      "en": "Version 1.0.2"
+    },
+    "body": {
+      "ko": "- 성향 축이 10개로 늘었어요. 축을 누르면 그 축 질문에 바로 답할 수 있어요.\n- 내가 한 답을 모아 보고, 3개월이 지난 답은 다시 답할 수 있어요.\n- 그룹을 여러 개 만들고 링크 하나로 초대할 수 있어요. 그룹원과의 궁합도 볼 수 있어요.\n- 친구에게 보낸 초대 링크가 앱에서 바로 열려요.\n- 알림 설정이 생겼고, 알림을 누르면 해당 화면으로 가요.\n- 궁합 연결 끊기와 앱 안에서 의견 보내기를 더했어요.\n- 첫 질문 받기 오류 등 여러 문제를 고쳤어요.",
+      "ja": "- 性格の軸が10個に増えました。軸をタップすると、その軸の質問にすぐ答えられます。\n- 自分の回答をまとめて見られ、3か月たった回答には答え直せます。\n- グループを複数作り、リンク1つで招待できます。グループメンバーとの相性も見られます。\n- 友だちに送った招待リンクがアプリで直接開きます。\n- 通知設定を追加し、通知をタップすると該当画面に移動します。\n- 相性のつながり解除と、アプリ内でのご意見送信を追加しました。\n- 「最初の質問へ」のエラーなど、いくつかの問題を修正しました。",
+      "en": "- Personality axes grew to 10. Tap an axis to answer its questions right away.\n- See all your answers in one place, and re-answer ones older than 3 months.\n- Create multiple groups and invite people with a single link. See your match with each group member.\n- Invite links you send to friends now open directly in the app.\n- New notification settings; tapping a notification takes you to the right screen.\n- Added disconnecting a match and sending feedback inside the app.\n- Fixed several issues, including the error on \"Get my first questions\"."
+    }
+  },
+  {
     "id": "update-1.0.0",
     "date": "2026-11-18",
     "kind": "update",

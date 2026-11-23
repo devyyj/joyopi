@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "scripts/**",
+    // 앱 웹 체험판 빌드 결과물(다른 저장소에서 빌드해 복사한 파일)
+    "public/apps/*/trial/**",
   ]),
 ]);
 

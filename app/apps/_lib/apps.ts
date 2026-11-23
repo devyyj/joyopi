@@ -211,7 +211,7 @@ const SOURCES: AppSource[] = [
       ja: ['/apps/ssamkejul/screens/ja-week.jpg', '/apps/ssamkejul/screens/ja-home.jpg', '/apps/ssamkejul/screens/ja-students.jpg'],
     },
     // 한국·일본에서만 판다. 영어 페이지는 한국 스토어로 보낸다
-    appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'us' } },
+    appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'kr' } },
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/ssamkejul/privacy' },

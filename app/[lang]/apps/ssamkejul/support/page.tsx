@@ -6,7 +6,7 @@ import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 // 쌤케줄 지원 페이지.
-// 일본어·영어는 한국어판을 옮긴 것이다(원어민 검수 전).
+// 일본어·영어는 한국어판을 옮긴 것이다(일본어 원어민 검수 전, 영어는 2026-11-24 원어민 문구 검수 반영).
 const DATE = '2026-11-16';
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 const deleteHref = (lang: Lang) => localePath(lang, '/apps/ssamkejul/delete-account');
@@ -18,12 +18,13 @@ const ko: DocLocale = {
   sections: [
     { id: "contact", heading: "문의", body: <><p>궁금한 점이나 문제가 있으면 {mail}로 보내 주세요. 영업일 3일 이내에 답장합니다.</p></> },
     { id: "faq-student", heading: "수강생도 앱을 설치해야 하나요?", body: <><p>아니요. 선생님이 보낸 초대 링크를 열고 카카오(한국)·LINE(일본) 등으로 로그인하면 웹에서 바로 씁니다.</p></> },
+    { id: "faq-child", heading: "어린 수강생은 어떻게 쓰나요?", body: <><p>만 14세(거주 국가의 법이 더 높은 연령을 정한 경우 그 연령) 미만 수강생은 보호자가 대신 로그인하거나 보호자의 동의를 받아 써야 합니다. 선생님은 이런 수강생의 초대 링크를 보호자에게 보내 주세요.</p></> },
     { id: "faq-link", heading: "초대 링크가 열리지 않아요", body: <><p>초대 링크는 처음 연결한 계정에서만 쓰입니다. 다른 계정으로 연결해야 하면 선생님께 새 링크를 부탁해 주세요(새 링크를 만들면 이전 링크는 쓸 수 없습니다).</p></> },
     { id: "faq-deadline", heading: "시간 바꾸기 버튼이 보이지 않아요", body: <><p>선생님이 정한 변경·취소 마감이 지났거나 그 레슨에 보낸 요청을 선생님이 확인 중이면 버튼 대신 안내가 보입니다. 이때는 선생님께 직접 연락해 주세요.</p></> },
     { id: "faq-delete", heading: "탈퇴하려면?", body: <><p><Link href={deleteHref('ko')}>계정·데이터 삭제 안내</Link>를 보세요.</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-24',
 };
 
 const ja: DocLocale = {
@@ -33,21 +34,23 @@ const ja: DocLocale = {
   sections: [
     { id: "contact", heading: "お問い合わせ", body: <><p>ご質問や問題があれば{mail}までお送りください。3営業日以内に返信します。</p></> },
     { id: "faq-student", heading: "生徒もアプリをインストールする必要がありますか?", body: <><p>いいえ。先生から届いた招待リンクを開き、LINEなどでログインすればWebですぐに使えます。</p></> },
+    { id: "faq-child", heading: "小さな生徒はどう使えばいいですか?", body: <><p>14歳（お住まいの国の法律がより高い年齢を定める場合はその年齢）未満の生徒は、保護者が代わりにログインするか、保護者の同意を得てご利用ください。先生はこうした生徒の招待リンクを保護者に送ってください。</p></> },
     { id: "faq-link", heading: "招待リンクが開けません", body: <><p>招待リンクは最初に連携したアカウントでのみ使えます。別のアカウントで連携する必要がある場合は、先生に新しいリンクをお願いしてください（新しいリンクを作ると前のリンクは使えなくなります）。</p></> },
     { id: "faq-deadline", heading: "振替ボタンが表示されません", body: <><p>先生が決めた振替・キャンセルの締切を過ぎたか、そのレッスンへのリクエストを先生が確認中の場合は、ボタンの代わりに案内が表示されます。その場合は先生に直接ご連絡ください。</p></> },
     { id: "faq-delete", heading: "退会するには?", body: <><p><Link href={deleteHref('ja')}>アカウント・データの削除</Link>をご覧ください。</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-24',
 };
 
 const en: DocLocale = {
   lang: 'en',
   title: "Teachedule Support",
-  lead: <p>Teachedule is a scheduling app for private lesson teachers. Students view their schedule from a link, with nothing to install.</p>,
+  lead: <p>Teachedule is a scheduling app for private lesson teachers. Students view their schedule from a link, with no app to install.</p>,
   sections: [
     { id: "contact", heading: "Contact", body: <><p>If you have a question or problem, email {mail}. We reply within 3 business days.</p></> },
     { id: "faq-student", heading: "Do students need to install the app?", body: <><p>No. Open the invite link from your teacher and sign in with Apple or Google to use it on the web.</p></> },
+    { id: "faq-child", heading: "What about younger students?", body: <><p>Students under 14 (or under the higher age required by the law of the country where they live) need a parent or guardian to sign in for them or give consent. Teachers should send invite links for these students to their parent or guardian.</p></> },
     { id: "faq-link", heading: "My invite link doesn’t work", body: <><p>An invite link works only for the first account that links it. If you need to link a different account, ask your teacher for a new link (creating a new link disables the old one).</p></> },
     { id: "faq-deadline", heading: "I can’t see the Reschedule button", body: <><p>If the teacher’s change/cancel deadline has passed, or the teacher is reviewing a request you sent for that lesson, a notice appears instead of the button. Please contact your teacher directly.</p></> },
     { id: "faq-delete", heading: "How do I delete my account?", body: <><p>See <Link href={deleteHref('en')}>Delete account & data</Link>.</p></> },

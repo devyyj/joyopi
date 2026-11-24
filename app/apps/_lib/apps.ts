@@ -209,7 +209,7 @@ const SOURCES: AppSource[] = [
       ko: ['/apps/ssamkejul/screens/ko-week.jpg', '/apps/ssamkejul/screens/ko-home.jpg', '/apps/ssamkejul/screens/ko-students.jpg'],
       ja: ['/apps/ssamkejul/screens/ja-week.jpg', '/apps/ssamkejul/screens/ja-home.jpg', '/apps/ssamkejul/screens/ja-students.jpg'],
     },
-    // 2026-11-24 1.1.0(영어 지원)부터 중국 본토를 뺀 모든 나라에서 판다
+    // 2026-11-24 1.1.0(영어 지원)부터 판매. 같은 날부터 중국 본토·EU/EEA·영국을 뺀 144개국(수강생 웹은 어디서나 열린다)
     appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'us' } },
     googlePlayUrl: null,
     pages: [
@@ -225,9 +225,9 @@ const SOURCES: AppSource[] = [
         description: '쌤, 언제 돼요? 이제 묻지 마세요',
         features: [
           '1인 레슨 선생님을 위한 일정 앱입니다.',
-          '수강생은 앱 설치 없이 카톡 링크와 카카오 로그인으로 일정을 보고 신청·변경·취소합니다.',
+          '수강생은 앱을 설치하지 않고, 선생님이 보낸 링크를 열어 카카오·Apple·Google 로그인으로 일정을 보고 신청·변경·취소합니다. 따로 아이디·비밀번호를 만들 필요가 없습니다.',
           '자동 확정·마감 같은 규칙을 정해 두면 「그때 돼요?」 대화를 하지 않아도 됩니다.',
-          '같은 시간에 두 수강생이 겹치지 않습니다.',
+          '같은 시간에 예약이 겹치지 않도록 자동으로 확인합니다.',
           '광고가 없고, 지금은 무료입니다.',
         ],
         facts: [
@@ -240,12 +240,12 @@ const SOURCES: AppSource[] = [
       ja: {
         name: 'せんせジュール',
         altNames: ['쌤케줄', 'Teachedule'],
-        description: 'レッスンの予約・振替、LINEでかんたん',
+        description: 'レッスンの予約・振替、リンクでかんたん',
         features: [
           '個人レッスンの先生のためのスケジュールアプリです。',
-          '生徒はアプリのインストール不要。LINEのリンクとLINEログインで予定の確認・予約・振替・キャンセルができます。',
+          '生徒はアプリのインストール不要。先生から届いたリンクを開き、LINE・Apple・Googleでログインして予定の確認・予約・振替・キャンセルができます。新たにID・パスワードを作る必要はありません。',
           '自動確定や締切などのルールを決めておけば、「その日空いてますか?」のやりとりが不要になります。',
-          '同じ時間に2人の生徒が重なることはありません。',
+          '同じ時間に予約が重ならないよう自動でチェックします。',
           '広告はなく、今は無料です。',
         ],
         facts: [
@@ -261,9 +261,9 @@ const SOURCES: AppSource[] = [
         description: 'Lesson scheduling for private teachers — students just open a link',
         features: [
           'A scheduling app for private lesson teachers.',
-          'Students need nothing to install: they open a link, sign in with Apple or Google, and book, reschedule or cancel.',
+          'No app to install for students: they open a link, sign in with Apple or Google, and book, reschedule or cancel.',
           'Set rules like auto-confirm and deadlines, and skip the endless “Are you free Tuesday?” texts.',
-          'No double-booking: two students can never land in the same slot.',
+          'Automatic double-booking checks keep two students out of the same slot.',
           'No ads, and free for now.',
         ],
         facts: [

@@ -6,7 +6,7 @@ import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 // 아기록(ベビろく / Agirok) 계정·데이터 삭제 안내 — Google Play 데이터 보안 양식의 「계정 삭제 URL」.
-// 내용 기준: docs/03_앱_스토어_페이지.md 5-3, apps/agirok/docs/privacy-policy.md 2장.
+// 내용 기준: docs/03_앱_스토어_페이지.md 5-3, 1-mobile-apps/agirok/docs/privacy-policy.md 2장.
 // 일본어·영어는 한국어판을 옮긴 것이다. 「」 안의 버튼 이름은 앱 화면 문구(agirok src/i18n/{ja,en}.ts)와 같게 쓴다.
 const EFFECTIVE_DATE = '2026-11-12';
 const UPDATED_DATE = '2026-11-13';

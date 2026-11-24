@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { Lang } from '@/app/_i18n/config';
 import { getDictionary } from '@/app/_i18n/dictionary';
 
-// 로고 에셋 원본: apps/business/brand/logo (joyopi 브랜드)
+// 로고 에셋 원본: business/brand/logo (joyopi 브랜드)
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

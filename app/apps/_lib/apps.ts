@@ -204,14 +204,13 @@ const SOURCES: AppSource[] = [
   {
     slug: 'ssamkejul',
     icon: '/apps/ssamkejul/icon.png',
-    iconByLang: { ja: '/apps/ssamkejul/icon-ja.png' },
     // 홍보 영상용으로 찍어 둔 실제 화면(business/promo/assets/ssamkejul/piano)
     screens: {
       ko: ['/apps/ssamkejul/screens/ko-week.jpg', '/apps/ssamkejul/screens/ko-home.jpg', '/apps/ssamkejul/screens/ko-students.jpg'],
       ja: ['/apps/ssamkejul/screens/ja-week.jpg', '/apps/ssamkejul/screens/ja-home.jpg', '/apps/ssamkejul/screens/ja-students.jpg'],
     },
-    // 한국·일본에서만 판다. 영어 페이지는 한국 스토어로 보낸다
-    appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'kr' } },
+    // 2026-11-24 1.1.0(영어 지원)부터 중국 본토를 뺀 모든 나라에서 판다
+    appStore: { id: '6835451326', country: { ko: 'kr', ja: 'jp', en: 'us' } },
     googlePlayUrl: null,
     pages: [
       { key: 'privacy', path: '/apps/ssamkejul/privacy' },
@@ -222,7 +221,7 @@ const SOURCES: AppSource[] = [
     text: {
       ko: {
         name: '쌤케줄',
-        altNames: ['せんせジュール', 'Ssamkejul'],
+        altNames: ['せんせジュール', 'Teachedule'],
         description: '쌤, 언제 돼요? 이제 묻지 마세요',
         features: [
           '1인 레슨 선생님을 위한 일정 앱입니다.',
@@ -233,14 +232,14 @@ const SOURCES: AppSource[] = [
         ],
         facts: [
           { label: '기기', value: 'iPhone, iPad (선생님, Android 준비 중), 웹 (수강생)' },
-          { label: '언어', value: '한국어, 日本語' },
+          { label: '언어', value: '한국어, English, 日本語' },
           { label: '가격', value: '지금은 무료' },
         ],
         pageLabels: { privacy: '개인정보처리방침', support: '지원', deleteAccount: '계정·데이터 삭제', terms: '이용약관' },
       },
       ja: {
         name: 'せんせジュール',
-        altNames: ['쌤케줄', 'Ssamkejul'],
+        altNames: ['쌤케줄', 'Teachedule'],
         description: 'レッスンの予約・振替、LINEでかんたん',
         features: [
           '個人レッスンの先生のためのスケジュールアプリです。',
@@ -251,25 +250,25 @@ const SOURCES: AppSource[] = [
         ],
         facts: [
           { label: '端末', value: 'iPhone、iPad(先生。Android は準備中)、Web(生徒)' },
-          { label: '言語', value: '한국어, 日本語' },
+          { label: '言語', value: '한국어, English, 日本語' },
           { label: '価格', value: '現在無料' },
         ],
         pageLabels: { privacy: 'プライバシーポリシー', support: 'サポート', deleteAccount: 'アカウント・データの削除', terms: '利用規約' },
       },
       en: {
-        name: 'Ssamkejul',
+        name: 'Teachedule',
         altNames: ['쌤케줄', 'せんせジュール'],
         description: 'Lesson scheduling for independent teachers — students just open a link',
         features: [
           'A scheduling app for independent lesson teachers.',
-          'Students need nothing to install: they open a link, sign in with Kakao or LINE, and book, reschedule or cancel.',
+          'Students need nothing to install: they open a link, sign in with Apple or Google, and book, reschedule or cancel.',
           'Set rules like auto-confirm and deadlines, and stop the endless “are you free then?” chats.',
           'Two students can never book the same time.',
           'No ads, and free for now.',
         ],
         facts: [
           { label: 'Devices', value: 'iPhone, iPad (teachers; Android coming soon), web (students)' },
-          { label: 'Languages', value: '한국어, 日本語' },
+          { label: 'Languages', value: '한국어, English, 日本語' },
           { label: 'Price', value: 'Free for now' },
         ],
         pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data', terms: 'Terms of Use' },

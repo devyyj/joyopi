@@ -1,9 +1,15 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest';
 
-import { handleFeedback, type FeedbackDeps } from './handle-feedback';
+import { feedbackExpireAt, handleFeedback, type FeedbackDeps } from './handle-feedback';
 
 const NOW = new Date('2026-11-21T10:00:00Z');
+
+describe('feedbackExpireAt', () => {
+  it('보낸 날로부터 1년(365일) 뒤에 지워지도록 만료 시각을 정한다', () => {
+    expect(feedbackExpireAt(NOW).toISOString()).toBe('2027-11-21T10:00:00.000Z');
+  });
+});
 
 function deps(over: Partial<FeedbackDeps> = {}): FeedbackDeps {
   return {

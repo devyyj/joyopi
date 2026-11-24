@@ -31,6 +31,10 @@ const EMAIL_MAX = 254;
 const DEVICE_ID = /^[A-Za-z0-9_-]{8,64}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** 의견 보관 기간(앱 처리방침 「보낸 의견: 1년」). Firestore TTL이 expireAt이 지난 문서를 지운다 */
+export const FEEDBACK_RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
+export const feedbackExpireAt = (createdAt: Date) => new Date(createdAt.getTime() + FEEDBACK_RETENTION_MS);
+
 export type FeedbackRecord = {
   app: FeedbackApp;
   kind: FeedbackKind | null;

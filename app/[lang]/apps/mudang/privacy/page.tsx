@@ -4,8 +4,8 @@ import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 // 무당 이야기 게임(가제 「신내림 받은 김대리」, 코드명 mudang) 개인정보 처리방침.
-// 내용 기준: mudang 앱 1.0 동작(2026-11-24) — 분석·오류 PostHog(이벤트 이름과 종류 하나만), 의견 보내기(공통 4장),
-// 게임 저장은 기기 안, 공유 카드는 OS 공유 시트, 위치·계정·광고·앱 내 구매 없음. 돌보기 방침(rockgazing/privacy)과 같은 틀.
+// 내용 기준: mudang 앱 1.0 동작(2026-11-24) — 분석·오류 PostHog(이벤트 이름 + 밸런스 조정용 게임 진행 값, mudang docs/balance-ops.md), 의견 보내기(공통 4장),
+// 게임 균형 값은 joyopi.com balance.json에서 읽음. 게임 저장은 기기 안, 공유 카드는 OS 공유 시트, 위치·계정·광고·앱 내 구매 없음. 하룻밤 점집은 2026-11-24 삭제. 돌보기 방침(rockgazing/privacy)과 같은 틀.
 // 앱 이름이 확정되면 제목을 고친다(2026-11-24 이름 미확정).
 const EFFECTIVE_DATE = '2026-11-24';
 const UPDATED_DATE = '2026-11-24';
@@ -25,8 +25,8 @@ const ko: DocLocale = {
   notice: (
     <p>
       앱에는 회원가입·로그인·광고·추적·앱 내 구매가 없고, 게임 진행은 기기 안에만 저장합니다. 개발자가 받는 정보는 앱을 고치기
-      위한 사용 통계와 오류 정보, 그리고 사용자가 설정 › 의견 보내기로 직접 보낸 의견뿐입니다. 신당 이름·게임 속 선택·위치는
-      받지 않습니다.
+      위한 사용 통계(게임 진행 통계 포함)와 오류 정보, 그리고 사용자가 설정 › 의견 보내기로 직접 보낸 의견뿐입니다. 신당 이름처럼
+      직접 쓴 글과 위치는 받지 않습니다.
     </p>
   ),
   sections: [
@@ -42,14 +42,15 @@ const ko: DocLocale = {
             </thead>
             <tbody>
               <tr><td>기기 무작위 값</td><td>분석에만 쓰려고 기기에서 만든 무작위 값을 변환(해시)한 값. 다시 설치하면 바뀝니다.</td><td>사용자 수·재방문 세기</td></tr>
-              <tr><td>앱 사용 기록</td><td>앱을 연 것, 사용 시간 구간(1분 미만·1~10분·10~60분·60분 이상), 게임 진행 이벤트 이름(새 게임 시작, 장 도달, 상담 마침, 미니게임 건너뜀, 결말 도달, 회귀, 하룻밤 점집 마침, 명함 공유)과 그 종류 하나(예: 몇 장, 어떤 결말). 입력한 글은 보내지 않습니다.</td><td>앱 개선</td></tr>
+              <tr><td>앱 사용 기록</td><td>앱을 연 것, 사용 시간 구간(1분 미만·1~10분·10~60분·60분 이상), 게임 진행 이벤트 이름(새 게임 시작, 장 도달, 상담 마침, 하루 마감, 신당 이사, 월세 밀림, 미니게임 건너뜀, 결말 도달, 회귀, 명함 공유)과 이름이 없는 게임 진행 값(예: 몇 장·며칠째, 어느 손님, 빈칸을 몇 개 맞혔는지, 고른 처방, 모신 신, 게임 속 복채·명성·소문). 입력한 글은 보내지 않습니다.</td><td>앱 개선·게임 난이도 조정</td></tr>
               <tr><td>오류 정보</td><td>오류 종류, 오류 메시지(입력한 값은 가림), 오류가 난 코드 위치</td><td>오류 수정</td></tr>
               <tr><td>앱 정보</td><td>앱 버전, 운영체제 종류(iOS·Android)</td><td>앱 개선·오류 수정</td></tr>
               <tr><td>IP 주소와 대략적인 위치</td><td>앱이 통신할 때 자동으로 전달되는 IP 주소와 그로 추정한 국가·도시. 기기의 위치 서비스는 쓰지 않습니다.</td><td>지역별 사용 통계</td></tr>
             </tbody>
           </table>
           <ul>
-            <li>분석으로는 이름·이메일·연락처·광고 식별자·신당 이름·게임 속 선택을 보내지 않습니다.</li>
+            <li>분석으로는 이름·이메일·연락처·광고 식별자·신당 이름처럼 직접 쓴 글을 보내지 않습니다.</li>
+            <li>앱은 게임 난이도 값(예: 이사 보증금)을 joyopi.com에서 읽어 올 수 있습니다. 이때 개인 정보는 보내지 않습니다.</li>
             <li>사람별 프로필을 만들지 않고, 다른 회사의 정보와 연결하지 않으며, 광고에 쓰지 않습니다(추적 없음).</li>
           </ul>
           <p>사용자가 설정 › 의견 보내기에서 「보내기」를 누를 때만 아래 정보를 joyopi.com 서버로 보냅니다.</p>
@@ -73,7 +74,7 @@ const ko: DocLocale = {
       heading: '2. 기기 안에만 저장하는 정보',
       body: (
         <ul>
-          <li>게임 진행(날짜·복채·손님 결과·신당 이름·성별·모신 신), 회차를 넘어 남는 기록(결말 컬렉션·추억 앨범·업적·하룻밤 점집 최고 점수), 게임 설정은 기기 안 앱 저장소에만 둡니다. 개발자는 받지 않습니다.</li>
+          <li>게임 진행(날짜·복채·손님 결과·신당 이름·성별·모신 신), 회차를 넘어 남는 기록(결말 컬렉션·추억 앨범·업적), 게임 설정은 기기 안 앱 저장소에만 둡니다. 개발자는 받지 않습니다.</li>
           <li>「명함 공유」는 기기에서 그림을 만들어 운영체제의 공유 화면으로 넘길 뿐이며, 어디로 보낼지는 사용자가 고릅니다. 개발자에게는 공유했다는 이벤트 이름만 옵니다(1번).</li>
           <li>앱은 새 소식과 앱 설정(강제 업데이트·공지)을 joyopi.com에서 읽어 옵니다. 이때 개인정보를 보내지 않습니다.</li>
         </ul>
@@ -196,8 +197,8 @@ const en: DocLocale = {
   notice: (
     <p>
       The App has no sign-up, login, ads, tracking, or in-app purchases, and your game progress stays on your device. The Developer
-      only receives usage statistics and error information to improve the App, plus feedback you choose to send from Settings ›
-      Send feedback. Your shrine name, in-game choices, and location are never received.
+      only receives usage statistics (including game-progress statistics) and error information to improve the App, plus feedback you choose to send from Settings ›
+      Send feedback. Text you write, such as your shrine name, and your location are never received.
     </p>
   ),
   sections: [
@@ -211,7 +212,7 @@ const en: DocLocale = {
             <thead><tr><th>Type</th><th>Details</th><th>Purpose</th></tr></thead>
             <tbody>
               <tr><td>Random device value</td><td>A hash of a random value the App creates for analytics only. It changes if you reinstall.</td><td>Counting users and return visits</td></tr>
-              <tr><td>Usage</td><td>Opening the App, a usage-time range, and game event names (new game, chapter reached, consultation finished, mini-game skipped, ending reached, rebirth, One-Night Shrine finished, card shared) with one category (e.g. which chapter or ending). Nothing you type is sent.</td><td>Improving the App</td></tr>
+              <tr><td>Usage</td><td>Opening the App, a usage-time range, and game event names (new game, chapter reached, consultation finished, day ended, shrine moved, rent missed, mini-game skipped, ending reached, rebirth, card shared) with game-progress values that carry no name (e.g. chapter and day, which guest, how many blanks were right, the remedy chosen, the god served, in-game money, fame, and rumor). Nothing you type is sent.</td><td>Improving the App and tuning difficulty</td></tr>
               <tr><td>Errors</td><td>Error type, message (typed values masked), and code location</td><td>Fixing bugs</td></tr>
               <tr><td>App info</td><td>App version, OS type (iOS/Android)</td><td>Improvement and fixes</td></tr>
               <tr><td>IP address and approximate location</td><td>The IP address sent automatically when the App connects, and the country/city estimated from it. Location services are not used.</td><td>Regional statistics</td></tr>
@@ -230,7 +231,7 @@ const en: DocLocale = {
       heading: '2. Information stored only on your device',
       body: (
         <ul>
-          <li>Game progress, records kept across lives (endings, album, achievements, One-Night Shrine best scores), and settings are stored only on your device.</li>
+          <li>Game progress, records kept across lives (endings, album, achievements), and settings are stored only on your device.</li>
           <li>“Share card” creates an image on your device and hands it to your OS share sheet; you choose where it goes. The Developer only receives the event name (section 1).</li>
           <li>The App reads news and app settings from joyopi.com without sending personal information.</li>
         </ul>
@@ -298,7 +299,7 @@ const ja: DocLocale = {
   notice: (
     <p>
       本アプリには会員登録・ログイン・広告・トラッキング・アプリ内課金はなく、ゲームの進行は端末内にだけ保存されます。開発者が受け取るのは、
-      改善のための利用統計とエラー情報、そして利用者が設定 › ご意見を送る から自分で送ったご意見だけです。神堂の名前・ゲーム内の選択・位置情報は受け取りません。
+      改善のための利用統計とエラー情報、そして利用者が設定 › ご意見を送る から自分で送ったご意見だけです。利用統計にはゲームの進行統計も含みます。神堂の名前など自分で書いた文章と位置情報は受け取りません。
     </p>
   ),
   sections: [
@@ -312,7 +313,7 @@ const ja: DocLocale = {
             <thead><tr><th>区分</th><th>項目</th><th>目的</th></tr></thead>
             <tbody>
               <tr><td>端末のランダム値</td><td>分析専用に端末で作ったランダム値のハッシュ。再インストールで変わります。</td><td>利用者数・再訪の集計</td></tr>
-              <tr><td>利用記録</td><td>アプリを開いたこと、利用時間の区分、ゲームの進行イベント名（新しいゲーム、章の到達、相談の完了、ミニゲームのスキップ、エンディング到達、回帰、一夜の占い処の完了、名刺の共有）とその種類一つ（例：何章、どのエンディング）。入力した文章は送信しません。</td><td>アプリの改善</td></tr>
+              <tr><td>利用記録</td><td>アプリを開いたこと、利用時間の区分、ゲームの進行イベント名（新しいゲーム、章の到達、相談の完了、一日の終わり、神堂の引っ越し、家賃の滞納、ミニゲームのスキップ、エンディング到達、回帰、名刺の共有）と、名前のないゲーム進行の値（例：何章・何日目、どのお客、空欄をいくつ当てたか、選んだ処方、祀る神、ゲーム内のお金・名声・噂）。入力した文章は送信しません。</td><td>アプリの改善・難易度の調整</td></tr>
               <tr><td>エラー情報</td><td>エラーの種類、メッセージ（入力値は伏せる）、発生した場所</td><td>不具合の修正</td></tr>
               <tr><td>アプリ情報</td><td>アプリのバージョン、OS の種類</td><td>改善・修正</td></tr>
               <tr><td>IP アドレスとおおよその位置</td><td>通信時に自動で伝わる IP アドレスと、そこから推定した国・都市。位置情報サービスは使いません。</td><td>地域別の統計</td></tr>
@@ -330,7 +331,7 @@ const ja: DocLocale = {
       heading: '2. 端末内にだけ保存する情報',
       body: (
         <ul>
-          <li>ゲームの進行、周回を越えて残る記録（エンディング・アルバム・実績・一夜の占い処の最高点）、設定は端末内にだけ保存し、開発者は受け取りません。</li>
+          <li>ゲームの進行、周回を越えて残る記録（エンディング・アルバム・実績）、設定は端末内にだけ保存し、開発者は受け取りません。</li>
           <li>「名刺の共有」は端末で画像を作り OS の共有画面へ渡すだけで、送り先は利用者が選びます。開発者にはイベント名だけが届きます。</li>
         </ul>
       ),

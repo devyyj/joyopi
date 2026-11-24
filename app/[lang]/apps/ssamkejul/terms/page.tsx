@@ -23,10 +23,11 @@ const ko: DocLocale = {
     { id: "change", heading: "5. 서비스의 변경·중단", body: <><p>회사는 서비스를 고치거나 일부를 멈출 수 있습니다. 서비스를 끝낼 때는 30일 전에 알립니다.</p></> },
     { id: "liability", heading: "6. 책임의 한계", body: <><p>회사는 서비스를 성실히 운영하지만, 통신 장애·기기 문제·이용자의 잘못된 입력으로 생긴 일정 문제에 대해서는 고의·중과실이 없는 한 책임지지 않습니다. 레슨 자체의 내용과 질은 선생님의 책임입니다.</p></> },
     { id: "leave", heading: "7. 탈퇴", body: <><p>선생님은 앱 「설정」›「계정 삭제(탈퇴)」로 언제든 탈퇴할 수 있습니다. 수강생은 「연결 끊기」로 언제든 연결을 해제할 수 있습니다.</p></> },
-    { id: "law", heading: "8. 준거법·관할", body: <><p>대한민국 법을 따르며, 분쟁은 민사소송법에 따른 관할 법원에서 해결합니다. 일본 이용자에게는 일본 소비자계약법 등 강행 규정이 우선합니다. 문의: {mail}</p></> },
+    { id: "terms-change", heading: "8. 약관의 변경", body: <><p>약관을 바꿀 때는 시행 7일 전(이용자에게 불리하면 30일 전)에 알립니다.</p></> },
+    { id: "law", heading: "9. 준거법·관할", body: <><p>대한민국 법을 따르며, 분쟁은 민사소송법에 따른 관할 법원에서 해결합니다. 일본 이용자에게는 일본 소비자계약법 등 강행 규정이 우선합니다. 문의: {mail}</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-24',
 };
 
 const ja: DocLocale = {
@@ -41,32 +42,34 @@ const ja: DocLocale = {
     { id: "change", heading: "5. サービスの変更・終了", body: <><p>当社は本サービスを変更し、一部を停止することがあります。本サービスを終了する場合は30日前までにお知らせします。</p></> },
     { id: "liability", heading: "6. 責任の制限", body: <><p>当社は本サービスを誠実に運営しますが、通信障害・端末の問題・利用者の誤入力による予定の問題については、故意または重大な過失がない限り責任を負いません。レッスンの内容と質は先生の責任です。</p></> },
     { id: "leave", heading: "7. 退会", body: <><p>先生はアプリ「設定」›「アカウント削除（退会）」からいつでも退会できます。生徒は「連携を解除」からいつでも連携を解除できます。</p></> },
-    { id: "law", heading: "8. 準拠法・管轄", body: <><p>大韓民国の法律に準拠し、紛争は同国の民事訴訟法に基づく管轄裁判所で解決します。日本の利用者には、日本の消費者契約法などの強行規定が優先して適用されます。お問い合わせ: {mail}</p></> },
+    { id: "terms-change", heading: "8. 規約の変更", body: <><p>本規約を変更する場合は、施行の7日前(利用者に不利な変更は30日前)までにお知らせします。</p></> },
+    { id: "law", heading: "9. 準拠法・管轄", body: <><p>大韓民国の法律に準拠し、紛争は同国の民事訴訟法に基づく管轄裁判所で解決します。日本の利用者には、日本の消費者契約法などの強行規定が優先して適用されます。お問い合わせ: {mail}</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-24',
 };
 
 const en: DocLocale = {
   lang: 'en',
-  title: "Teachedule Terms of Use",
+  title: "Teachedule Terms of Service",
   lead: <p>Teachedule (Korean name 쌤케줄 “Ssamkejul”, Japanese name せんせジュール; the “Service”) is a lesson-scheduling service provided by JOYOPI (“we”).</p>,
   sections: [
-    { id: "price", heading: "1. Price", body: <><p>The Service is free for now. We may later charge for some features or for registering more than a certain number of students; we will give 30 days’ notice and keep already-registered students usable.</p></> },
-    { id: "account", heading: "2. Accounts", body: <><p>You sign in with a Kakao, LINE, Apple or Google account (in English, the App offers Apple and Google), which only you may use. A student invite link works only for the first account that links it.</p></> },
-    { id: "teacher", heading: "3. Teacher responsibilities", body: <><ul><li>Tell your students and obtain any required consent before entering their information.</li><li>Lesson contracts, fees and refunds are between teacher and student; we are not a party to them.</li><li>Teachers choose auto-confirmation and deadline settings and are responsible for communicating their results.</li></ul></> },
-    { id: "prohibited", heading: "4. Prohibited use", body: <><p>Do not use others’ accounts, disrupt the Service (e.g. automated mass requests), break the law, infringe others’ rights, or use the Service for anything other than managing lesson schedules (e.g. ads or spam).</p></> },
-    { id: "change", heading: "5. Changes to the Service", body: <><p>We may change or suspend parts of the Service. We will give 30 days’ notice before ending it and help teachers move their schedule records.</p></> },
-    { id: "liability", heading: "6. Limitation of liability", body: <><p>We operate the Service with care, but unless we act intentionally or with gross negligence we are not liable for schedule problems caused by network outages, device issues or incorrect input. The content and quality of lessons are the teacher’s responsibility.</p><p>Nothing in these terms limits rights you have under mandatory consumer protection law where you live.</p></> },
-    { id: "leave", heading: "7. Leaving", body: <><p>Teachers can delete their account at any time in Settings › Delete account. Students can unlink at any time with “Unlink”.</p></> },
-    { id: "law", heading: "8. Governing law", body: <><p>These terms are governed by the laws of the Republic of Korea, and disputes are resolved in the competent court under its Civil Procedure Act. For users in Japan, mandatory provisions such as the Consumer Contract Act take priority. For users in the EU, the UK and other regions, the mandatory consumer protection laws of your country of residence also continue to apply. Contact: {mail}</p></> },
+    { id: "price", heading: "1. Fees", body: <><p>The Service is free for now. We may later charge for some features or for registering more than a certain number of students. If we do, we will give 30 days’ notice, and students you have already registered will remain available to you.</p></> },
+    { id: "account", heading: "2. Accounts", body: <><p>You sign in with a Kakao, LINE, Apple or Google account (the English version offers Apple and Google). You may use only your own account. Each student invite link can be used by only one account: the first one that signs in with it.</p></> },
+    { id: "teacher", heading: "3. Teacher responsibilities", body: <><ul><li>Tell your students and obtain any required consent before entering their information.</li><li>Lesson contracts, fees and refunds are between teacher and student; we are not a party to them.</li><li>Teachers choose the auto-confirm and deadline settings and are responsible for explaining to students how these settings apply.</li></ul></> },
+    { id: "prohibited", heading: "4. Prohibited use", body: <><p>Do not use others’ accounts, disrupt the Service (such as with automated mass requests), break the law, infringe others’ rights, or use the Service for anything other than managing lesson schedules (such as ads or spam).</p></> },
+    { id: "change", heading: "5. Changes to the Service", body: <><p>We may change or suspend parts of the Service. We will give 30 days’ notice before ending it and help teachers export their schedule records.</p></> },
+    { id: "liability", heading: "6. Limitation of liability", body: <><p>We operate the Service with care, but, except in cases of intent or gross negligence, we are not liable for schedule problems caused by network outages, device issues or incorrect information entered by users. The content and quality of lessons are the teacher’s responsibility.</p><p>Nothing in these terms limits rights you have under mandatory consumer protection law where you live.</p></> },
+    { id: "leave", heading: "7. Deleting your account", body: <><p>Teachers can delete their account at any time in Settings › Delete account. Students can unlink at any time by tapping Unlink.</p></> },
+    { id: "terms-change", heading: "8. Changes to these terms", body: <><p>We will notify you at least 7 days before changes to these terms take effect, or at least 30 days before if the changes are unfavorable to you.</p></> },
+    { id: "law", heading: "9. Governing law and disputes", body: <><p>These terms are governed by the laws of the Republic of Korea, and disputes will be brought before the court having jurisdiction under the Civil Procedure Act of the Republic of Korea. For users in Japan, mandatory provisions such as the Consumer Contract Act take priority. For users in the EU, the UK and other regions, the mandatory consumer protection laws of your country of residence also continue to apply. Contact: {mail}</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: '2026-11-23',
+  updatedDate: '2026-11-24',
 };
 
 const DOCS: Record<Lang, DocLocale> = { ko, ja, en };
-const TITLES: Record<Lang, string> = {"ko": "쌤케줄 이용약관", "ja": "せんせジュール 利用規約", "en": "Teachedule Terms of Use"};
+const TITLES: Record<Lang, string> = {"ko": "쌤케줄 이용약관", "ja": "せんせジュール 利用規約", "en": "Teachedule Terms of Service"};
 
 export async function generateMetadata({ params }: LangParams): Promise<Metadata> {
   const lang = await resolveLang(params);

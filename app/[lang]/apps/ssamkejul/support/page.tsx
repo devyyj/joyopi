@@ -43,21 +43,21 @@ const ja: DocLocale = {
 
 const en: DocLocale = {
   lang: 'en',
-  title: "Ssamkejul Support",
-  lead: <p>Ssamkejul is a scheduling app for independent lesson teachers. Students view their schedule from a link, with nothing to install.</p>,
+  title: "Teachedule Support",
+  lead: <p>Teachedule is a scheduling app for private lesson teachers. Students view their schedule from a link, with nothing to install.</p>,
   sections: [
-    { id: "contact", heading: "Contact", body: <><p>If you have a question or problem, email {mail}. I reply within 3 business days.</p></> },
-    { id: "faq-student", heading: "Do students need to install the app?", body: <><p>No. Open the invite link from your teacher and sign in with Kakao, LINE, Apple or Google to use it on the web.</p></> },
+    { id: "contact", heading: "Contact", body: <><p>If you have a question or problem, email {mail}. We reply within 3 business days.</p></> },
+    { id: "faq-student", heading: "Do students need to install the app?", body: <><p>No. Open the invite link from your teacher and sign in with Apple or Google to use it on the web.</p></> },
     { id: "faq-link", heading: "My invite link doesn’t work", body: <><p>An invite link works only for the first account that links it. If you need to link a different account, ask your teacher for a new link (creating a new link disables the old one).</p></> },
-    { id: "faq-deadline", heading: "I can’t see the reschedule button", body: <><p>If the teacher’s change/cancel deadline has passed, or the teacher is reviewing a request you sent for that lesson, a notice appears instead of the button. Please contact your teacher directly.</p></> },
+    { id: "faq-deadline", heading: "I can’t see the Reschedule button", body: <><p>If the teacher’s change/cancel deadline has passed, or the teacher is reviewing a request you sent for that lesson, a notice appears instead of the button. Please contact your teacher directly.</p></> },
     { id: "faq-delete", heading: "How do I delete my account?", body: <><p>See <Link href={deleteHref('en')}>Delete account & data</Link>.</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-24',
 };
 
 const DOCS: Record<Lang, DocLocale> = { ko, ja, en };
-const TITLES: Record<Lang, string> = {"ko": "쌤케줄 지원", "ja": "せんせジュール サポート", "en": "Ssamkejul Support"};
+const TITLES: Record<Lang, string> = {"ko": "쌤케줄 지원", "ja": "せんせジュール サポート", "en": "Teachedule Support"};
 
 export async function generateMetadata({ params }: LangParams): Promise<Metadata> {
   const lang = await resolveLang(params);

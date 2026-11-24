@@ -6,7 +6,7 @@ import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 // 아기록(ベビろく / Agirok) 개인정보처리방침.
-// 원고 기준: apps/agirok/docs/privacy-policy.md — 내용을 여기서 먼저 고치지 않는다.
+// 원고 기준: 1-mobile-apps/agirok/docs/privacy-policy.md — 내용을 여기서 먼저 고치지 않는다.
 // 원고가 바뀌면 한국어판을 그대로 다시 옮기고, 일본어·영어판도 같이 고친 뒤 날짜를 고친다. (docs/03_앱_스토어_페이지.md 5-1)
 // 일본어·영어는 한국어판을 옮긴 것이다. ‘’ 안의 메뉴 이름은 앱 화면 문구(agirok src/i18n/{ko,ja,en}.ts)와 같게 쓴다.
 // 원고는 6열 국외 이전 표지만, 모바일 폭(390px)에서 가로 스크롤이 생겨 받는 자별 2열 표로 옮긴다(AGENTS.md 6.11). 내용은 같다.

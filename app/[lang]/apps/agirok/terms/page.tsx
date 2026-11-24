@@ -6,7 +6,7 @@ import DocPage, { type DocLocale } from '@/app/apps/_components/doc-page';
 import { BUSINESS_INFO, CONTACT_EMAIL } from '@/app/apps/_lib/business-info';
 
 // 아기록(ベビろく / Agirok) 이용약관.
-// 원고 기준: apps/agirok/docs/terms.md — 내용을 여기서 먼저 고치지 않는다.
+// 원고 기준: 1-mobile-apps/agirok/docs/terms.md — 내용을 여기서 먼저 고치지 않는다.
 // 원고가 바뀌면 한국어판을 그대로 다시 옮기고, 일본어·영어판도 같이 고친 뒤 날짜를 고친다. (docs/03_앱_스토어_페이지.md 5-4)
 // 일본어·영어는 한국어판을 옮긴 것이다. ‘’·「」·“” 안의 메뉴 이름은 앱 화면 문구(agirok src/i18n/{ko,ja,en}.ts)와 같게 쓴다.
 const EFFECTIVE_DATE = '2026-11-14';

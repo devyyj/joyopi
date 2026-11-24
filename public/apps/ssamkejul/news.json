@@ -12,7 +12,7 @@
     "body": {
       "ko": "- 영어를 지원해요. 설정에서 언어를 고를 수 있어요.\n- 해외에서 레슨하는 선생님도 쓸 수 있게 시간대를 고를 수 있어요.\n- 레슨비 통화를 고를 수 있어요(원·엔·달러 등).",
       "ja": "- 英語に対応しました。言語は設定で選べます。\n- 海外でレッスンする先生のために、タイムゾーンを選べるようになりました。\n- レッスン料の通貨を選べます(円・ウォン・ドルなど)。",
-      "en": "- Teachedule now speaks English. Pick any time zone, see times in 12-hour format, choose your lesson fee currency, and share invitations from your device's share sheet. Korean and Japanese work as before."
+      "en": "- Teachedule now speaks English.\n- Pick any time zone and see times in 12-hour format.\n- Choose your lesson fee currency (USD, EUR, GBP and more).\n- Share invites with any app."
     }
   },
   {

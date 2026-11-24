@@ -41,20 +41,20 @@ const ja: DocLocale = {
 
 const en: DocLocale = {
   lang: 'en',
-  title: "Delete Your Ssamkejul Account and Data",
-  lead: <p>How to delete your Ssamkejul account and data.</p>,
+  title: "Delete Your Teachedule Account and Data",
+  lead: <p>How to delete your Teachedule account and data.</p>,
   sections: [
     { id: "teacher", heading: "Teachers", body: <><p>In the App, go to Settings › Delete account and confirm. Your account and all students, schedules, records, student links and invite links are deleted immediately. This cannot be undone.</p></> },
-    { id: "student", heading: "Students", body: <><p>Tap “Unlink” at the bottom of the student page to remove your link to that lesson. To delete your name or memo entered by the teacher, ask your teacher or email {mail}.</p></> },
-    { id: "email", heading: "If you can’t use the App", body: <><p>Email {mail} with the type of account you signed in with (Kakao, LINE, Apple, Google) and your teacher’s name, and we will delete your data after verifying it.</p></> },
-    { id: "kept", heading: "What remains", body: <><p>Anonymous usage events (no names or sign-in IDs) are deleted automatically after 1 year.</p></> },
+    { id: "student", heading: "Students", body: <><p>Tap Unlink at the bottom of the student page to remove your link to that teacher. To have the name or notes your teacher entered about you deleted, ask your teacher or email {mail}.</p></> },
+    { id: "email", heading: "If you can’t use the App", body: <><p>Email {mail} with the type of account you signed in with (Kakao, LINE, Apple, Google) and your teacher’s name, and we will delete your data after verifying your identity.</p></> },
+    { id: "kept", heading: "What remains", body: <><p>Anonymous usage events and error reports (no names or sign-in IDs) are deleted automatically after 1 year.</p></> },
   ],
   effectiveDate: DATE,
-  updatedDate: DATE,
+  updatedDate: '2026-11-24',
 };
 
 const DOCS: Record<Lang, DocLocale> = { ko, ja, en };
-const TITLES: Record<Lang, string> = {"ko": "쌤케줄 계정·데이터 삭제", "ja": "せんせジュール アカウント・データの削除", "en": "Delete Your Ssamkejul Account and Data"};
+const TITLES: Record<Lang, string> = {"ko": "쌤케줄 계정·데이터 삭제", "ja": "せんせジュール アカウント・データの削除", "en": "Delete Your Teachedule Account and Data"};
 
 export async function generateMetadata({ params }: LangParams): Promise<Metadata> {
   const lang = await resolveLang(params);

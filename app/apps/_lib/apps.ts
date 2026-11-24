@@ -258,12 +258,12 @@ const SOURCES: AppSource[] = [
       en: {
         name: 'Teachedule',
         altNames: ['쌤케줄', 'せんせジュール'],
-        description: 'Lesson scheduling for independent teachers — students just open a link',
+        description: 'Lesson scheduling for private teachers — students just open a link',
         features: [
-          'A scheduling app for independent lesson teachers.',
+          'A scheduling app for private lesson teachers.',
           'Students need nothing to install: they open a link, sign in with Apple or Google, and book, reschedule or cancel.',
-          'Set rules like auto-confirm and deadlines, and stop the endless “are you free then?” chats.',
-          'Two students can never book the same time.',
+          'Set rules like auto-confirm and deadlines, and skip the endless “Are you free Tuesday?” texts.',
+          'No double-booking: two students can never land in the same slot.',
           'No ads, and free for now.',
         ],
         facts: [
@@ -271,7 +271,7 @@ const SOURCES: AppSource[] = [
           { label: 'Languages', value: '한국어, English, 日本語' },
           { label: 'Price', value: 'Free for now' },
         ],
-        pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data', terms: 'Terms of Use' },
+        pageLabels: { privacy: 'Privacy Policy', support: 'Support', deleteAccount: 'Delete account & data', terms: 'Terms of Service' },
       },
     },
   },

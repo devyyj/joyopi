@@ -1,5 +1,21 @@
 [
   {
+    "id": "update-1.1.1",
+    "date": "2026-11-25",
+    "kind": "update",
+    "version": "1.1.1",
+    "title": {
+      "ko": "1.1.1 업데이트",
+      "ja": "1.1.1 アップデート",
+      "en": "Version 1.1.1"
+    },
+    "body": {
+      "ko": "- 사용 통계·오류 보고를 설정에서 끌 수 있어요.\n- 로그인할 때 이용약관·개인정보 처리방침 동의를 함께 기록해요.\n- 반복 레슨의 예약 겹침을 모든 일정까지 확인해요.\n- 영어 화면 문구를 다듬었어요.",
+      "ja": "- 利用統計・エラー報告を設定でオフにできます。\n- ログイン時に利用規約・プライバシーポリシーへの同意を記録します。\n- 毎週のレッスンの重なりを、すべての予定までチェックします。\n- 英語の表示を見直しました。",
+      "en": "- Turn off usage stats and error reports in Settings.\n- Your agreement to the Terms and Privacy Policy is now recorded at sign-in.\n- Double-booking checks for recurring lessons now cover your whole schedule.\n- Polished English wording throughout the app."
+    }
+  },
+  {
     "id": "update-1.1.0",
     "date": "2026-11-24",
     "kind": "update",

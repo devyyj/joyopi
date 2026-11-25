@@ -1,5 +1,21 @@
 [
   {
+    "id": "update-1.0.3",
+    "date": "2026-11-25",
+    "kind": "update",
+    "version": "1.0.3",
+    "title": {
+      "ko": "1.0.3 업데이트",
+      "ja": "1.0.3 アップデート",
+      "en": "Version 1.0.3"
+    },
+    "body": {
+      "ko": "- 시작 화면과 앱 안에서 의견 보내기를 다듬었어요.\n- 작은 문제를 고쳤어요.",
+      "ja": "- 起動画面とアプリ内でのご意見送信を見直しました。\n- 細かな問題を修正しました。",
+      "en": "- Polished the start screen and sending feedback in the app.\n- Minor fixes."
+    }
+  },
+  {
     "id": "update-1.0.2",
     "date": "2026-11-23",
     "kind": "update",

@@ -134,7 +134,7 @@ describe('홈', () => {
     expect(container.textContent).toContain('수강생 195명 · 평점 5.0 · 수강평 22개');
     expect(hrefs()).toEqual(expect.arrayContaining(['https://www.inflearn.com/ko/users/1167019/@joyopi', 'https://www.inflearn.com/ko/course/distributed-transact-1']));
     // 새 소식: 앱 새 소식(앱 이름 붙여)과 사이트 소식
-    expect(container.textContent).toContain('쌤케줄 · 1.1.0 업데이트');
+    expect(container.textContent).toContain('쌤케줄 · 1.1.1 업데이트');
     expect(hrefs()).toContain('/news');
     // 의견 보내기는 로그인 없이 창으로, 긴 문의는 메일
     expect(screen.getByRole('button', { name: '의견 보내기' })).toBeInTheDocument();

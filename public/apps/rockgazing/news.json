@@ -1,5 +1,21 @@
 [
   {
+    "id": "update-1.1.1",
+    "date": "2026-11-25",
+    "kind": "update",
+    "version": "1.1.1",
+    "title": {
+      "ko": "1.1.1 업데이트",
+      "ja": "1.1.1 アップデート",
+      "en": "Version 1.1.1"
+    },
+    "body": {
+      "ko": "- 설정 안에서 의견을 바로 써서 보낼 수 있어요.\n- 불러오는 동안 표시가 나오고, 새 소식은 아래로 당겨 새로고침할 수 있어요.\n- 앱 밖에서 열리는 링크에 표시를 달았어요.",
+      "ja": "- 設定の中から、ご意見をそのまま書いて送れるようになりました。\n- 読み込み中の表示を追加し、お知らせは下に引っぱって更新できます。\n- アプリの外で開くリンクに印を付けました。",
+      "en": "- Write and send feedback right inside Settings.\n- A loading indicator now shows while content loads, and you can pull down to refresh What's New.\n- Links that open outside the app are now marked."
+    }
+  },
+  {
     "id": "update-1.1.0",
     "date": "2026-11-17",
     "kind": "update",

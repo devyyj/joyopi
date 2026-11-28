@@ -368,7 +368,7 @@ const ko: DocLocale = {
           <h3 className="mt-4 font-bold">12-1. 유럽연합(EU)·유럽경제지역(EEA)·영국 이용자 (GDPR, UK GDPR)</h3>
           <p>
             <strong>개인정보 처리자(컨트롤러)</strong>: {BUSINESS_INFO.nameKo}({BUSINESS_INFO.nameEn}), 대표{' '}
-            {BUSINESS_INFO.representative}, 대한민국 {BUSINESS_INFO.addressKo}, {mail}. 개인정보에 관한 문의는 개인정보
+            {BUSINESS_INFO.representative}, 대한민국, {mail}. 개인정보에 관한 문의는 개인정보
             보호책임자(11장)에게 같은 메일로 보낼 수 있습니다.
           </p>
           <p>
@@ -827,7 +827,7 @@ const ja: DocLocale = {
           <h3 className="mt-4 font-bold">12-1. 欧州連合（EU）・欧州経済領域（EEA）・英国の利用者（GDPR、UK GDPR）</h3>
           <p>
             <strong>管理者（コントローラー）</strong>：{BUSINESS_INFO.nameEn}（代表 {BUSINESS_INFO.representativeEn}）、
-            {BUSINESS_INFO.addressEn}、{mail}。個人情報に関するお問い合わせは、個人情報保護責任者（第11項）に同じメールで送ることができます。
+            大韓民国、{mail}。個人情報に関するお問い合わせは、個人情報保護責任者（第11項）に同じメールで送ることができます。
           </p>
           <p>
             <strong>取り扱いの法的根拠</strong>
@@ -1300,7 +1300,7 @@ const en: DocLocale = {
           <h3 className="mt-4 font-bold">12-1. Users in the EU, EEA, and UK (GDPR, UK GDPR)</h3>
           <p>
             <strong>Controller</strong>: {BUSINESS_INFO.nameEn} (representative: {BUSINESS_INFO.representativeEn}),{' '}
-            {BUSINESS_INFO.addressEn}, {mail}. You can also send privacy questions to the privacy officer (section 11) at the
+            Republic of Korea, {mail}. You can also send privacy questions to the privacy officer (section 11) at the
             same address.
           </p>
           <p>

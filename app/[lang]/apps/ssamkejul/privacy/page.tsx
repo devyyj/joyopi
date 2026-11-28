@@ -162,7 +162,7 @@ const ko: DocLocale = {
       heading: '9. 개인정보 보호책임자와 문의',
       body: (
         <p>
-          개인정보 보호책임자: {BUSINESS_INFO.privacyOfficer}(대표, {BUSINESS_INFO.nameKo}), 이메일 {mail}, 전화 {BUSINESS_INFO.phone}, 주소 {BUSINESS_INFO.addressKo}. 열람 등 요청과 개인정보 관련 문의·불만도 같은 곳에서 받습니다.
+          개인정보 보호책임자: {BUSINESS_INFO.privacyOfficer}(대표, {BUSINESS_INFO.nameKo}), 이메일 {mail}, 전화 {BUSINESS_INFO.phone}. 열람 등 요청과 개인정보 관련 문의·불만도 같은 곳에서 받습니다.
         </p>
       ),
     },
@@ -188,7 +188,7 @@ const ko: DocLocale = {
         <>
           <p>앱은 2026년 11월 24일부터 EU·EEA(유럽경제지역)와 영국의 앱스토어에서 제공하지 않습니다. 다만 수강생 웹은 이 지역에서도 열 수 있어, GDPR·UK GDPR에 따른 사항을 알립니다.</p>
           <ul>
-            <li>컨트롤러: {BUSINESS_INFO.nameKo}({BUSINESS_INFO.nameEn}, 대표 {BUSINESS_INFO.representative}), {BUSINESS_INFO.addressEn}, {mail}. 선생님이 입력한 수강생 정보는 선생님을 대신해 처리합니다(2항).</li>
+            <li>컨트롤러: {BUSINESS_INFO.nameKo}({BUSINESS_INFO.nameEn}, 대표 {BUSINESS_INFO.representative}, 대한민국), {mail}. 선생님이 입력한 수강생 정보는 선생님을 대신해 처리합니다(2항).</li>
             <li>처리 근거: 계약 이행(로그인·일정·요청·알림·선생님의 레슨 관리), 동의(사용 기록·오류 기록, 푸시 알림. 언제든 철회할 수 있습니다), 정당한 이익(악용 방지, 의견 처리. 반대할 수 있습니다), 법적 의무.</li>
             <li>권리: 열람, 정정, 삭제, 처리 제한, 이동, 반대, 동의 철회. {mail}로 요청하며, 거주 국가의 개인정보 감독기관에 민원을 낼 수도 있습니다.</li>
             <li>이전: 데이터는 대한민국(EU·영국의 적정성 결정 국가)에 저장되며, 미국으로의 이전은 표준계약조항(SCC) 또는 해당되는 경우 EU-미국 데이터 프라이버시 프레임워크(영국은 UK Extension)에 따릅니다.</li>
@@ -369,7 +369,7 @@ const ja: DocLocale = {
         <>
           <p>本アプリは2026年11月24日から、EU・EEA（欧州経済領域）と英国のApp Storeでは提供していません。ただし生徒用Webはこれらの地域からも開けるため、GDPR・UK GDPRに基づく事項をお知らせします。</p>
           <ul>
-            <li>管理者（コントローラー）：{BUSINESS_INFO.nameEn}（代表 {BUSINESS_INFO.representativeEn}）、{BUSINESS_INFO.addressEn}、{mail}。先生が入力した生徒の情報は先生に代わって取り扱います（第2項）。</li>
+            <li>管理者（コントローラー）：{BUSINESS_INFO.nameEn}（代表 {BUSINESS_INFO.representativeEn}、大韓民国）、{mail}。先生が入力した生徒の情報は先生に代わって取り扱います（第2項）。</li>
             <li>法的根拠：契約の履行（ログイン・予定・リクエスト・通知・先生のレッスン管理）、同意（利用記録・エラーの記録、プッシュ通知。いつでも撤回できます）、正当な利益（不正利用の防止、ご意見の対応。異議を述べることができます）、法的義務。</li>
             <li>権利：アクセス、訂正、消去、処理の制限、データポータビリティ、異議、同意の撤回。{mail} までご請求ください。お住まいの国のデータ保護監督機関に苦情を申し立てることもできます。</li>
             <li>移転：データは大韓民国（EU・英国の十分性認定国）に保存され、米国への移転は標準契約条項（SCC）または該当する場合はEU-米国データプライバシーフレームワーク（英国はUK Extension）に基づきます。</li>
@@ -535,7 +535,7 @@ const en: DocLocale = {
       heading: '9. Who we are and privacy officer',
       body: (
         <p>
-          {BUSINESS_INFO.nameEn} (a sole proprietorship in the Republic of Korea), {BUSINESS_INFO.addressEn}. Privacy officer: {BUSINESS_INFO.privacyOfficerEn}, the representative. Contact: {mail}.
+          {BUSINESS_INFO.nameEn} (a sole proprietorship in the Republic of Korea). Privacy officer: {BUSINESS_INFO.privacyOfficerEn}, the representative. Contact: {mail}.
         </p>
       ),
     },
@@ -557,7 +557,7 @@ const en: DocLocale = {
         <>
           <p>Since November 24, 2026 the App has not been offered in App Stores in the European Union, the European Economic Area or the United Kingdom. The student web can still be opened there, so we give the following information under the GDPR and the UK GDPR.</p>
           <ul>
-            <li>Controller: {BUSINESS_INFO.nameEn} (representative: {BUSINESS_INFO.representativeEn}), {BUSINESS_INFO.addressEn}, {mail}. We handle student information that teachers enter on the teacher’s behalf (section 2).</li>
+            <li>Controller: {BUSINESS_INFO.nameEn} (representative: {BUSINESS_INFO.representativeEn}, Republic of Korea), {mail}. We handle student information that teachers enter on the teacher’s behalf (section 2).</li>
             <li>Legal bases: contract (sign-in, schedules, requests, notifications and the teacher’s lesson management); consent (usage events and error reports, push notifications; you can withdraw it at any time); legitimate interests (abuse prevention and handling feedback; you can object); legal obligation where the law requires it.</li>
             <li>Rights: access, rectification, erasure, restriction, data portability, objection and withdrawal of consent. Email {mail} to use them. You can also complain to the data protection authority where you live.</li>
             <li>Transfers: data is stored in South Korea, which has EU and UK adequacy decisions. For transfers to the United States we rely on Standard Contractual Clauses or, where applicable, the EU-U.S. Data Privacy Framework (and its UK Extension).</li>

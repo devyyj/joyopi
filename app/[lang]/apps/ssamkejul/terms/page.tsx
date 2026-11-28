@@ -29,7 +29,7 @@ const previous = (summary: string, items: [string, string][]): ReactNode => (
 const ko: DocLocale = {
   lang: 'ko',
   title: "쌤케줄 이용약관",
-  lead: <p>쌤케줄(せんせジュール·Teachedule, 이하 ‘서비스’)은 {B.nameKo}({B.nameEn}, 대표 {B.representative}, 사업자등록번호 {B.registrationNumber}{B.mailOrderNumber ? `, 통신판매업 신고 ${B.mailOrderNumber}` : ''}{B.addressKo ? `, ${B.addressKo}` : ''}, 이하 ‘회사’)가 제공하는 레슨 일정 관리 서비스입니다.</p>,
+  lead: <p>쌤케줄(せんせジュール·Teachedule, 이하 ‘서비스’)은 {B.nameKo}({B.nameEn}, 대표 {B.representative}, 사업자등록번호 {B.registrationNumber}{B.mailOrderNumber ? `, 통신판매업 신고 ${B.mailOrderNumber}` : ''}, 이하 ‘회사’)가 제공하는 레슨 일정 관리 서비스입니다.</p>,
   notice: <p>개정 약관 공고: 이 약관은 {EFFECTIVE}부터 시행됩니다({PUBLISHED} 공고). 그 전까지는 이전 약관이 적용되며, 이전 약관 전문은 맨 아래 「개정 이력」에서 볼 수 있습니다.</p>,
   sections: [
     { id: "service", heading: "1. 서비스", body: <><p>선생님은 앱으로 레슨 시간과 수강생을 관리하고, 수강생은 선생님이 보낸 링크로 웹에서 일정을 보고 신청·변경·취소를 요청합니다.</p></> },
@@ -63,7 +63,7 @@ const ko: DocLocale = {
 const ja: DocLocale = {
   lang: 'ja',
   title: "せんせジュール 利用規約",
-  lead: <p>せんせジュール（쌤케줄・Teachedule、以下「本サービス」）は、{B.nameEn}（代表 {B.representativeEn}、韓国事業者登録番号 {B.registrationNumber}{B.addressEn ? `、${B.addressEn}` : ''}、以下「当社」）が提供するレッスンの予定管理サービスです。</p>,
+  lead: <p>せんせジュール（쌤케줄・Teachedule、以下「本サービス」）は、{B.nameEn}（代表 {B.representativeEn}、韓国事業者登録番号 {B.registrationNumber}、以下「当社」）が提供するレッスンの予定管理サービスです。</p>,
   notice: <p>規約改定のお知らせ: 本規約は{EFFECTIVE}から適用されます（{PUBLISHED}公表）。それまでは改定前の規約が適用されます。改定前の規約の全文は末尾の「改定履歴」でご覧いただけます。</p>,
   sections: [
     { id: "service", heading: "1. 本サービス", body: <><p>先生はアプリでレッスンの時間と生徒を管理し、生徒は先生から届いたリンクからWebで予定を確認し、予約・振替・キャンセルをリクエストします。</p></> },
@@ -97,7 +97,7 @@ const ja: DocLocale = {
 const en: DocLocale = {
   lang: 'en',
   title: "Teachedule Terms of Service",
-  lead: <p>Teachedule (Korean name 쌤케줄 “Ssamkejul”, Japanese name せんせジュール; the “Service”) is a lesson-scheduling service provided by {B.nameEn} (owner: {B.representativeEn}; Korean business registration no. {B.registrationNumber}{B.addressEn ? `; ${B.addressEn}` : ''}; “we”).</p>,
+  lead: <p>Teachedule (Korean name 쌤케줄 “Ssamkejul”, Japanese name せんせジュール; the “Service”) is a lesson-scheduling service provided by {B.nameEn} (owner: {B.representativeEn}; Korean business registration no. {B.registrationNumber}; “we”).</p>,
   notice: <p>Notice of updated terms: these terms take effect on December 1, 2026 (published November 24, 2026). Until then, the previous terms apply; their full text is under “Revision history” at the bottom of this page. The warranty disclaimer and liability cap in Section 8 take effect on December 24, 2026, 30 days after notice.</p>,
   sections: [
     { id: "service", heading: "1. The Service", body: <><p>Teachers manage lesson times and students in the app. Students use a link from their teacher to see their schedule on the web and book, reschedule or cancel lessons.</p></> },
